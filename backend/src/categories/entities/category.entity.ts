@@ -8,6 +8,7 @@ import {
   OneToMany,
   JoinColumn,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 @Entity('category') // ← passe de 'categories' à 'category'
 export class Category {
@@ -24,6 +25,7 @@ export class Category {
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'parentId' })
+  @Exclude({ toPlainOnly: true })
   parent: Category | null;
 
   @OneToMany(() => Category, (cat) => cat.parent)

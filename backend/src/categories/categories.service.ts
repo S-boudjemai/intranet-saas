@@ -30,18 +30,20 @@ export class CategoriesService {
 
   /**
    * Renvoie la liste complète de toutes les catégories sous forme d'arbre.
+   * @param maxDepth Profondeur maximum de l'arbre (défaut: 10)
    */
-  async findTree(): Promise<Category[]> {
-    return this.treeRepo.findTrees();
+  async findTree(maxDepth: number = 10): Promise<Category[]> {
+    return this.treeRepo.findTrees({ depth: maxDepth });
   }
 
   /**
    * Renvoie une catégorie et tout son sous-arbre.
-   * @param id  UUID de la catégorie racine
+   * @param id UUID de la catégorie racine
+   * @param maxDepth Profondeur maximum du sous-arbre (défaut: 10)
    */
-  async findOne(id: string): Promise<Category> {
+  async findOne(id: string, maxDepth: number = 10): Promise<Category> {
     const root = await this.repo.findOneByOrFail({ id });
-    return this.treeRepo.findDescendantsTree(root);
+    return this.treeRepo.findDescendantsTree(root, { depth: maxDepth });
   }
 
   /**

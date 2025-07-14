@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { TokensService } from './tokens.service';
 import { UsersModule } from 'src/users/users.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -8,6 +9,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
 import { InvitesModule } from 'src/invites/invites.module'; // <-- IMPORT IMPORTANT
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Restaurant } from 'src/restaurant/entites/restaurant.entity';
+import { Announcement } from '../announcements/entities/announcement.entity';
+import { User } from '../users/entities/user.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -16,17 +22,19 @@ import { InvitesModule } from 'src/invites/invites.module'; // <-- IMPORT IMPORT
     PassportModule.register({ defaultStrategy: 'jwt', session: false }),
     ConfigModule,
     InvitesModule, // <-- AJOUTÉ ICI : On rend InvitesService disponible
+    TypeOrmModule.forFeature([Restaurant, Announcement, User]), // <-- AJOUT DU REPOSITORY RESTAURANT, ANNOUNCEMENT ET USER
+    NotificationsModule, // <-- AJOUT DU MODULE NOTIFICATIONS
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (cfg: ConfigService) => ({
         secret: cfg.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '1d' },
+        signOptions: { expiresIn: '1h' },
       }),
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy, TokensService],
   exports: [AuthService],
 })
 export class AuthModule {}

@@ -10,8 +10,10 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Comment } from './comment.entity';
+import { TicketAttachment } from './ticket-attachment.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Restaurant } from 'src/restaurant/entites/restaurant.entity';
+import { Exclude } from 'class-transformer';
 
 export enum TicketStatus {
   NonTraitee = 'non_traitee',
@@ -60,7 +62,11 @@ export class Ticket {
   creator: User;
 
   @OneToMany(() => Comment, (c) => c.ticket, { cascade: true })
+  @Exclude({ toPlainOnly: true })
   comments: Comment[];
+
+  @OneToMany(() => TicketAttachment, (attachment) => attachment.ticket)
+  attachments: TicketAttachment[];
 
   @CreateDateColumn()
   created_at: Date;

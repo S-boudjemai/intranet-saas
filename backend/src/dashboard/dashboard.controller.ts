@@ -13,7 +13,6 @@ export class DashboardController {
   @Get()
   @Roles(Role.Manager, Role.Admin)
   async getDashboard(@Req() req: any) {
-    console.log('🔥 payload JWT:', req.user);
     const user = req.user as any;
     const tenantId: string = user.tenant_id;
 

@@ -4,6 +4,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { RestaurantType } from '../../common/enums/restaurant-type.enum';
 
 @Entity('tenants')
 export class Tenant {
@@ -12,6 +13,13 @@ export class Tenant {
 
   @Column({ type: 'text' })
   name: string;
+
+  @Column({ 
+    type: 'enum', 
+    enum: RestaurantType,
+    default: RestaurantType.TRADITIONNEL
+  })
+  restaurant_type: RestaurantType;
 
   // Palette de couleurs dynamiques pour le thème
   @Column({ type: 'varchar', length: 7, default: '#4F46E5' })

@@ -25,19 +25,9 @@ export class RolesGuard implements CanActivate {
     const request = ctx.switchToHttp().getRequest();
     const user = request.user;
 
-    // --- LIGNES DE DÉBOGAGE AJOUTÉES ICI ---
-    console.log('--- RolesGuard Debug ---');
-    console.log('Route requires roles:', required);
-    console.log('User object received:', user);
-    console.log('User role is:', user?.role);
-    // ------------------------------------
-
     if (!user || !required.includes(user.role)) {
-      console.error('ACCESS DENIED: User role does not match required roles.');
       throw new ForbiddenException('Accès refusé');
     }
-
-    console.log('ACCESS GRANTED: User role is authorized.');
     return true;
   }
 }

@@ -14,6 +14,8 @@ import {
 import { InvitesService } from './invites.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Public } from 'src/auth/public.decorator';
+import { CreateInviteDto } from './dto/create-invite.dto';
+import { CreateInviteWithRestaurantDto } from './dto/create-invite-with-restaurant.dto';
 
 @Controller('invites')
 export class InvitesController {
@@ -21,9 +23,17 @@ export class InvitesController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Req() req, @Body('email') invite_email: string) {
+  create(
+    @Req() req, 
+    @Body() inviteDto: CreateInviteWithRestaurantDto
+  ) {
     const { tenant_id } = req.user;
-    return this.svc.create(tenant_id, invite_email);
+    return this.svc.create(
+      tenant_id, 
+      inviteDto.email, 
+      inviteDto.restaurant_name, 
+      inviteDto.restaurant_city
+    );
   }
 
   @UseGuards(JwtAuthGuard)

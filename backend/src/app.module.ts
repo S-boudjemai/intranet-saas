@@ -15,12 +15,31 @@ import { CategoriesModule } from './categories/categories.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { TagsModule } from './tags/tags.module';
 import { RestaurantsModule } from './restaurant/restaurant.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { SearchModule } from './search/search.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { validationSchema } from './config/env.validation';
+import { HealthModule } from './health/health.module';
+import { AuditsModule } from './audits/audits.module';
 
 @Module({
   imports: [
     // Charge .env et rend ConfigService disponible partout
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ 
+      isGlobal: true,
+      validationSchema,
+      validationOptions: {
+        allowUnknown: true,
+        abortEarly: false,
+      },
+    }),
+    
+    // Rate limiting - 100 requêtes par minute par IP
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 1 minute
+      limit: 100, // 100 requêtes max
+    }]),
     // --- CONFIGURATION DU MAILER PLACÉE ICI ---
     // Il est important de configurer les modules fournisseurs avant les modules qui les consomment.
     MailerModule.forRootAsync({
@@ -53,7 +72,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
         password: cfg.get<string>('DB_PASS'),
         database: cfg.get<string>('DB_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // en DEV : génère les tables automatiquement
+        synchronize: cfg.get<string>('NODE_ENV') !== 'production', // SECURITE: Désactivé en production
       }),
     }),
     TenantsModule,
@@ -67,11 +86,16 @@ import { MailerModule } from '@nestjs-modules/mailer';
     DashboardModule,
     TagsModule,
     RestaurantsModule,
+    NotificationsModule,
+    SearchModule,
+    HealthModule,
+    AuditsModule,
   ],
 
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

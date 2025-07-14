@@ -5,8 +5,11 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { Ticket } from './ticket.entity';
+import { TicketAttachment } from './ticket-attachment.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class Comment {
@@ -27,5 +30,9 @@ export class Comment {
 
   @ManyToOne(() => Ticket, (ticket) => ticket.comments)
   @JoinColumn({ name: 'ticket_id' })
+  @Exclude({ toPlainOnly: true })
   ticket: Ticket;
+
+  @OneToMany(() => TicketAttachment, (attachment) => attachment.comment)
+  attachments: TicketAttachment[];
 }

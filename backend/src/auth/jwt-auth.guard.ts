@@ -24,14 +24,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return true;
     }
 
-    // --- AJOUT DU LOG ICI ---
-    const req = context.switchToHttp().getRequest();
-    console.log(
-      '[JwtAuthGuard] Authorization header:',
-      req.headers.authorization,
-    );
-    // --------------------------
-
     const canActivate = (await super.canActivate(context)) as boolean;
     if (!canActivate) {
       return false;
@@ -42,7 +34,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   handleRequest(err, user, info) {
     if (err || !user) {
-      console.error('JWT Auth Guard Error:', info?.message || err);
       throw err || new UnauthorizedException('Accès non autorisé');
     }
     return user;

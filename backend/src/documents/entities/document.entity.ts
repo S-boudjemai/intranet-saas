@@ -12,6 +12,7 @@ import {
   ManyToMany,
   JoinTable,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class Document {
@@ -48,5 +49,6 @@ export class Document {
 
   @ManyToMany(() => Tag, (tag) => tag.documents, { cascade: true })
   @JoinTable({ name: 'document_tags' })
+  @Exclude({ toPlainOnly: true })
   tags: Tag[];
 }

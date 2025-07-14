@@ -14,7 +14,7 @@ export class Restaurant {
   @PrimaryGeneratedColumn() id: number;
   @Column() tenant_id: number;
   @Column({ type: 'varchar', length: 255 }) name: string;
-  @Column({ type: 'varchar', length: 255, nullable: true }) city: string;
+  @Column({ type: 'varchar', length: 255, nullable: true }) city: string | null;
   @CreateDateColumn() created_at: Date;
 
   @ManyToOne(() => Tenant)
