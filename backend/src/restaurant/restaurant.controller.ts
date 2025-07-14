@@ -3,7 +3,7 @@ import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
-import { JwtUser } from 'src/announcements/announcements.service';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 import { RestaurantsService } from './restaurant.service';
 
 @Controller('restaurants')

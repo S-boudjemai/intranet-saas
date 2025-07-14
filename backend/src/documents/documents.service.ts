@@ -15,12 +15,10 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Role } from 'src/auth/roles/roles.enum';
-
-export interface JwtUser {
-  userId: number;
-  tenant_id: number | null;
-  role: Role;
-}
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { NotificationType } from '../notifications/entities/notification.entity';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 
 @Injectable()
 export class DocumentsService {
@@ -31,6 +29,8 @@ export class DocumentsService {
     private documentsRepository: Repository<Document>,
     @InjectRepository(Category)
     private categoriesRepository: Repository<Category>,
+    private notificationsService: NotificationsService,
+    private notificationsGateway: NotificationsGateway,
   ) {
     this.s3 = new S3Client({
       region: process.env.AWS_REGION,
@@ -82,7 +82,28 @@ export class DocumentsService {
       doc.category = category;
     }
 
-    return this.documentsRepository.save(doc);
+    const savedDoc = await this.documentsRepository.save(doc);
+
+    // Créer des notifications pour tous les utilisateurs du tenant (sauf l'auteur)
+    const tenantId = parseInt(savedDoc.tenant_id);
+    const message = `Nouveau document: ${savedDoc.name}`;
+    
+    await this.notificationsService.createNotificationsForTenant(
+      tenantId,
+      NotificationType.DOCUMENT_UPLOADED,
+      parseInt(savedDoc.id),
+      message,
+      user.userId
+    );
+
+    // Envoyer notification temps réel
+    this.notificationsGateway.notifyDocumentUploaded(tenantId, {
+      id: savedDoc.id,
+      name: savedDoc.name,
+      message
+    });
+
+    return savedDoc;
   }
 
   /**

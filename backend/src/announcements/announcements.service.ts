@@ -9,13 +9,10 @@ import { Announcement } from './entities/announcement.entity';
 import { Repository, In, Brackets } from 'typeorm';
 import { Role } from 'src/auth/roles/roles.enum';
 import { Restaurant } from 'src/restaurant/entites/restaurant.entity';
-
-export interface JwtUser {
-  userId: number;
-  tenant_id: number | null;
-  role: Role;
-  restaurant_id?: number;
-}
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { NotificationType } from '../notifications/entities/notification.entity';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 
 @Injectable()
 export class AnnouncementsService {
@@ -25,6 +22,9 @@ export class AnnouncementsService {
 
     @InjectRepository(Restaurant)
     private readonly restaurantRepo: Repository<Restaurant>,
+
+    private notificationsService: NotificationsService,
+    private notificationsGateway: NotificationsGateway,
   ) {}
 
   async findAll(user: JwtUser): Promise<Announcement[]> {
@@ -93,12 +93,6 @@ export class AnnouncementsService {
     },
     user: JwtUser,
   ): Promise<Announcement> {
-    // ================== LOGS DE CRÉATION ==================
-    console.log(`[create] Received data: title=${data.title}`);
-    console.log(
-      `[create] Received restaurant_ids: [${data.restaurant_ids?.join(', ')}]`,
-    );
-    // ====================================================
 
     const newAnnouncement = this.repo.create({
       title: data.title,
@@ -112,18 +106,29 @@ export class AnnouncementsService {
         id: In(data.restaurant_ids),
       });
       newAnnouncement.restaurants = restaurants;
-      // ================== LOGS D'ASSOCIATION ==================
-      console.log(
-        `[create] Associating with ${restaurants.length} restaurants with IDs: [${restaurants.map((r) => r.id).join(', ')}]`,
-      );
-      // ========================================================
     } else {
-      console.log(
-        `[create] No restaurant_ids received. Creating a global announcement.`,
-      );
     }
 
-    return this.repo.save(newAnnouncement);
+    const savedAnnouncement = await this.repo.save(newAnnouncement);
+
+    // Créer des notifications pour les viewers uniquement (les managers n'ont pas besoin de notifications d'annonces)
+    const message = `Nouvelle annonce: ${savedAnnouncement.title}`;
+    
+    await this.notificationsService.createNotificationsForViewers(
+      data.tenant_id,
+      NotificationType.ANNOUNCEMENT_POSTED,
+      savedAnnouncement.id,
+      message
+    );
+
+    // Envoyer notification temps réel
+    this.notificationsGateway.notifyAnnouncementPosted(data.tenant_id, {
+      id: savedAnnouncement.id,
+      title: savedAnnouncement.title,
+      message
+    });
+
+    return savedAnnouncement;
   }
 
   async softDelete(id: string, user: JwtUser): Promise<void> {

@@ -10,7 +10,8 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { DocumentsService, JwtUser } from './documents.service';
+import { DocumentsService } from './documents.service';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 import { Document } from './entities/document.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles/roles.guard';

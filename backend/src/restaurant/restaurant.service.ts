@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { JwtUser } from 'src/announcements/announcements.service';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 import { Restaurant } from './entites/restaurant.entity';
 
 @Injectable()

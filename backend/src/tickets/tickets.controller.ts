@@ -9,7 +9,10 @@ import {
   Param,
   Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { TicketsService } from './tickets.service';
 import { Ticket, TicketStatus } from './entities/ticket.entity';
 import { Comment } from './entities/comment.entity';
@@ -18,12 +21,12 @@ import { RolesGuard } from 'src/auth/roles/roles.guard';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { Role } from 'src/auth/roles/roles.enum';
 import { Request } from 'express';
-
-interface JwtUser {
-  userId: number;
-  tenant_id: number | null;
-  role: Role;
-}
+import { CreateTicketDto } from './dto/create-ticket.dto';
+import { UpdateTicketDto } from './dto/update-ticket.dto';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UploadAttachmentDto } from './dto/upload-attachment.dto';
+import { TicketAttachment } from './entities/ticket-attachment.entity';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 
 @Controller('tickets')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -37,10 +40,10 @@ export class TicketsController {
   @Post()
   @Roles(Role.Viewer)
   async create(
-    @Body() body: Partial<Ticket>,
+    @Body() createTicketDto: CreateTicketDto,
     @Req() req: Request & { user: JwtUser },
   ): Promise<Ticket> {
-    return this.svc.create(body, req.user);
+    return this.svc.create(createTicketDto, req.user);
   }
 
   /**
@@ -78,10 +81,10 @@ export class TicketsController {
   @Roles(Role.Manager, Role.Admin)
   async updateStatus(
     @Param('id') id: string,
-    @Body('status') status: TicketStatus,
+    @Body() updateTicketDto: UpdateTicketDto,
     @Req() req: Request & { user: JwtUser },
   ): Promise<Ticket> {
-    return this.svc.updateStatus(id, status, req.user);
+    return this.svc.updateStatus(id, updateTicketDto.status!, req.user);
   }
 
   /**
@@ -92,10 +95,10 @@ export class TicketsController {
   @Roles(Role.Manager, Role.Admin)
   async addComment(
     @Param('id') ticket_id: string,
-    @Body('message') message: string,
+    @Body() createCommentDto: CreateCommentDto,
     @Req() req: Request & { user: JwtUser },
   ): Promise<Comment> {
-    return this.svc.addComment(ticket_id, req.user.userId, message);
+    return this.svc.addComment(ticket_id, req.user.userId, createCommentDto.message);
   }
 
   /**
@@ -107,5 +110,37 @@ export class TicketsController {
   async remove(@Param('id') id: string): Promise<{ deleted: true }> {
     await this.svc.softDelete(id);
     return { deleted: true };
+  }
+
+  /**
+   * POST /tickets/upload-image
+   * - Tous les rôles: upload d'image pour un ticket ou commentaire
+   */
+  @Post('upload-image')
+  @Roles(Role.Viewer, Role.Manager, Role.Admin)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB max
+      },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype.match(/^image\/(jpeg|jpg|png|gif|webp)$/)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Seules les images sont autorisées (JPEG, PNG, GIF, WebP)'), false);
+        }
+      },
+    })
+  )
+  async uploadImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() uploadDto: UploadAttachmentDto,
+    @Req() req: Request & { user: JwtUser },
+  ): Promise<TicketAttachment> {
+    if (!file) {
+      throw new Error('Aucun fichier fourni');
+    }
+
+    return this.svc.uploadAttachment(file, uploadDto, req.user);
   }
 }

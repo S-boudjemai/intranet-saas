@@ -9,7 +9,8 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { AnnouncementsService, JwtUser } from './announcements.service';
+import { AnnouncementsService } from './announcements.service';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 import { Announcement } from './entities/announcement.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles/roles.guard';
