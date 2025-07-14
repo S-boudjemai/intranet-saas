@@ -68,7 +68,6 @@ export default function TicketsPage() {
     if (!token) return;
     setLoading(true);
     try {
-      console.log("[TicketsPage] token used:", token);
       const res = await fetch(`${import.meta.env.VITE_API_URL}/tickets`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -136,7 +135,6 @@ export default function TicketsPage() {
         }
       );
     } catch (error) {
-      console.error("Erreur lors de la mise à jour optimiste:", error);
       loadTickets();
     }
   };

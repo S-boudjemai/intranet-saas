@@ -111,6 +111,7 @@ export default function AnnouncementsPage() {
     loadAnnouncements();
   }, [token]);
 
+
   // --- LOGIQUE DE SUPPRESSION MISE À JOUR ---
   const handleDeleteRequest = (announcement: Announcement) => {
     setAnnouncementToDelete(announcement);

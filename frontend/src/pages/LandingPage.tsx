@@ -93,31 +93,31 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
             <div className="flex flex-col items-center">
-              <div className="p-4 bg-primary/10 rounded-full text-primary mb-4">
+              <div className="p-4 bg-white rounded-full text-black mb-4">
                 <FeatureIcon1 />
               </div>
-              <h3 className="text-xl font-bold mb-2">Gestion Documentaire</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-xl font-bold mb-2 text-secondary-foreground">Gestion Documentaire</h3>
+              <p className="text-secondary-foreground">
                 Centralisez toutes vos factures, procédures et documents
                 importants en un seul endroit sécurisé.
               </p>
             </div>
             <div className="flex flex-col items-center">
-              <div className="p-4 bg-primary/10 rounded-full text-primary mb-4">
+              <div className="p-4 bg-white rounded-full text-black mb-4">
                 <FeatureIcon2 />
               </div>
-              <h3 className="text-xl font-bold mb-2">Suivi des Tickets</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-xl font-bold mb-2 text-secondary-foreground">Suivi des Tickets</h3>
+              <p className="text-secondary-foreground">
                 Signalez un problème, suivez sa résolution et communiquez avec
                 le support en temps réel.
               </p>
             </div>
             <div className="flex flex-col items-center">
-              <div className="p-4 bg-primary/10 rounded-full text-primary mb-4">
+              <div className="p-4 bg-white rounded-full text-black mb-4">
                 <FeatureIcon3 />
               </div>
-              <h3 className="text-xl font-bold mb-2">Annonces Centralisées</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-xl font-bold mb-2 text-secondary-foreground">Annonces Centralisées</h3>
+              <p className="text-secondary-foreground">
                 Diffusez des informations importantes à un ou plusieurs
                 restaurants en quelques clics.
               </p>

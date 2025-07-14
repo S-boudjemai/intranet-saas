@@ -1,7 +1,10 @@
 // src/pages/Signup.tsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import type { InviteType } from "../types";
+import CityAutocomplete from "../components/CityAutocomplete";
+import Button from "../components/ui/Button";
+import Card, { CardContent } from "../components/ui/Card";
 
 // --- ICÔNES SVG ---
 const SpinnerIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -23,13 +26,11 @@ export default function Signup() {
   const [error, setError] = useState<string | null>(null);
   const [loadingInvite, setLoadingInvite] = useState(true);
   const [password, setPassword] = useState("");
+  const [restaurantName, setRestaurantName] = useState("");
+  const [restaurantCity, setRestaurantCity] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const effectRan = useRef(false);
-
   useEffect(() => {
-    if (effectRan.current === true) return;
-    effectRan.current = true;
 
     if (!inviteToken) {
       setError("Le lien d’invitation est invalide.");
@@ -46,7 +47,12 @@ export default function Signup() {
         }
         return res.json();
       })
-      .then((inv: InviteType) => setInvite(inv))
+      .then((inv: InviteType) => {
+        setInvite(inv);
+        // Pré-remplir les champs si l'invitation contient des infos restaurant
+        if (inv.restaurant_name) setRestaurantName(inv.restaurant_name);
+        if (inv.restaurant_city) setRestaurantCity(inv.restaurant_city);
+      })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoadingInvite(false));
   }, [inviteToken]);
@@ -65,6 +71,8 @@ export default function Signup() {
           body: JSON.stringify({
             token: inviteToken,
             password: password,
+            restaurant_name: restaurantName.trim() || undefined,
+            restaurant_city: restaurantCity.trim() || undefined,
           }),
         }
       );
@@ -127,6 +135,39 @@ export default function Signup() {
               {invite.invite_email}
             </p>
           </div>
+
+          {/* Informations du restaurant */}
+          <Card padding="md" className="bg-accent/20 border-accent/30">
+            <CardContent>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Informations du restaurant</h3>
+            <div>
+              <label
+                htmlFor="restaurant-name"
+                className="block text-sm font-medium text-muted-foreground mb-2"
+              >
+                Nom du restaurant
+              </label>
+              <input
+                id="restaurant-name"
+                type="text"
+                className={inputClasses}
+                value={restaurantName}
+                onChange={(e) => setRestaurantName(e.target.value)}
+                placeholder="Ex: Pizzalif Lyon Centre"
+              />
+            </div>
+            <div>
+              <CityAutocomplete
+                id="restaurant-city"
+                label="Ville du restaurant"
+                value={restaurantCity}
+                onChange={setRestaurantCity}
+                placeholder="Commencez à taper le nom de la ville..."
+              />
+            </div>
+            </CardContent>
+          </Card>
+
           <div>
             <label
               htmlFor="password"
@@ -146,13 +187,16 @@ export default function Signup() {
             />
           </div>
           <div className="pt-2">
-            <button
+            <Button
               type="submit"
               disabled={submitting}
-              className="w-full bg-primary text-primary-foreground font-bold py-3 px-4 rounded-md hover:bg-primary/90 active:scale-95 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-all"
+              loading={submitting}
+              variant="primary"
+              size="lg"
+              className="w-full"
             >
-              {submitting ? "Création en cours..." : "Créer mon compte"}
-            </button>
+              Créer mon compte
+            </Button>
           </div>
         </form>
       );

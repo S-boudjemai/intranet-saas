@@ -1,5 +1,5 @@
 // src/components/CategoryTree.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
 // --- ICÔNES SVG ---
@@ -61,26 +61,30 @@ export default function CategoryTree({ selectedId, onSelect }: Props) {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => Array.isArray(data) && setRoots(data))
+      .then((json) => {
+        const data = json.data || json;
+        Array.isArray(data) && setRoots(data);
+      })
       .catch(() => setRoots([]));
   }, [token]);
 
   // Fetch children on demand
-  const fetchChildren = (parentId: string) => {
+  const fetchChildren = useCallback((parentId: string) => {
     if (!token || childrenMap[parentId]) return;
     fetch(`${import.meta.env.VITE_API_URL}/categories?parentId=${parentId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) =>
+      .then((json) => {
+        const data = json.data || json;
         Array.isArray(data)
-          ? setChildrenMap((m) => ({ ...m, [parentId]: data }))
-          : null
-      )
+          ? setChildrenMap((prev) => ({ ...prev, [parentId]: data }))
+          : null;
+      })
       .catch(() => {
-        setChildrenMap((m) => ({ ...m, [parentId]: [] }));
+        setChildrenMap((prev) => ({ ...prev, [parentId]: [] }));
       });
-  };
+  }, [token, childrenMap]);
 
   const handleToggle = (nodeId: string) => {
     const newExpanded = new Set(expanded);

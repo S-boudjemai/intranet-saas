@@ -1,5 +1,5 @@
 // src/pages/DocumentsPage.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import UploadDocument from "../components/UploadDocument";
 import DocumentCard from "../components/DocumentCard";
@@ -83,7 +83,8 @@ export default function DocumentsPage() {
       `${import.meta.env.VITE_API_URL}/documents?${params.toString()}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
-    const data = await response.json();
+    const json = await response.json();
+    const data = json.data || json;
     setDocs(data);
   };
 
@@ -92,16 +93,20 @@ export default function DocumentsPage() {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/tags`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    const data = await response.json();
-    setTags(data);
+    const json = await response.json();
+    const data = json.data || json;
+    // S'assurer que data est un tableau
+    setTags(Array.isArray(data) ? data : []);
   };
 
   useEffect(() => {
     loadTags();
   }, [token]);
+  const memoizedFilterTags = useMemo(() => filterTags, [filterTags.join(',')]);
+
   useEffect(() => {
     loadDocs();
-  }, [token, category, search, filterTags]);
+  }, [token, category, search, memoizedFilterTags]);
 
   // --- LOGIQUE DE SUPPRESSION MISE À JOUR ---
   const handleDeleteRequest = (doc: DocumentType) => {
@@ -131,7 +136,7 @@ export default function DocumentsPage() {
     setPreview({ url, name });
   };
 
-  const handleDownload = async (fileUrl: string, name: string) => {
+  const handleDownload = async (fileUrl: string) => {
     try {
       const res = await fetch(
         `${
@@ -143,7 +148,6 @@ export default function DocumentsPage() {
       const { url } = await res.json();
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (error) {
-      console.error("Failed to open document:", error);
     }
   };
 
@@ -197,7 +201,6 @@ export default function DocumentsPage() {
     try {
       await Promise.all([...addPromises, ...removePromises]);
     } catch (error) {
-      console.error("Failed to update tags:", error);
     } finally {
       await loadDocs();
       setIsSavingTags(false);

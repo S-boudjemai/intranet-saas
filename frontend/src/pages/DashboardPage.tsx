@@ -1,5 +1,5 @@
 // src/pages/DashboardPage.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
   CartesianGrid,
@@ -10,8 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import KipCard from "../components/KipCard"; // Correction de la typo KipCard -> KpiCard
-import { useTheme } from "../contexts/ThemeContext"; // Import du hook de thème pour les couleurs du graphique
+import KpiCard from "../components/KipCard"; // Le fichier s'appelle KipCard mais exporte KpiCard
 
 // --- ICÔNES SVG ---
 const ClockIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -125,7 +124,6 @@ const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
-  const { theme } = useTheme();
 
   useEffect(() => {
     if (!token) return;
@@ -137,27 +135,29 @@ const DashboardPage: React.FC = () => {
         if (!res.ok) throw new Error("Impossible de charger les données");
         return res.json();
       })
-      .then((json: DashboardData) => setData(json))
-      .catch((err) => console.error("Erreur fetch Dashboard:", err))
+      .then((json: any) => setData(json.data || json))
+      .catch((err) => {})
       .finally(() => setLoading(false));
   }, [token]);
 
   // Récupération des couleurs du thème pour le graphique
-  const getCssVar = (name: string) => {
-    if (typeof window === "undefined") return "";
-    return getComputedStyle(document.documentElement)
-      .getPropertyValue(name)
-      .trim();
-  };
+  const chartColors = useMemo(() => {
+    const getCssVar = (name: string) => {
+      if (typeof window === "undefined") return "";
+      return getComputedStyle(document.documentElement)
+        .getPropertyValue(name)
+        .trim();
+    };
 
-  const chartColors = {
-    grid: `hsl(${getCssVar("--border")})`,
-    text: `hsl(${getCssVar("--muted-foreground")})`,
-    line: `hsl(${getCssVar("--primary")})`,
-    tooltipBg: `hsl(${getCssVar("--popover")})`,
-    tooltipBorder: `hsl(${getCssVar("--border")})`,
-    tooltipText: `hsl(${getCssVar("--popover-foreground")})`,
-  };
+    return {
+      grid: `hsl(${getCssVar("--border")})`,
+      text: `hsl(${getCssVar("--muted-foreground")})`,
+      line: `hsl(${getCssVar("--primary")})`,
+      tooltipBg: `hsl(${getCssVar("--popover")})`,
+      tooltipBorder: `hsl(${getCssVar("--border")})`,
+      tooltipText: `hsl(${getCssVar("--popover-foreground")})`,
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -189,18 +189,18 @@ const DashboardPage: React.FC = () => {
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KipCard
+        <KpiCard
           title="Total documents"
           value={data.totalDocuments}
           icon={<DocumentReportIcon />}
         />
-        <KipCard
+        <KpiCard
           title="Docs cette semaine"
           value={data.docsThisWeek}
           icon={<ClockIcon />}
         />
-        {Object.entries(data.ticketsByStatus).map(([status, count]) => (
-          <KipCard
+        {data.ticketsByStatus && Object.entries(data.ticketsByStatus).map(([status, count]) => (
+          <KpiCard
             key={status}
             title={`Tickets ${status.replace("_", " ")}`}
             value={count}

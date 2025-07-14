@@ -61,15 +61,15 @@ export default function ThemeSwitcher() {
   ];
 
   return (
-    <div className="flex items-center p-1 bg-secondary rounded-full">
+    <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg border border-border">
       {themes.map((t) => (
         <button
           key={t.name}
           onClick={() => setTheme(t.name as "light" | "dark" | "system")}
-          className={`p-2 rounded-full transition-colors duration-200 ${
+          className={`p-2 rounded-md transition-all duration-200 ${
             theme === t.name
-              ? "bg-background text-primary shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-primary text-primary-foreground shadow-sm scale-105"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent"
           }`}
           title={`Thème ${t.label}`}
         >

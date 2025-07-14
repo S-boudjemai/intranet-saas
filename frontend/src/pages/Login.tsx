@@ -1,7 +1,8 @@
 // src/pages/Login.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom"; // <-- Ajout de Link
 import { useAuth } from "../contexts/AuthContext";
+import Button from "../components/ui/Button";
 
 // --- ICÔNE SVG ---
 const ExclamationCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -46,17 +47,41 @@ interface LocationState {
 }
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as LocationState;
 
-  const redirectTo = state?.from?.pathname || "/documents";
+  // Fonction pour déterminer la redirection basée sur le rôle
+  const getRedirectPath = (userRole?: string) => {
+    if (state?.from?.pathname) {
+      return state.from.pathname;
+    }
+    
+    // Redirection basée sur le rôle
+    switch (userRole) {
+      case 'admin':
+      case 'manager':
+        return '/dashboard';
+      case 'viewer':
+        return '/documents';
+      default:
+        return '/documents';
+    }
+  };
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Redirection automatique après login réussi
+  useEffect(() => {
+    if (user) {
+      const redirectPath = getRedirectPath(user.role);
+      navigate(redirectPath, { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,9 +89,8 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate(redirectTo, { replace: true });
+      // La redirection se fait automatiquement via useEffect
     } catch (err: any) {
-      console.error("Erreur de connexion:", err);
       setError("Email ou mot de passe incorrect.");
       setLoading(false);
     }
@@ -139,19 +163,16 @@ export default function Login() {
           </div>
 
           <div className="pt-2">
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="
-                w-full flex items-center justify-center 
-                bg-primary text-primary-foreground font-bold py-3 px-4 rounded-md
-                hover:bg-primary/90 active:scale-95 
-                disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed
-                transition-all duration-300
-              "
+              loading={loading}
+              variant="primary"
+              size="lg"
+              className="w-full"
             >
-              {loading ? "Connexion en cours..." : "Se connecter"}
-            </button>
+              Se connecter
+            </Button>
           </div>
         </form>
 

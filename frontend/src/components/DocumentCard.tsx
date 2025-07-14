@@ -1,6 +1,7 @@
 // src/components/DocumentCard.tsx
 import React from "react";
 import type { DocumentType } from "../types";
+import Card from "./ui/Card";
 
 // --- DÉBUT DES ICÔNES SVG ---
 const DocumentTextIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -104,7 +105,7 @@ interface DocumentCardProps {
   canManage: boolean;
   onDelete: (id: string) => void;
   onPreview: (url: string, name: string) => void;
-  onDownload: (url: string, name: string) => void;
+  onDownload: (url: string) => void;
   onTagClick: (tagId: string) => void;
   onManageTags: () => void;
 }
@@ -119,7 +120,10 @@ export default function DocumentCard({
   onManageTags,
 }: DocumentCardProps) {
   return (
-    <div className="bg-card border border-border rounded-lg flex flex-col group transition-all duration-300 hover:border-primary/20 hover:shadow-2xl hover:shadow-black/20">
+    <Card 
+      hover={true} 
+      className="flex flex-col group animate-slide-up"
+    >
       <div className="p-5 flex-grow">
         <div className="flex items-start justify-between">
           <div className="p-2 bg-primary/10 rounded-lg mb-4">
@@ -173,13 +177,13 @@ export default function DocumentCard({
           <span>Aperçu</span>
         </button>
         <button
-          onClick={() => onDownload(doc.url, doc.name)}
+          onClick={() => onDownload(doc.url)}
           className="w-full text-sm font-semibold text-foreground/80 hover:text-primary flex items-center justify-center gap-2 p-2 rounded-md hover:bg-primary/10 transition-colors"
         >
           <DownloadIcon className="h-5 w-5" />
           <span>Télécharger</span>
         </button>
       </div>
-    </div>
+    </Card>
   );
 }

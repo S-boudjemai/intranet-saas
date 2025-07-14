@@ -1,6 +1,9 @@
 // src/components/TicketItem.tsx
 import React, { useState } from "react";
-import type { TicketType } from "../types"; // Importer depuis le fichier central
+import type { TicketType, TicketAttachment } from "../types"; // Importer depuis le fichier central
+import TicketBadge from "./TicketBadge";
+import ImageUpload from "./ImageUpload";
+import AttachmentGallery from "./AttachmentGallery";
 
 // --- ICÔNES SVG ---
 const ChevronDownIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -62,22 +65,6 @@ interface TicketItemProps {
   defaultExpanded?: boolean;
 }
 
-const StatusBadge: React.FC<{ status: TicketType["status"] }> = ({
-  status,
-}) => {
-  const statusStyles = {
-    non_traitee: "bg-destructive/10 text-destructive ring-destructive/20",
-    en_cours: "bg-amber-500/10 text-amber-400 ring-amber-500/20",
-    traitee: "bg-primary/10 text-primary ring-primary/20",
-  };
-  return (
-    <span
-      className={`px-2.5 py-1 text-xs font-semibold rounded-full ring-1 ring-inset ${statusStyles[status]}`}
-    >
-      {status.replace("_", " ")}
-    </span>
-  );
-};
 
 export default function TicketItem({
   ticket,
@@ -88,7 +75,17 @@ export default function TicketItem({
   defaultExpanded = false,
 }: TicketItemProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [ticketAttachments, setTicketAttachments] = useState<TicketAttachment[]>(ticket.attachments || []);
+  const [commentAttachments] = useState<Record<string, TicketAttachment[]>>({});
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const commentInputRef = React.useRef<HTMLTextAreaElement>(null);
+
+  // Fermer la modale d'upload quand le ticket se ferme
+  React.useEffect(() => {
+    if (!isExpanded) {
+      setIsUploadModalOpen(false);
+    }
+  }, [isExpanded]);
 
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +113,7 @@ export default function TicketItem({
           <h2 className="font-bold text-lg text-card-foreground">
             {ticket.title}
           </h2>
-          <StatusBadge status={ticket.status} />
+          <TicketBadge status={ticket.status} />
         </div>
         <div className="flex items-center gap-4">
           <span className="text-xs text-muted-foreground">
@@ -139,38 +136,100 @@ export default function TicketItem({
           {ticket.description && (
             <p className="text-foreground/80">{ticket.description}</p>
           )}
+          
+          {/* Affichage des images du ticket */}
+          {ticketAttachments.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-foreground text-sm">Images du ticket :</h4>
+              <AttachmentGallery attachments={ticketAttachments} />
+            </div>
+          )}
+          
           {isManager && (
-            <div className="flex items-center justify-between p-3 bg-secondary rounded-md">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-secondary-foreground">
-                  Changer statut:
-                </span>
-                {(["non_traitee", "en_cours", "traitee"] as const).map(
-                  (status) => (
-                    <button
-                      key={status}
-                      onClick={() => onStatusChange(ticket.id, status)}
-                      disabled={ticket.status === status}
-                      className="disabled:cursor-not-allowed"
-                    >
-                      <StatusBadge status={status} />
-                    </button>
-                  )
-                )}
+            <div className="border-2 border-dashed border-border rounded-lg p-4 bg-gradient-to-r from-muted/30 to-muted/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-foreground bg-accent/50 px-3 py-1 rounded-full border border-border">
+                    Gestion du ticket
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {(["non_traitee", "en_cours", "traitee"] as const).map(
+                      (status) => (
+                        <button
+                          key={status}
+                          onClick={() => onStatusChange(ticket.id, status)}
+                          disabled={ticket.status === status}
+                          className="disabled:cursor-not-allowed hover:scale-105 transition-transform duration-200"
+                        >
+                          <TicketBadge status={status} />
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => onDeleteRequest(ticket)} // <-- MODIFIÉ
+                  className="p-2 rounded-full text-muted-foreground hover:bg-destructive/20 hover:text-destructive border border-transparent hover:border-destructive/30 transition-all duration-200"
+                >
+                  <TrashIcon className="h-5 w-5" />
+                </button>
               </div>
-              <button
-                onClick={() => onDeleteRequest(ticket)} // <-- MODIFIÉ
-                className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-              >
-                <TrashIcon className="h-5 w-5" />
-              </button>
             </div>
           )}
           <div className="space-y-3">
-            <h3 className="font-semibold text-foreground flex items-center gap-2">
-              <ChatAlt2Icon className="h-5 w-5" />
-              Commentaires
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <ChatAlt2Icon className="h-5 w-5" />
+                Commentaires
+              </h3>
+              
+              {/* Upload d'images accessible à tous */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsUploadModalOpen(!isUploadModalOpen)}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors bg-accent/20 px-2 py-1 rounded"
+                >
+                  <span className={`inline-block w-3 h-3 border border-border rounded bg-accent/30 transition-transform ${isUploadModalOpen ? 'rotate-90' : ''}`}>
+                    <svg className="w-2 h-2 ml-0.5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                  📷 Images
+                </button>
+                
+                {isUploadModalOpen && (
+                  <div className="absolute right-0 bottom-full mb-2 bg-card border border-border rounded-lg shadow-lg p-3 z-50 min-w-64 max-w-80">
+                    {/* Bouton de fermeture */}
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-sm font-medium text-foreground">Ajouter une image</span>
+                      <button
+                        onClick={() => setIsUploadModalOpen(false)}
+                        className="p-1 rounded-full hover:bg-accent transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    <ImageUpload
+                      ticketId={ticket.id}
+                      onUploadSuccess={(attachment) => {
+                        setTicketAttachments(prev => [...prev, attachment]);
+                        setIsUploadModalOpen(false); // Fermer après upload réussi
+                      }}
+                      onUploadError={(error) => {
+                      }}
+                      className="w-full"
+                    />
+                    
+                    {/* Petite flèche pointant vers le bouton */}
+                    <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-border"></div>
+                    <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-card mt-[-1px]"></div>
+                  </div>
+                )}
+              </div>
+            </div>
             {ticket.comments.length === 0 && (
               <p className="text-sm text-muted-foreground pl-2">
                 Aucun commentaire.
@@ -178,8 +237,17 @@ export default function TicketItem({
             )}
             <div className="space-y-3">
               {ticket.comments.map((c) => (
-                <div key={c.id} className="p-3 bg-secondary rounded-lg text-sm">
+                <div key={c.id} className="p-3 bg-secondary rounded-lg text-sm space-y-2">
                   <p className="text-secondary-foreground">{c.message}</p>
+                  
+                  {/* Affichage des images du commentaire */}
+                  {commentAttachments[c.id] && commentAttachments[c.id].length > 0 && (
+                    <AttachmentGallery 
+                      attachments={commentAttachments[c.id]} 
+                      className="mt-2"
+                    />
+                  )}
+                  
                   <p className="text-xs text-muted-foreground mt-1">
                     Par {c.author_id} le{" "}
                     {new Date(c.created_at).toLocaleString("fr-FR")}
@@ -189,24 +257,26 @@ export default function TicketItem({
             </div>
           </div>
           {isManager && (
-            <form
-              onSubmit={handleCommentSubmit}
-              className="flex items-start gap-3 pt-4 border-t border-border/50"
-            >
-              <textarea
-                ref={commentInputRef}
-                rows={2}
-                className={inputClasses}
-                placeholder="Votre réponse..."
-                required
-              />
-              <button
-                type="submit"
-                className="bg-primary text-primary-foreground font-bold py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
+            <div className="pt-4 border-t border-border/50 space-y-4">
+              <form
+                onSubmit={handleCommentSubmit}
+                className="flex items-start gap-3"
               >
-                Envoyer
-              </button>
-            </form>
+                <textarea
+                  ref={commentInputRef}
+                  rows={2}
+                  className={inputClasses}
+                  placeholder="Votre réponse..."
+                  required
+                />
+                <button
+                  type="submit"
+                  className="bg-primary text-primary-foreground font-bold py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
+                >
+                  Envoyer
+                </button>
+              </form>
+            </div>
           )}
         </div>
       </div>

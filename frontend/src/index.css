@@ -3,6 +3,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Animations personnalisées */
+@layer utilities {
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Définit les variables de couleur pour le thème par défaut (clair) */
 @layer base {
   :root {
@@ -12,20 +58,40 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 84 80% 44%; /* Votre couleur lime/vert */
-    --primary-foreground: 60 9.1% 97.8%; /* Texte blanc sur la couleur primaire */
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
+    
+    /* Couleurs primaires améliorées */
+    --primary: 217 91% 59%; /* Bleu professionnel */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 217 91% 54%;
+    
+    /* Couleurs secondaires améliorées - TOUT EN BLEU */
+    --secondary: 217 91% 65%; /* Bleu plus clair que primary */
+    --secondary-foreground: 0 0% 100%;
+    --secondary-hover: 217 91% 60%;
+    
+    /* Amélioration des gris */
+    --muted: 215 20% 96%;
+    --muted-foreground: 215 15% 45%;
+    --accent: 215 20% 96%;
     --accent-foreground: 222.2 47.4% 11.2%;
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 84 80% 44%;
+    --ring: 217 91% 59%;
     --radius: 0.75rem;
+    
+    /* Status colors - success aussi en bleu */
+    --success: 217 91% 45%; /* Bleu foncé pour success */
+    --warning: 38 92% 50%;
+    --error: 0 84% 60%;
+    --info: 217 91% 59%;
+    
+    /* Shadows améliorées */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
 
   /* Définit les variables pour le mode sombre lorsque la classe .dark est présente */
@@ -36,18 +102,47 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 84 80% 44%; /* Votre couleur lime/vert */
-    --primary-foreground: 60 9.1% 97.8%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    
+    /* Couleurs adaptées pour le mode sombre */
+    --primary: 217 91% 69%; /* Plus clair en mode sombre */
+    --primary-foreground: 222.2 84% 4.9%;
+    --primary-hover: 217 91% 64%;
+    
+    --secondary: 217 91% 75%; /* Bleu encore plus clair en mode sombre */
+    --secondary-foreground: 222.2 84% 4.9%;
+    --secondary-hover: 217 91% 70%;
+    
+    --muted: 215 25% 15%;
+    --muted-foreground: 215 15% 65%;
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 84 80% 44%;
+    --ring: 217 91% 69%;
+    
+    /* Status colors pour mode sombre */
+    --success: 217 91% 55%; /* Bleu moyen pour success en dark */
+    --warning: 38 92% 60%;
+    --error: 0 84% 70%;
+    --info: 217 91% 69%;
   }
+}
+
+/* Nouvelles classes utilitaires */
+@layer utilities {
+  .text-success { color: hsl(var(--success)); }
+  .text-warning { color: hsl(var(--warning)); }
+  .text-error { color: hsl(var(--error)); }
+  .text-info { color: hsl(var(--info)); }
+  
+  .bg-success { background-color: hsl(var(--success)); }
+  .bg-warning { background-color: hsl(var(--warning)); }
+  .bg-error { background-color: hsl(var(--error)); }
+  .bg-info { background-color: hsl(var(--info)); }
+  
+  .shadow-custom-sm { box-shadow: var(--shadow-sm); }
+  .shadow-custom { box-shadow: var(--shadow); }
+  .shadow-custom-lg { box-shadow: var(--shadow-lg); }
 }

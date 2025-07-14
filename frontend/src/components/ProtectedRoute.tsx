@@ -13,8 +13,6 @@ export default function ProtectedRoute() {
     setReady(true);
   }, []);
 
-  console.log("🔐 ProtectedRoute:", { ready, token });
-
   // tant que ready===false, on ne redirige pas et on n'affiche rien
   if (!ready) return null;
 

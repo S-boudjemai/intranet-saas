@@ -13,6 +13,8 @@ export default function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("");
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,13 +35,66 @@ export default function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
       if (!res.ok) throw new Error(`Erreur du serveur (${res.status})`);
 
       const created: TicketType = await res.json();
+      
+      // Uploader les images en attente vers le ticket créé
+      if (pendingFiles.length > 0) {
+        setStatus("Upload des images en cours...");
+        
+        for (const file of pendingFiles) {
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('ticketId', created.id);
+            
+            await fetch('http://localhost:3000/tickets/upload-image', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+              body: formData,
+            });
+          } catch (err) {
+          }
+        }
+      }
+      
       onSuccess(created);
       setTitle("");
       setDescription("");
+      setPendingFiles([]);
+      setPreviewImages([]);
       setStatus("✅ Ticket créé avec succès !");
     } catch (err: any) {
       setStatus(`Erreur : ${err.message}`);
     }
+  };
+
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files) return;
+    
+    const validFiles: File[] = [];
+    
+    Array.from(files).forEach(file => {
+      // Vérification du type et de la taille
+      if (file.type.match(/^image\/(jpeg|jpg|png|gif|webp)$/) && file.size <= 5 * 1024 * 1024) {
+        validFiles.push(file);
+        // Créer une prévisualisation
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            setPreviewImages(prev => [...prev, e.target!.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    setPendingFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviewImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const inputClasses = `bg-input border border-border rounded-md w-full p-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all`;
@@ -85,6 +140,79 @@ export default function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
           placeholder="Décrivez le problème plus en détail..."
           rows={4}
         />
+      </div>
+
+      {/* Upload d'images */}
+      <div className="space-y-3">
+        <details className="group">
+          <summary className="cursor-pointer list-none flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <span className="inline-block w-4 h-4 border border-border rounded bg-accent/30 group-open:rotate-90 transition-transform">
+              <svg className="w-3 h-3 ml-0.5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
+            📷 Ajouter des images ({pendingFiles.length})
+          </summary>
+          
+          <div className="mt-3 space-y-3">
+            {/* Zone de drop */}
+            <div
+              onDrop={(e) => {
+                e.preventDefault();
+                handleFileSelect(e.dataTransfer.files);
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/50 transition-colors"
+            >
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => handleFileSelect(e.target.files)}
+                className="hidden"
+                id="file-upload"
+              />
+              <label
+                htmlFor="file-upload"
+                className="cursor-pointer flex flex-col items-center gap-2"
+              >
+                <div className="text-2xl">📷</div>
+                <div className="text-sm">
+                  <span className="font-medium text-primary">Cliquez pour ajouter</span>
+                  <span className="text-muted-foreground"> ou glissez vos images</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  JPEG, PNG, GIF, WebP - Max 5MB par image
+                </div>
+              </label>
+            </div>
+            
+            {/* Prévisualisation des images */}
+            {previewImages.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {previewImages.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-20 object-cover rounded border border-border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeFile(index)}
+                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-destructive/80 transition-colors"
+                    >
+                      ×
+                    </button>
+                    <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-1 rounded">
+                      {pendingFiles[index]?.name.substring(0, 10)}...
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </details>
       </div>
 
       <div className="pt-2">
