@@ -4,6 +4,7 @@ import type { AuditTemplate } from '../types';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import CreateTemplateModal from '../components/modals/CreateTemplateModal';
+import EditTemplateModal from '../components/modals/EditTemplateModal';
 import AuditTemplateDetailsModal from '../components/modals/AuditTemplateDetailsModal';
 import ConfirmModal from '../components/ConfirmModal';
 import Toast from '../components/Toast';
@@ -18,6 +19,8 @@ export default function AuditTemplatesPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<AuditTemplate | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [templateToEdit, setTemplateToEdit] = useState<AuditTemplate | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [toast, setToast] = useState<{
     isOpen: boolean;
     type: 'success' | 'error' | 'warning' | 'info';
@@ -63,8 +66,8 @@ export default function AuditTemplatesPage() {
   };
 
   const handleEditTemplate = (template: AuditTemplate) => {
-    // TODO: Implémenter l'édition
-    console.log('Édition du template:', template.id);
+    setTemplateToEdit(template);
+    setShowEditModal(true);
     setShowDetailsModal(false);
   };
 
@@ -123,6 +126,35 @@ export default function AuditTemplatesPage() {
       }
     } catch (error) {
       showToast('error', 'Erreur réseau', 'Une erreur est survenue lors de la création.');
+    }
+  };
+
+  const handleEditTemplateSubmit = async (templateData: any) => {
+    try {
+      console.log('🚀 Frontend - Sending edited template data:', JSON.stringify(templateData, null, 2));
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/audit-templates/${templateData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(templateData),
+      });
+
+      if (response.ok) {
+        await fetchTemplates(); // Recharger la liste
+        showToast('success', 'Template modifié', 'Le template d\'audit a été modifié avec succès.');
+        setTemplateToEdit(null);
+        setShowEditModal(false);
+      } else {
+        const errorData = await response.text();
+        showToast('error', 'Erreur de modification', 'Impossible de modifier le template. Vérifiez les données saisies.');
+        console.error('❌ Erreur lors de la modification du template. Status:', response.status);
+        console.error('❌ Error details:', errorData);
+      }
+    } catch (error) {
+      showToast('error', 'Erreur réseau', 'Une erreur est survenue lors de la modification.');
     }
   };
 
@@ -310,6 +342,17 @@ export default function AuditTemplatesPage() {
           if (template) handleDeleteTemplate(template);
         }}
         userRole={user?.role}
+      />
+
+      {/* Modal d'édition */}
+      <EditTemplateModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setTemplateToEdit(null);
+        }}
+        onSubmit={handleEditTemplateSubmit}
+        template={templateToEdit}
       />
 
       {/* Modal de confirmation de suppression */}

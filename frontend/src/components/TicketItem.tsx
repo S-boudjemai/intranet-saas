@@ -167,12 +167,16 @@ export default function TicketItem({
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={() => onDeleteRequest(ticket)} // <-- MODIFIÉ
-                  className="p-2 rounded-full text-muted-foreground hover:bg-destructive/20 hover:text-destructive border border-transparent hover:border-destructive/30 transition-all duration-200"
-                >
-                  <TrashIcon className="h-5 w-5" />
-                </button>
+                {/* Bouton suppression uniquement si ticket traité */}
+                {ticket.status === "traitee" && (
+                  <button
+                    onClick={() => onDeleteRequest(ticket)}
+                    className="p-2 rounded-full text-muted-foreground hover:bg-destructive/20 hover:text-destructive border border-transparent hover:border-destructive/30 transition-all duration-200"
+                    title="Supprimer le ticket traité"
+                  >
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
+                )}
               </div>
             </div>
           )}

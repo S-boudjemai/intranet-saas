@@ -7,7 +7,8 @@ import {
   IsOptional,
   IsNumber,
   ArrayMinSize,
-  ArrayMaxSize
+  ArrayMaxSize,
+  IsUUID
 } from 'class-validator';
 
 export class CreateAnnouncementDto {
@@ -29,4 +30,10 @@ export class CreateAnnouncementDto {
   @ArrayMaxSize(50, { message: 'Trop de restaurants sélectionnés (maximum 50)' })
   @IsNumber({}, { each: true, message: 'Chaque ID de restaurant doit être un nombre' })
   restaurantIds?: number[];
+
+  @IsOptional()
+  @IsArray({ message: 'Les IDs des documents doivent être un tableau' })
+  @ArrayMaxSize(10, { message: 'Trop de documents sélectionnés (maximum 10)' })
+  @IsUUID(4, { each: true, message: 'Chaque ID de document doit être un UUID valide' })
+  documentIds?: string[];
 }

@@ -1,5 +1,6 @@
 // src/announcements/entities/announcement.entity.ts
 import { Restaurant } from 'src/restaurant/entites/restaurant.entity';
+import { Document } from 'src/documents/entities/document.entity';
 import {
   Column,
   CreateDateColumn,
@@ -50,4 +51,13 @@ export class Announcement {
     inverseJoinColumn: { name: 'restaurant_id', referencedColumnName: 'id' },
   })
   restaurants: Restaurant[];
+
+  // ✅ Relation avec les documents attachés
+  @ManyToMany(() => Document)
+  @JoinTable({
+    name: 'announcement_documents',
+    joinColumn: { name: 'announcement_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'document_id', referencedColumnName: 'id' },
+  })
+  documents: Document[];
 }

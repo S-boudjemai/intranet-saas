@@ -50,6 +50,7 @@ export class AnnouncementsController {
       content: string;
       // 👇 MODIFICATION : Accepter un tableau d'IDs, optionnel
       restaurant_ids?: number[];
+      document_ids?: string[];
       tenant_id?: number;
     },
   ): Promise<any> {
@@ -60,6 +61,7 @@ export class AnnouncementsController {
         content: body.content,
         // 👇 MODIFICATION : Passer le tableau au service
         restaurant_ids: body.restaurant_ids,
+        document_ids: body.document_ids,
         tenant_id:
           req.user.role === Role.Admin
             ? body.tenant_id!

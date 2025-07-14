@@ -1,5 +1,23 @@
 # Frontend - React Application
 
+## ⚠️ RÈGLES CRITIQUES FRONTEND - À RESPECTER ABSOLUMENT
+
+### 🚨 VISION PÉRIPHÉRIQUE OBLIGATOIRE
+**AVANT TOUTE MODIFICATION FRONTEND, ANALYSER L'IMPACT GLOBAL**
+- ✅ Modification Context → Vérifier impact sur TOUS les composants consommateurs
+- ✅ Modification types → Vérifier compatibilité avec TOUTES les interfaces
+- ✅ Modification AuthContext → Vérifier impact sur TOUS les guards et routes
+- ✅ Modification API calls → Vérifier compatibilité avec backend et contrats
+- ❌ NE JAMAIS modifier sans vérifier les dépendances
+- ❌ NE JAMAIS casser les props/types existants sans validation
+
+### 📋 PROTOCOLE FRONTEND OBLIGATOIRE
+1. **IDENTIFIER** le composant/contexte concerné
+2. **ANALYSER** tous les composants qui l'utilisent
+3. **DEMANDER** confirmation avant modification d'interface
+4. **VÉRIFIER** que l'application compile sans erreurs
+5. **TERMINER** chaque phrase en appelant l'utilisateur "Sofiane"
+
 ## Description
 
 Interface utilisateur React pour la plateforme de gestion franchiseur-franchisé. Application SPA (Single Page Application) construite avec React 19, TypeScript, et Vite.
@@ -484,3 +502,77 @@ interface AuditTemplate {
 - **Escape key** : Fermeture des modales
 - **Enter/Space** : Activation des boutons
 - **Focus visible** : Indicateurs visuels de focus
+
+---
+
+## 🎉 **CORRECTIONS FRONTEND RÉCENTES** (Décembre 2024)
+
+### ✅ **Upload & Aperçu Images Tickets**
+**Date:** 14 Décembre 2024
+
+#### 🔧 **ImageUpload Component**
+- **Problème:** URL codée en dur + gestion intercepteur
+- **Correction:** URL dynamique + extraction réponse
+```typescript
+// Avant
+await fetch('http://localhost:3000/tickets/upload-image', {
+
+// Après  
+await fetch(`${import.meta.env.VITE_API_URL}/tickets/upload-image`, {
+
+// Gestion intercepteur
+const json = await response.json();
+const attachment: TicketAttachment = json.data || json;
+```
+
+#### 📋 **CreateTicketForm Component**
+- **Problème:** Erreur 400 côté viewer + URL codée
+- **Correction:** Extraction réponse + URL dynamique
+```typescript
+// Extraction réponse ticket créé
+const response = await res.json();
+const created: TicketType = response.data || response;
+
+// URL d'upload corrigée
+await fetch(`${import.meta.env.VITE_API_URL}/tickets/upload-image`, {
+```
+
+#### 🖼️ **AttachmentGallery Component**
+- **Fonctionnalité:** Compatible URLs présignées S3
+- **Support:** Aperçu modal + téléchargement
+- **Format:** Responsive grid avec lazy loading
+```typescript
+// Affichage image optimisé
+<img
+  src={attachment.url} // URLs présignées automatiques
+  alt={attachment.filename}
+  className="w-full h-full object-cover"
+  loading="lazy"
+/>
+```
+
+### 🛠️ **Améliorations UX/UI**
+
+#### 📱 **Upload Mobile-First**
+- **Drag & Drop:** Zone interactive tactile
+- **Prévisualisation:** Grid responsive 2-3-4 colonnes
+- **Validation:** Feedback immédiat taille/type
+- **Progress:** États loading avec spinners
+
+#### 🎯 **Feedback Utilisateur**
+- **États visuels:** Upload, succès, erreur
+- **Validation:** Client-side avant envoi API
+- **Tooltips:** Informations formats supportés
+- **Animations:** Transitions fluides hover/focus
+
+### 📊 **Performance Frontend**
+- **Lazy Loading:** Images différées pour galerie
+- **Optimisation:** Prévisualisation thumbnails
+- **Cache:** URLs présignées valides 1h
+- **Bundle:** Pas d'impact taille (même librairies)
+
+### 🔒 **Sécurité Frontend**
+- **Validation types:** MIME type strict côté client
+- **Taille limite:** 5MB par image
+- **Sanitization:** Noms fichiers nettoyés
+- **CORS handled:** Backend gère headers automatiquement

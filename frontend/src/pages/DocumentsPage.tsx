@@ -68,6 +68,8 @@ export default function DocumentsPage() {
   const raw = token ? JSON.parse(atob(token.split(".")[1])) : null;
   const canManage = raw?.role === "manager" || raw?.role === "admin";
   const tenantId = raw?.tenant_id;
+  
+  console.log('🔍 DocumentsPage - tenantId from JWT:', tenantId, typeof tenantId);
 
   // Data fetching logic
   const loadDocs = async () => {
@@ -132,7 +134,8 @@ export default function DocumentsPage() {
       }/documents/download-url?filename=${encodeURIComponent(filename)}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
-    const { url } = await res.json();
+    const response = await res.json();
+    const { url } = response.data || response;
     setPreview({ url, name });
   };
 
@@ -145,7 +148,8 @@ export default function DocumentsPage() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) throw new Error("Could not get download URL");
-      const { url } = await res.json();
+      const response = await res.json();
+      const { url } = response.data || response;
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (error) {
     }

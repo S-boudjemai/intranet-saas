@@ -2,33 +2,18 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import MultiSelect from "./MultiSelect"; // <-- ON IMPORTE LE NOUVEAU COMPOSANT
+import UploadDocument from "./UploadDocument"; // <-- IMPORT POUR L'UPLOAD
+import { parseJwt, type JwtPayload } from "../utils/jwt";
+import { SpeakerphoneIcon } from "./icons";
 
-// --- ICÔNE SVG ---
-const SpeakerphoneIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    {...props}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M10.5 6a7.5 7.5 0 100 12h-3a7.5 7.5 0 00-7.5-7.5h1.5v-1.5a7.5 7.5 0 007.5-7.5h3z"
-    />
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16.5 18.75h-1.5a7.5 7.5 0 00-7.5-7.5h-1.5v-1.5a7.5 7.5 0 017.5-7.5h1.5v16.5z"
-    />
-  </svg>
-);
-// --- FIN ICÔNE SVG ---
 
 interface Restaurant {
   id: number;
+  name: string;
+}
+
+interface Document {
+  id: string;
   name: string;
 }
 
@@ -43,20 +28,55 @@ export default function CreateAnnouncementForm({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedRestaurantIds, setSelectedRestaurantIds] = useState<number[]>(
     []
   );
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
+  const [showUploadDocument, setShowUploadDocument] = useState(false);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Extraire tenant_id du token pour UploadDocument
+  const raw = token ? parseJwt<JwtPayload>(token) : null;
+  const tenantId = raw?.tenant_id;
+
+  const loadDocuments = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/documents`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const response = await res.json();
+      console.log('📄 Documents response:', response);
+      const data = response.data || response;
+      console.log('📄 Documents data:', data);
+      if (Array.isArray(data)) {
+        setDocuments(data);
+        console.log('📄 Documents loaded:', data.length);
+      }
+    } catch (error) {
+      console.error('📄 Error loading documents:', error);
+      setStatus("Erreur: Impossible de charger les documents.");
+    }
+  };
+
   useEffect(() => {
     if (!token) return;
+    
+    // Charger les restaurants
     fetch(`${import.meta.env.VITE_API_URL}/restaurants`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => Array.isArray(data) && setRestaurants(data))
+      .then((response) => {
+        const data = response.data || response;
+        Array.isArray(data) && setRestaurants(data);
+      })
       .catch(() => setStatus("Erreur: Impossible de charger les restaurants."));
+
+    // Charger les documents
+    loadDocuments();
   }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,6 +92,7 @@ export default function CreateAnnouncementForm({
       title: string;
       content: string;
       restaurant_ids?: number[];
+      document_ids?: string[];
     } = {
       title,
       content,
@@ -79,6 +100,10 @@ export default function CreateAnnouncementForm({
 
     if (selectedRestaurantIds.length > 0) {
       payload.restaurant_ids = selectedRestaurantIds;
+    }
+
+    if (selectedDocumentIds.length > 0) {
+      payload.document_ids = selectedDocumentIds;
     }
 
     try {
@@ -102,6 +127,7 @@ export default function CreateAnnouncementForm({
       setTitle("");
       setContent("");
       setSelectedRestaurantIds([]);
+      setSelectedDocumentIds([]);
       onSuccess();
     } catch (err: any) {
       setStatus(`Erreur : ${err.message}`);
@@ -166,6 +192,43 @@ export default function CreateAnnouncementForm({
           onChange={setSelectedRestaurantIds}
           placeholder="Sélectionner un ou plusieurs restaurants..."
         />
+      </div>
+
+      {/* Section Documents */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium text-muted-foreground">
+            Documents à joindre (optionnel)
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowUploadDocument(!showUploadDocument)}
+            className="text-xs text-primary hover:text-primary/80 font-medium"
+          >
+            {showUploadDocument ? "📋 Sélectionner existants" : "📤 Uploader nouveau"}
+          </button>
+        </div>
+
+        {showUploadDocument ? (
+          // Mode Upload
+          tenantId && (
+            <UploadDocument
+              tenant_id={tenantId.toString()}
+              onUploadSuccess={async () => {
+                await loadDocuments();
+                setShowUploadDocument(false);
+              }}
+            />
+          )
+        ) : (
+          // Mode Sélection
+          <MultiSelect
+            options={documents.map((d) => ({ value: d.id, label: d.name }))}
+            selectedValues={selectedDocumentIds}
+            onChange={setSelectedDocumentIds}
+            placeholder="Sélectionner des documents à joindre..."
+          />
+        )}
       </div>
 
       <div className="pt-2">

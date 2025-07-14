@@ -103,12 +103,15 @@ export class TicketsController {
 
   /**
    * DELETE /tickets/:id
-   * - Manager & Admin only: suppression logique
+   * - Manager & Admin only: suppression logique (uniquement si statut = "traitee")
    */
   @Delete(':id')
   @Roles(Role.Manager, Role.Admin)
-  async remove(@Param('id') id: string): Promise<{ deleted: true }> {
-    await this.svc.softDelete(id);
+  async remove(
+    @Param('id') id: string,
+    @Req() req: Request & { user: JwtUser },
+  ): Promise<{ deleted: true }> {
+    await this.svc.softDelete(id, req.user);
     return { deleted: true };
   }
 

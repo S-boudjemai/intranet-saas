@@ -18,7 +18,10 @@ import { RolesGuard } from 'src/auth/roles/roles.guard';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { Role } from 'src/auth/roles/roles.enum';
 import { Request } from 'express';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 
+@ApiTags('Documents')
+@ApiBearerAuth('JWT-auth')
 @Controller('documents')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class DocumentsController {
@@ -55,9 +58,24 @@ export class DocumentsController {
     return { deleted: true };
   }
 
-  /** Admin/Manager only: URL d’upload */
+  /** Admin/Manager only: URL d'upload */
   @Get('upload-url')
   @Roles(Role.Admin, Role.Manager)
+  @ApiOperation({ summary: 'Obtenir une URL présignée pour upload S3' })
+  @ApiQuery({ name: 'filename', description: 'Nom du fichier à uploader' })
+  @ApiQuery({ name: 'mimetype', description: 'Type MIME du fichier' })
+  @ApiResponse({ status: 200, description: 'URL présignée générée', schema: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+      data: {
+        type: 'object',
+        properties: {
+          url: { type: 'string', example: 'https://bucket.s3.amazonaws.com/...' }
+        }
+      }
+    }
+  }})
   async getUploadUrl(
     @Query('filename') filename: string,
     @Query('mimetype') mimetype: string,

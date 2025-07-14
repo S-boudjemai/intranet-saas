@@ -90,7 +90,9 @@ export default function UploadDocument({
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!res1.ok) throw new Error("URL S3 impossible");
-      const { url: uploadUrl } = await res1.json();
+      const response1 = await res1.json();
+      console.log('🔍 Upload URL response:', response1);
+      const { url: uploadUrl } = response1.data || response1;
 
       const res2 = await fetch(uploadUrl, {
         method: "PUT",
@@ -99,18 +101,25 @@ export default function UploadDocument({
       });
       if (!res2.ok) throw new Error("Échec upload S3");
 
+      // Construire l'URL publique du fichier uploadé sur S3
+      const fileUrl = `https://${import.meta.env.VITE_AWS_S3_BUCKET || 'internet-saas'}.s3.${import.meta.env.VITE_AWS_REGION || 'us-east-1'}.amazonaws.com/${safeName}`;
+
+      const documentData = {
+        name,
+        url: fileUrl,
+        tenant_id,
+        ...(categoryId ? { categoryId } : {}),
+      };
+      
+      console.log('📄 Sending document data:', documentData);
+      
       const res3 = await fetch(`${import.meta.env.VITE_API_URL}/documents`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          name,
-          url: file.name,
-          tenant_id,
-          ...(categoryId ? { categoryId } : {}),
-        }),
+        body: JSON.stringify(documentData),
       });
       if (!res3.ok) throw new Error("Impossible d’enregistrer");
 

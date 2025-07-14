@@ -1,47 +1,11 @@
 // src/components/AnnouncementCard.tsx
-import React from "react";
+import React, { useState } from "react";
 import type { Announcement } from "../types"; // <-- Importer depuis le fichier central
+import { useAuth } from "../contexts/AuthContext";
+import DocumentPreviewModal from "./DocumentPreviewModal";
+import { SpeakerphoneIcon, EyeIcon, TrashIcon } from "./icons";
 
-// --- ICÔNES SVG ---
-const SpeakerphoneIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    {...props}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M10.5 6a7.5 7.5 0 100 12h-3a7.5 7.5 0 00-7.5-7.5h1.5v-1.5a7.5 7.5 0 007.5-7.5h3z"
-    />
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16.5 18.75h-1.5a7.5 7.5 0 00-7.5-7.5h-1.5v-1.5a7.5 7.5 0 017.5-7.5h1.5v16.5z"
-    />
-  </svg>
-);
-
-const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    {...props}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.033-2.134h-3.868c-1.123 0-2.033.954-2.033 2.134v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-    />
-  </svg>
-);
-// --- FIN DES ICÔNES SVG ---
+// --- ICÔNES LOCALES SUPPRIMÉES, UTILISATION CENTRALISÉE ---
 
 interface AnnouncementCardProps {
   announcement: Announcement;
@@ -64,6 +28,48 @@ export default function AnnouncementCard({
   canManage,
   onDeleteRequest, // <-- MODIFIÉ
 }: AnnouncementCardProps) {
+  const { token } = useAuth();
+  const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
+
+  // Fonction pour prévisualiser un document
+  const handlePreview = async (documentUrl: string, name: string) => {
+    if (!token) return;
+    
+    try {
+      // Extraire le nom du fichier depuis l'URL stockée en base
+      let filename = documentUrl;
+      
+      // Si c'est une URL S3 complète, extraire juste le nom du fichier
+      if (documentUrl.includes('amazonaws.com/')) {
+        const urlParts = documentUrl.split('/');
+        filename = urlParts[urlParts.length - 1].split('?')[0]; // Enlever les paramètres query
+      }
+      
+      console.log('🔍 Preview - Original URL:', documentUrl);
+      console.log('🔍 Preview - Extracted filename:', filename);
+      
+      // Utiliser l'endpoint de téléchargement pour avoir une URL présignée fraîche
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/documents/download-url?filename=${encodeURIComponent(filename)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (!res.ok) {
+        throw new Error(`Could not get preview URL: ${res.status}`);
+      }
+      
+      const response = await res.json();
+      const { url } = response.data || response;
+      
+      console.log('✅ Preview - Got presigned URL:', url);
+      setPreview({ url, name });
+    } catch (error) {
+      console.error("❌ Error getting preview URL:", error);
+      // Fallback: essayer avec l'URL originale
+      setPreview({ url: documentUrl, name });
+    }
+  };
+
   return (
     <div className="relative pl-12">
       {/* Timeline Dot & Line */}
@@ -95,7 +101,42 @@ export default function AnnouncementCard({
         <p className="mt-2 text-foreground/80 leading-relaxed">
           {announcement.content}
         </p>
+
+        {/* Documents attachés */}
+        {announcement.documents && announcement.documents.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-border">
+            <p className="text-sm font-medium text-muted-foreground mb-2">
+              Documents joints :
+            </p>
+            <div className="space-y-2">
+              {announcement.documents.map((doc) => (
+                <div key={doc.id} className="flex items-center justify-between p-2 bg-secondary/30 rounded-md">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="text-primary">📄</span>
+                    <span className="text-sm font-medium text-secondary-foreground truncate">
+                      {doc.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      onClick={() => handlePreview(doc.url, doc.name)}
+                      className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                      title="Aperçu"
+                    >
+                      <EyeIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Modal de prévisualisation */}
+      {preview && (
+        <DocumentPreviewModal {...preview} onClose={() => setPreview(null)} />
+      )}
     </div>
   );
 }

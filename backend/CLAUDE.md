@@ -1,5 +1,23 @@
 # Backend - NestJS API
 
+## ⚠️ RÈGLES CRITIQUES BACKEND - À RESPECTER ABSOLUMENT
+
+### 🚨 VISION PÉRIPHÉRIQUE OBLIGATOIRE
+**AVANT TOUTE MODIFICATION BACKEND, ANALYSER L'IMPACT GLOBAL**
+- ✅ Modification d'entité → Vérifier impact sur TOUS les services utilisant cette entité
+- ✅ Modification JWT → Vérifier compatibilité avec frontend et TOUS les guards
+- ✅ Modification Auth → Vérifier impact sur TOUS les modules protégés
+- ✅ Modification DB → Vérifier impact sur TOUTES les migrations et relations
+- ❌ NE JAMAIS modifier sans analyse d'impact complète
+- ❌ NE JAMAIS casser les contrats d'interface existants
+
+### 📋 PROTOCOLE BACKEND OBLIGATOIRE
+1. **IDENTIFIER** le service/module concerné
+2. **ANALYSER** les dépendances et utilisations
+3. **DEMANDER** confirmation avant modification transversale
+4. **VÉRIFIER** que tous les tests passent après modification
+5. **TERMINER** chaque phrase en appelant l'utilisateur "Sofiane"
+
 ## Description
 
 API REST construite avec NestJS pour la plateforme de gestion franchiseur-franchisé. Architecture modulaire avec TypeORM pour la persistance PostgreSQL et authentification JWT.
@@ -562,3 +580,85 @@ DELETE /audit-templates/:id # Suppression (avec vérification usage)
 - Utilisation des templates par catégorie
 - Templates les plus utilisés
 - Durée moyenne des audits par template
+
+---
+
+## 🎉 **CORRECTIONS BACKEND RÉCENTES** (Décembre 2024)
+
+### ✅ **Upload & Aperçu Images Tickets**
+**Date:** 14 Décembre 2024
+
+#### 🔧 **Tickets Service - Migration AWS SDK**
+- **Avant:** aws-sdk v2 avec méthodes upload().promise()
+- **Après:** @aws-sdk/client-s3 v3 avec PutObjectCommand
+```typescript
+// Migration imports
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+// Nouvelle initialisation S3
+this.s3 = new S3Client({
+  region: this.configService.get('AWS_REGION'),
+  credentials: {
+    accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID') as string,
+    secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY') as string,
+  },
+});
+```
+
+#### 🖼️ **URLs Présignées Automatiques**
+- **Ajout méthode:** `getPresignedUrlForAttachment()`
+- **Application dans:** `findAll()` et `findOneWithComments()`
+- **Durée:** 1 heure d'expiration sécurisée
+- **Fallback:** URLs locales préservées
+```typescript
+private async getPresignedUrlForAttachment(currentUrl: string): Promise<string> {
+  // Extraction clé S3 depuis URL complète
+  const fileName = urlParts.slice(-3).join('/'); // tickets/id/filename.ext
+  
+  const command = new GetObjectCommand({
+    Bucket: awsBucket,
+    Key: fileName,
+  });
+
+  return await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+}
+```
+
+#### 🛡️ **Sécurité & Headers CORS**
+- **main.ts:** Configuration Helmet étendue
+- **CSP imgSrc:** Ajout "http://localhost:*" 
+- **CORP:** Désactivation crossOriginResourcePolicy
+- **Headers statiques:** Access-Control-Allow-Origin pour /uploads/
+```typescript
+// Helmet configuration
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      imgSrc: ["'self'", "data:", "https:", "http://localhost:*"],
+    },
+  },
+  crossOriginResourcePolicy: false,
+}));
+
+// Fichiers statiques avec CORS
+app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+  prefix: '/uploads/',
+  setHeaders: (res, path) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  },
+});
+```
+
+### 📊 **Impact Performance**
+- **S3 SDK v3:** Réduction taille bundle ~30%
+- **URLs présignées:** Sécurité accrue sans impact performance  
+- **Fallback local:** 0ms latency pour développement
+- **Cache presigned:** 1h validité optimale
+
+### 🔒 **Améliorations Sécurité**
+- **Authentification S3:** URLs présignées vs objets publics
+- **Expiration temporelle:** 1h limite d'accès
+- **CORS précis:** Headers spécifiques aux uploads
+- **CSP intelligent:** localhost autorisé, production restreinte

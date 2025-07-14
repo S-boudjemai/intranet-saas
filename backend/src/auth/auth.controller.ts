@@ -5,7 +5,9 @@ import { TokensService } from './tokens.service';
 import { Public } from './public.decorator';
 import { LocalAuthGuard } from './local-auth.guard';
 import { SignupWithInviteDto } from './dto/signup-with-invite.dto';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -16,6 +18,39 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard)
   @Post('login')
+  @ApiOperation({ summary: 'Connexion utilisateur' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        password: { type: 'string', example: 'password123' }
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Connexion réussie', schema: { 
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', example: true },
+      data: {
+        type: 'object',
+        properties: {
+          access_token: { type: 'string' },
+          user: {
+            type: 'object',
+            properties: {
+              userId: { type: 'number' },
+              email: { type: 'string' },
+              role: { type: 'string' },
+              tenant_id: { type: 'number' },
+              restaurant_id: { type: 'number' }
+            }
+          }
+        }
+      }
+    }
+  }})
+  @ApiResponse({ status: 401, description: 'Identifiants invalides' })
   async login(@Request() req, @Res({ passthrough: true }) res: Response) {
     const user = req.user;
     const tokens = this.tokensService.generateTokenPair({

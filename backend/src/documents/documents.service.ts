@@ -32,11 +32,18 @@ export class DocumentsService {
     private notificationsService: NotificationsService,
     private notificationsGateway: NotificationsGateway,
   ) {
+    console.log('🔧 Initializing S3 client with:', {
+      region: process.env.AWS_REGION,
+      bucket: process.env.AWS_S3_BUCKET,
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID ? `${process.env.AWS_ACCESS_KEY_ID.substring(0, 5)}...` : 'undefined',
+      hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
+    });
+    
     this.s3 = new S3Client({
       region: process.env.AWS_REGION,
       credentials: {
-        accessKeyId: process.env.S3_ACCESS_KEY as string,
-        secretAccessKey: process.env.S3_SECRET_KEY as string,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
       },
     });
   }
@@ -52,6 +59,9 @@ export class DocumentsService {
     data: Partial<Document> & { categoryId?: string },
     user: JwtUser,
   ): Promise<Document> {
+    console.log('📄 Creating document with user:', JSON.stringify(user, null, 2));
+    console.log('📄 Document data:', JSON.stringify(data, null, 2));
+    
     // Gestion du tenant_id
     if (user.tenant_id === null) {
       // super-admin : doit préciser
@@ -65,11 +75,18 @@ export class DocumentsService {
       data.tenant_id = user.tenant_id.toString();
     }
 
+    // Vérification que user.userId est valide
+    if (!user.userId || isNaN(user.userId)) {
+      throw new ForbiddenException(`userId invalide: ${user.userId}. Token JWT corrompu.`);
+    }
+
     // Création initiale
     const doc = this.documentsRepository.create({
       ...data,
       created_by: user.userId,
     });
+    
+    console.log('📄 Created document object:', JSON.stringify(doc, null, 2));
 
     // Liaison de la catégorie si fournie
     if (data.categoryId) {
@@ -160,22 +177,56 @@ export class DocumentsService {
     filename: string,
     mimetype: string,
   ): Promise<string> {
-    const cmd = new PutObjectCommand({
-      Bucket: process.env.S3_BUCKET as string,
-      Key: filename,
-      ContentType: mimetype,
-    });
-    return getSignedUrl(this.s3, cmd, { expiresIn: 300 });
+    try {
+      console.log('🔗 Generating upload URL for:', filename, mimetype);
+      console.log('🔧 AWS Config:', {
+        bucket: process.env.AWS_S3_BUCKET,
+        region: process.env.AWS_REGION,
+        hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
+        hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
+      });
+      
+      const cmd = new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET as string,
+        Key: filename,
+        ContentType: mimetype,
+      });
+      
+      const url = await getSignedUrl(this.s3, cmd, { expiresIn: 300 });
+      console.log('✅ Upload URL generated successfully');
+      return url;
+    } catch (error) {
+      console.error('❌ Error generating upload URL:', error);
+      throw error;
+    }
   }
 
   /**
-   * Génère l’URL presignée pour le download depuis S3
+   * Génère l'URL presignée pour le download depuis S3
    */
-  async getPresignedDownloadUrl(filename: string): Promise<string> {
-    const cmd = new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET as string,
-      Key: filename,
-    });
-    return getSignedUrl(this.s3, cmd, { expiresIn: 300 });
+  async getPresignedDownloadUrl(filenameOrUrl: string): Promise<string> {
+    let filename = filenameOrUrl;
+    
+    // Si c'est une URL complète S3, extraire le nom du fichier
+    if (filenameOrUrl.includes('amazonaws.com/')) {
+      const urlParts = filenameOrUrl.split('/');
+      filename = urlParts[urlParts.length - 1];
+      console.log('🔗 Extracted filename from URL:', filename);
+    }
+    
+    console.log('🔗 Generating download URL for:', filename);
+    
+    try {
+      const cmd = new GetObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET as string,
+        Key: filename,
+      });
+      const url = await getSignedUrl(this.s3, cmd, { expiresIn: 300 });
+      console.log('✅ Download URL generated successfully');
+      return url;
+    } catch (error) {
+      console.error('❌ Error generating download URL:', error);
+      throw error;
+    }
   }
 }

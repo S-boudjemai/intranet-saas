@@ -1,5 +1,22 @@
 # Internet SAAS - Plateforme de Gestion Franchiseur-Franchisé
 
+## ⚠️ RÈGLES CRITIQUES DE DÉVELOPPEMENT - À RESPECTER ABSOLUMENT
+
+### 🚨 VISION PÉRIPHÉRIQUE OBLIGATOIRE
+**AVANT TOUTE MODIFICATION, ANALYSER L'IMPACT SUR TOUTE L'APPLICATION**
+- ✅ Si problème avec les documents → Corriger UNIQUEMENT le code des documents
+- ✅ Si problème avec token → Vérifier compatibilité avec TOUTES les features avant modification
+- ✅ Si problème avec base de données → Vérifier impact sur TOUS les modules
+- ❌ NE JAMAIS toucher à autre chose que le périmètre du problème
+- ❌ NE JAMAIS modifier structure globale (JWT, DB, Auth) sans validation complète
+
+### 📋 PROTOCOLE DE MODIFICATION OBLIGATOIRE
+1. **IDENTIFIER** le périmètre exact du problème
+2. **DEMANDER CONFIRMATION** avant toute modification hors périmètre
+3. **VÉRIFIER** l'impact sur les autres modules
+4. **TESTER** que les autres fonctionnalités restent opérationnelles
+5. **TERMINER** chaque phrase en appelant l'utilisateur "BOSS"
+
 ## Description du Projet
 
 SAAS destiné aux franchiseurs de la restauration pour faciliter la communication et la gestion avec leurs franchisés. La plateforme permet:
@@ -62,6 +79,8 @@ internet-saas/
 - Statuts: `non_traitee`, `en_cours`, `traitee`
 - Système de commentaires
 - Association aux restaurants
+- Upload d'images/attachments avec support S3 et local
+- Aperçu d'images avec URLs présignées
 
 ### 5. Annonces
 - Diffusion d'annonces du franchiseur vers les franchisés
@@ -163,6 +182,7 @@ Transformer la plateforme en solution complète de gestion franchise avec module
 - 🎭 **UX/UI Professionnel** : Toast, Modales, Animations (100%)
 - 📋 **Actions Correctives** : CRUD complet avec statuts (100%)
 - 🔍 **Templates d'Audit** : Gestion complète avec questions (100%)
+- 🎨 **Icônes SVG Centralisées** : Correction systématique toutes les icônes (100%)
 
 ### 🔄 **EN COURS** (Phase 2-3)
 - 📊 **Analytics & Reporting** : Métriques avancées (30%)
@@ -183,7 +203,7 @@ Transformer la plateforme en solution complète de gestion franchise avec module
 - [x] ✅ **Database Schema Fixed** - non_conformity_id nullable + champ notes
 - [x] ✅ **Validation DTOs** - Class-validator sur toutes les APIs
 - [x] ✅ **Error Handling** - HttpExceptionFilter global avec logs
-- [x] ✅ **Security Headers** - Helmet.js implémenté avec CSP
+- [x] ✅ **Security Headers** - Helmet.js implémenté avec CSP + CORS pour fichiers statiques
 - [ ] Corriger XSS vulnerability GlobalSearch frontend
 - [ ] Sécuriser variables environnement (.env → variables système)
 - [ ] Désactiver `synchronize: true` en production
@@ -195,6 +215,7 @@ Transformer la plateforme en solution complète de gestion franchise avec module
 - [x] ✅ **Toast System** - Remplacement des alert() par notifications élégantes
 - [x] ✅ **Modal System** - ConfirmModal remplace window.confirm()
 - [x] ✅ **Input Validation** - Validation frontend avant envoi API
+- [x] ✅ **Icônes SVG Centralisées** - Correction systématique toutes les icônes brisées
 - [ ] Fix dangerouslySetInnerHTML dans GlobalSearch.tsx:154
 - [ ] Migration localStorage → cookies httpOnly pour JWT
 - [ ] Input sanitization systématique
@@ -337,3 +358,121 @@ Transformer la plateforme en solution complète de gestion franchise avec module
 3. **📱 Mobile** - Usage terrain critique franchises
 4. **📊 Analytics** - Valeur ajoutée franchiseurs
 5. **⚡ Performance** - Adoption utilisateurs
+
+---
+
+## 🎉 **CORRECTIONS RÉCENTES APPLIQUÉES** (Décembre 2024)
+
+### ✅ **Centralisation et Correction Icônes SVG**  
+**Date:** 14 Décembre 2024 (Soir)
+
+#### 🎯 **Problème Identifié**
+- **Diagnostic complet** : Toutes les icônes du site étaient brisées
+- **Icônes dupliquées** : Définitions SVG locales dans chaque composant
+- **Erreurs compilation** : "Duplicate declaration" lors des imports
+- **Maintenance difficile** : Modifications icônes dispersées dans toute l'app
+
+#### 🔧 **Solution Implémentée**
+- **Fichier centralisé** : `/frontend/src/components/icons/index.tsx`
+- **Interface standardisée** : `IconProps` commune pour toutes les icônes
+- **Correction systématique** : Audit complet + correction progressive
+- **Compilation validée** : Plus d'erreurs d'icônes manquantes
+
+#### 📋 **Composants Corrigés**
+```typescript
+// Fichiers mis à jour avec imports centralisés
+- DashboardPage.tsx          → ChartPieIcon, DocumentReportIcon, ExclamationCircleIcon, SpinnerIcon, ClockIcon
+- AnnouncementsPage.tsx      → SpeakerphoneIcon, ExclamationCircleIcon, SpinnerIcon  
+- AnnouncementCard.tsx       → SpeakerphoneIcon, EyeIcon, TrashIcon
+- UsersPage.tsx              → UsersIcon, PaperAirplaneIcon, TrashIcon
+```
+
+#### 🏗️ **Architecture Centralisée**
+```typescript
+// Structure du fichier centralisé
+/frontend/src/components/icons/index.tsx
+├── Interface IconProps commune
+├── Icônes de Navigation (SpeakerphoneIcon, UsersIcon, ChartPieIcon)
+├── Icônes d'Actions (TrashIcon, EyeIcon, DownloadIcon, SearchIcon)
+├── Icônes de Documents (DocumentTextIcon, DocumentReportIcon, UploadIcon)
+├── Icônes de Statut (ExclamationTriangleIcon, SpinnerIcon)
+└── Icônes Diverses (ClockIcon, PaperAirplaneIcon, XIcon)
+```
+
+#### ✨ **Améliorations Techniques**
+- **Alias intelligent** : `ExclamationCircleIcon = ExclamationTriangleIcon`
+- **Props TypeScript** : Interface `IconProps` avec `className?` optionnel
+- **Cohérence visuelle** : Tous les SVG avec strokeWidth={1.5} standardisé
+- **Performance** : Suppression définitions dupliquées (réduction bundle)
+
+### ✅ **Problèmes Tickets Résolus**
+**Date:** 14 Décembre 2024 (Matin)
+
+#### 🔧 **Upload d'Images dans Tickets**
+- **Problème:** Erreur 500 lors upload d'images côté viewer et manager
+- **Cause:** Incompatibilité AWS SDK (v2 vs v3) et URL codée en dur
+- **Solution:** 
+  - Migration complète vers @aws-sdk/client-s3 v3 dans tickets.service.ts
+  - Correction URL dynamique dans ImageUpload.tsx et CreateTicketForm.tsx
+  - Gestion intercepteur global pour réponses wrappées
+
+#### 🖼️ **Aperçu Images S3/Local**  
+- **Problème:** ERR_BLOCKED_BY_RESPONSE.NotSameOrigin pour images locales
+- **Cause:** Headers Helmet bloquant accès cross-origin aux fichiers statiques
+- **Solution:**
+  - URLs présignées S3 avec getSignedUrl (1h expiration)
+  - Headers CORS spécifiques pour /uploads/ dans main.ts
+  - CSP étendu avec "http://localhost:*" pour imgSrc
+  - crossOriginResourcePolicy: false dans Helmet
+
+#### 📋 **Création Tickets Viewer**
+- **Problème:** Erreur 400 Bad Request côté viewer  
+- **Cause:** Réponse non-extraite de l'intercepteur global
+- **Solution:** Ajout pattern response.data || response
+
+### 🛠️ **Améliorations Techniques**
+
+#### Backend (tickets.service.ts)
+```typescript
+// Migration AWS SDK v3
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+// URLs présignées automatiques
+private async getPresignedUrlForAttachment(currentUrl: string): Promise<string>
+```
+
+#### Frontend 
+```typescript
+// URLs dynamiques corrigées
+${import.meta.env.VITE_API_URL}/tickets/upload-image
+
+// Gestion intercepteur
+const response = await res.json();
+const created: TicketType = response.data || response;
+```
+
+#### Infrastructure (main.ts)
+```typescript
+// Headers CORS fichiers statiques
+app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+  setHeaders: (res, path) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+});
+```
+
+### 📈 **Impact & Validation**
+- ✅ Upload images fonctionne pour tous les rôles (viewer, manager, admin)
+- ✅ Aperçu images S3 avec URLs présignées sécurisées  
+- ✅ Aperçu images locales sans erreur CORS
+- ✅ Compatibilité mixte S3/local selon configuration
+- ✅ Gestion fallback intelligente pour erreurs
+
+### 🔄 **Modules Impactés**
+- **tickets.service.ts** - Migration AWS SDK + URLs présignées
+- **ImageUpload.tsx** - Correction URL + gestion réponse  
+- **CreateTicketForm.tsx** - Correction URL + extraction réponse
+- **main.ts** - Headers CORS + CSP étendu
+- **AttachmentGallery.tsx** - Compatible URLs présignées

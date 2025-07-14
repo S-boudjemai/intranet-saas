@@ -61,6 +61,8 @@ export interface Announcement {
   title: string;
   content: string;
   created_at: string;
+  restaurants?: RestaurantInfo[];
+  documents?: DocumentType[];
 }
 
 // --- INTERFACE POUR LES INVITATIONS (AJOUTÉE) ---

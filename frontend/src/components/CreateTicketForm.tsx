@@ -34,7 +34,8 @@ export default function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
       });
       if (!res.ok) throw new Error(`Erreur du serveur (${res.status})`);
 
-      const created: TicketType = await res.json();
+      const response = await res.json();
+      const created: TicketType = response.data || response;
       
       // Uploader les images en attente vers le ticket créé
       if (pendingFiles.length > 0) {
@@ -46,7 +47,7 @@ export default function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
             formData.append('file', file);
             formData.append('ticketId', created.id);
             
-            await fetch('http://localhost:3000/tickets/upload-image', {
+            await fetch(`${import.meta.env.VITE_API_URL}/tickets/upload-image`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`,

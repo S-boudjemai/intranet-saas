@@ -9,6 +9,7 @@ import { Announcement } from './entities/announcement.entity';
 import { Repository, In, Brackets } from 'typeorm';
 import { Role } from 'src/auth/roles/roles.enum';
 import { Restaurant } from 'src/restaurant/entites/restaurant.entity';
+import { Document } from 'src/documents/entities/document.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { NotificationType } from '../notifications/entities/notification.entity';
@@ -23,44 +24,40 @@ export class AnnouncementsService {
     @InjectRepository(Restaurant)
     private readonly restaurantRepo: Repository<Restaurant>,
 
+    @InjectRepository(Document)
+    private readonly documentRepo: Repository<Document>,
+
     private notificationsService: NotificationsService,
     private notificationsGateway: NotificationsGateway,
   ) {}
 
+
   async findAll(user: JwtUser): Promise<Announcement[]> {
-    // ... (la logique de findAll reste la même pour l'instant)
-    const qb = this.repo
-      .createQueryBuilder('announcement')
-      .where('announcement.is_deleted = false');
+    let announcements: Announcement[] = [];
 
     if (user.role === Role.Admin) {
-      return this.repo.find({
+      announcements = await this.repo.find({
         where: { is_deleted: false },
-        relations: ['restaurants'],
+        relations: ['restaurants', 'documents'],
         order: { created_at: 'DESC' },
       });
-    }
-
-    if (!user.tenant_id) {
+    } else if (!user.tenant_id) {
       throw new ForbiddenException('Tenant non défini pour cet utilisateur');
-    }
-
-    if (user.role === Role.Manager) {
-      return this.repo.find({
+    } else if (user.role === Role.Manager) {
+      announcements = await this.repo.find({
         where: { tenant_id: user.tenant_id, is_deleted: false },
-        relations: ['restaurants'],
+        relations: ['restaurants', 'documents'],
         order: { created_at: 'DESC' },
       });
-    }
-
-    if (user.role === Role.Viewer) {
+    } else if (user.role === Role.Viewer) {
       if (!user.restaurant_id) {
         throw new ForbiddenException('Restaurant non défini pour le viewer');
       }
 
       const qb = this.repo
         .createQueryBuilder('announcement')
-        .leftJoin('announcement.restaurants', 'restaurant')
+        .leftJoinAndSelect('announcement.restaurants', 'restaurant')
+        .leftJoinAndSelect('announcement.documents', 'document')
         .where('announcement.tenant_id = :tenantId', {
           tenantId: user.tenant_id,
         })
@@ -78,10 +75,11 @@ export class AnnouncementsService {
         )
         .orderBy('announcement.created_at', 'DESC');
 
-      return qb.getMany();
+      announcements = await qb.getMany();
     }
 
-    return [];
+    // Ne pas générer d'URLs présignées ici, laisser le frontend le faire à la demande
+    return announcements;
   }
 
   async create(
@@ -89,6 +87,7 @@ export class AnnouncementsService {
       title: string;
       content: string;
       restaurant_ids?: number[];
+      document_ids?: string[];
       tenant_id: number;
     },
     user: JwtUser,
@@ -106,7 +105,13 @@ export class AnnouncementsService {
         id: In(data.restaurant_ids),
       });
       newAnnouncement.restaurants = restaurants;
-    } else {
+    }
+
+    if (data.document_ids && data.document_ids.length > 0) {
+      const documents = await this.documentRepo.findBy({
+        id: In(data.document_ids),
+      });
+      newAnnouncement.documents = documents;
     }
 
     const savedAnnouncement = await this.repo.save(newAnnouncement);
@@ -128,7 +133,17 @@ export class AnnouncementsService {
       message
     });
 
-    return savedAnnouncement;
+    // Recharger l'annonce avec les restaurants et documents pour la retourner complète
+    const reloadedAnnouncement = await this.repo.findOne({
+      where: { id: savedAnnouncement.id },
+      relations: ['restaurants', 'documents']
+    });
+    
+    if (!reloadedAnnouncement) {
+      throw new NotFoundException('Annonce introuvable après création');
+    }
+    
+    return reloadedAnnouncement;
   }
 
   async softDelete(id: string, user: JwtUser): Promise<void> {

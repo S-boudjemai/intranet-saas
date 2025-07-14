@@ -74,7 +74,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       if (ticketId) formData.append('ticketId', ticketId);
       if (commentId) formData.append('commentId', commentId);
 
-      const response = await fetch('http://localhost:3000/tickets/upload-image', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/upload-image`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -87,7 +87,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         throw new Error(errorData.message || 'Erreur lors de l\'upload');
       }
 
-      const attachment: TicketAttachment = await response.json();
+      const json = await response.json();
+      const attachment: TicketAttachment = json.data || json;
       onUploadSuccess?.(attachment);
     } catch (error) {
       onUploadError?.(error instanceof Error ? error.message : 'Erreur lors de l\'upload');

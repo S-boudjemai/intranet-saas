@@ -16,14 +16,15 @@ import { NotificationType } from '../notifications/entities/notification.entity'
 import { User } from '../users/entities/user.entity';
 import { UploadAttachmentDto } from './dto/upload-attachment.dto';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
-import { S3 } from 'aws-sdk';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class TicketsService {
-  private s3: S3;
+  private s3: S3Client;
 
   constructor(
     @InjectRepository(Ticket)
@@ -41,10 +42,12 @@ export class TicketsService {
     // Initialisation de S3 seulement si les credentials sont configurés
     const awsBucket = this.configService.get('AWS_S3_BUCKET');
     if (awsBucket) {
-      this.s3 = new S3({
-        accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
+      this.s3 = new S3Client({
         region: this.configService.get('AWS_REGION'),
+        credentials: {
+          accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID') as string,
+          secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY') as string,
+        },
       });
     }
   }
@@ -107,6 +110,13 @@ export class TicketsService {
 
   // ----- CORRECTION 2 : Liste des tickets -----
   async findAll(user: JwtUser): Promise<Ticket[]> {
+    console.log('🎫 Finding tickets for user:', {
+      userId: user.userId,
+      role: user.role,
+      tenant_id: user.tenant_id,
+      restaurant_id: user.restaurant_id
+    });
+
     const qb = this.ticketsRepo
       .createQueryBuilder('ticket')
       .leftJoinAndSelect('ticket.comments', 'comment')
@@ -117,18 +127,60 @@ export class TicketsService {
 
     if (user.role === Role.Viewer) {
       // Un viewer ne voit que les tickets de son restaurant
-      if (!user.restaurant_id) return []; // Sécurité
+      if (!user.restaurant_id) {
+        console.log('🎫 Viewer without restaurant_id, returning empty array');
+        return [];
+      }
+      console.log('🎫 Filtering tickets for restaurant_id:', user.restaurant_id);
       qb.andWhere('ticket.restaurant_id = :rid', { rid: user.restaurant_id });
     } else if (user.role === Role.Manager) {
       // Un manager voit tous les tickets de sa franchise
-      if (!user.tenant_id) return []; // Sécurité
+      if (!user.tenant_id) {
+        console.log('🎫 Manager without tenant_id, returning empty array');
+        return [];
+      }
+      console.log('🎫 Filtering tickets for tenant_id:', user.tenant_id);
       qb.andWhere('ticket.tenant_id = :tid', {
         tid: user.tenant_id.toString(),
       });
     }
     // Un admin voit tout (pas de filtre de tenant)
 
-    return qb.orderBy('ticket.updated_at', 'DESC').getMany();
+    const tickets = await qb.orderBy('ticket.updated_at', 'DESC').getMany();
+    console.log('🎫 Found tickets:', tickets.length, 'tickets for user role:', user.role);
+    
+    // Log des premiers tickets pour debug
+    if (tickets.length > 0) {
+      console.log('🎫 First ticket data:', {
+        id: tickets[0].id,
+        title: tickets[0].title,
+        restaurant_id: tickets[0].restaurant_id,
+        tenant_id: tickets[0].tenant_id,
+        status: tickets[0].status
+      });
+    }
+
+    // Générer des URLs présignées pour les attachments S3
+    for (const ticket of tickets) {
+      if (ticket.attachments && ticket.attachments.length > 0) {
+        for (const attachment of ticket.attachments) {
+          attachment.url = await this.getPresignedUrlForAttachment(attachment.url);
+        }
+      }
+      
+      // Faire de même pour les commentaires avec attachments
+      if (ticket.comments) {
+        for (const comment of ticket.comments) {
+          if (comment.attachments && comment.attachments.length > 0) {
+            for (const attachment of comment.attachments) {
+              attachment.url = await this.getPresignedUrlForAttachment(attachment.url);
+            }
+          }
+        }
+      }
+    }
+
+    return tickets;
   }
 
   // ... le reste du service (findOne, updateStatus, etc.) reste globalement identique ...
@@ -151,6 +203,24 @@ export class TicketsService {
     ) {
       throw new ForbiddenException('Accès refusé');
     }
+
+    // Générer des URLs présignées pour les attachments
+    if (ticket.attachments && ticket.attachments.length > 0) {
+      for (const attachment of ticket.attachments) {
+        attachment.url = await this.getPresignedUrlForAttachment(attachment.url);
+      }
+    }
+    
+    if (ticket.comments) {
+      for (const comment of ticket.comments) {
+        if (comment.attachments && comment.attachments.length > 0) {
+          for (const attachment of comment.attachments) {
+            attachment.url = await this.getPresignedUrlForAttachment(attachment.url);
+          }
+        }
+      }
+    }
+
     return ticket;
   }
 
@@ -222,7 +292,26 @@ export class TicketsService {
     return savedComment;
   }
 
-  async softDelete(id: string): Promise<void> {
+  async softDelete(id: string, user: JwtUser): Promise<void> {
+    // Récupérer le ticket pour vérifier son statut et les permissions
+    const ticket = await this.ticketsRepo.findOne({
+      where: { id, is_deleted: false },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket introuvable');
+    }
+
+    // Vérifier que l'utilisateur a le droit de supprimer (manager/admin du même tenant)
+    if (user.role === Role.Manager && ticket.tenant_id !== user.tenant_id?.toString()) {
+      throw new ForbiddenException('Accès refusé');
+    }
+
+    // Vérifier que le ticket est traité
+    if (ticket.status !== 'traitee') {
+      throw new ForbiddenException('Seuls les tickets traités peuvent être supprimés');
+    }
+
     await this.ticketsRepo.update(id, { is_deleted: true });
   }
 
@@ -273,16 +362,15 @@ export class TicketsService {
 
     if (awsBucket && this.s3) {
       // Upload vers S3 si configuré
-      const uploadParams = {
+      const command = new PutObjectCommand({
         Bucket: awsBucket,
         Key: fileName,
         Body: file.buffer,
         ContentType: file.mimetype,
-        ACL: 'public-read',
-      };
+      });
 
-      const uploadResult = await this.s3.upload(uploadParams).promise();
-      fileUrl = uploadResult.Location;
+      await this.s3.send(command);
+      fileUrl = `https://${awsBucket}.s3.${this.configService.get('AWS_REGION')}.amazonaws.com/${fileName}`;
     } else {
       // Fallback: stockage local pour le développement
       const uploadsDir = path.join(process.cwd(), 'uploads', 'tickets', ticket!.id);
@@ -340,6 +428,35 @@ export class TicketsService {
       ) {
         throw new ForbiddenException('Accès refusé à ce ticket');
       }
+    }
+  }
+
+  /**
+   * Génère une URL présignée pour un attachment
+   */
+  private async getPresignedUrlForAttachment(currentUrl: string): Promise<string> {
+    const awsBucket = this.configService.get('AWS_S3_BUCKET');
+    
+    // Si pas de S3 configuré ou URL locale, retourner l'URL telle quelle
+    if (!awsBucket || !this.s3 || currentUrl.startsWith('http://localhost')) {
+      return currentUrl;
+    }
+
+    try {
+      // Extraire le nom du fichier depuis l'URL S3
+      const urlParts = currentUrl.split('/');
+      const fileName = urlParts.slice(-3).join('/'); // tickets/id/filename.ext
+      
+      const command = new GetObjectCommand({
+        Bucket: awsBucket,
+        Key: fileName,
+      });
+
+      const presignedUrl = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+      return presignedUrl;
+    } catch (error) {
+      console.error('Erreur génération URL présignée pour attachment:', error);
+      return currentUrl; // Fallback sur l'URL originale
     }
   }
 }

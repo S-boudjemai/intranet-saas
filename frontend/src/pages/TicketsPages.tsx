@@ -75,8 +75,14 @@ export default function TicketsPage() {
         navigate("/login", { replace: true });
         return;
       }
-      const list = await res.json();
+      const response = await res.json();
+      console.log('🎫 Frontend - Tickets response:', response);
+      
+      // Gérer le format transformé par l'intercepteur global
+      const list = response.data || response;
       setTickets(Array.isArray(list) ? list : []);
+      
+      console.log('🎫 Frontend - Set tickets:', Array.isArray(list) ? list.length : 0, 'tickets');
     } finally {
       setLoading(false);
     }
