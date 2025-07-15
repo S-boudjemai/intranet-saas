@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 Une erreur inattendue s'est produite. Veuillez rafraîchir la page ou contacter le support si le problème persiste.
               </p>
               
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {import.meta.env.DEV && this.state.error && (
                 <details className="mt-4 text-left bg-red-50 p-4 rounded-md">
                   <summary className="cursor-pointer font-medium text-red-800">
                     Détails de l'erreur (dev mode)

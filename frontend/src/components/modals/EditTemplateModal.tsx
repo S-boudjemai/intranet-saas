@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FiX, FiPlus, FiTrash2, FiMove } from 'react-icons/fi';
 import type { AuditTemplate } from '../../types';
 

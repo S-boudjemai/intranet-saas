@@ -1,23 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { TicketAttachment } from '../types';
+import { XMarkIcon, MagnifyingGlassIcon } from '../components/icons';
 
 interface AttachmentGalleryProps {
   attachments: TicketAttachment[];
   className?: string;
 }
-
-// Icônes SVG
-const XMarkIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-
-const MagnifyingGlassIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 15.803a7.5 7.5 0 0 0 10.607 0Z" />
-  </svg>
-);
 
 const AttachmentGallery: React.FC<AttachmentGalleryProps> = ({ 
   attachments, 

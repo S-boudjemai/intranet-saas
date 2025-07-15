@@ -1,5 +1,5 @@
 // src/components/ConfirmModal.tsx
-import React from "react";
+
 
 // --- ICÔNE SVG ---
 const ExclamationTriangleIcon = (props: React.SVGProps<SVGSVGElement>) => (

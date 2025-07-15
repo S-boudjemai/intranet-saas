@@ -1,5 +1,5 @@
 // src/pages/AnnouncementsPage.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import CreateAnnouncementForm from "../components/CreateAnnouncementForm";
 import AnnouncementCard from "../components/AnnouncementCard";

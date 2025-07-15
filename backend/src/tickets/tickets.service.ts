@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { Ticket, TicketStatus } from './entities/ticket.entity';
 import { Comment } from './entities/comment.entity';
 import { TicketAttachment } from './entities/ticket-attachment.entity';
@@ -123,7 +123,7 @@ export class TicketsService {
       .leftJoinAndSelect('ticket.restaurant', 'restaurant') // <-- On joint pour récupérer le nom du restaurant
       .leftJoinAndSelect('ticket.attachments', 'attachment') // <-- Ajouter les attachments
       .leftJoinAndSelect('comment.attachments', 'commentAttachment') // <-- Attachments des commentaires
-      .where('ticket.is_deleted = false');
+      .where('ticket.status != :supprime', { supprime: TicketStatus.Supprime });
 
     if (user.role === Role.Viewer) {
       // Un viewer ne voit que les tickets de son restaurant
@@ -295,7 +295,7 @@ export class TicketsService {
   async softDelete(id: string, user: JwtUser): Promise<void> {
     // Récupérer le ticket pour vérifier son statut et les permissions
     const ticket = await this.ticketsRepo.findOne({
-      where: { id, is_deleted: false },
+      where: { id, status: Not(TicketStatus.Supprime) },
     });
 
     if (!ticket) {
@@ -307,12 +307,13 @@ export class TicketsService {
       throw new ForbiddenException('Accès refusé');
     }
 
-    // Vérifier que le ticket est traité
-    if (ticket.status !== 'traitee') {
-      throw new ForbiddenException('Seuls les tickets traités peuvent être supprimés');
+    // Permettre suppression des tickets non traités OU traités
+    if (ticket.status === TicketStatus.Supprime) {
+      throw new ForbiddenException('Ticket déjà supprimé');
     }
 
-    await this.ticketsRepo.update(id, { is_deleted: true });
+    // Mettre le statut à "supprime" au lieu d'utiliser is_deleted
+    await this.ticketsRepo.update(id, { status: TicketStatus.Supprime });
   }
 
   /**

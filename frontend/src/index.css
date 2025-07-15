@@ -10,11 +10,19 @@
   }
   
   .animate-fade-in {
-    animation: fade-in 0.2s ease-out;
+    animation: fade-in 0.4s ease-out;
   }
   
   .animate-scale-in {
     animation: scale-in 0.2s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+
+  .animate-tab-content {
+    animation: tab-content-enter 0.3s ease-out;
   }
 }
 
@@ -45,6 +53,28 @@
   }
   to {
     transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes tab-content-enter {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 }

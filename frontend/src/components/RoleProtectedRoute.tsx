@@ -1,5 +1,4 @@
-import React from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 interface RoleProtectedRouteProps {
@@ -14,7 +13,7 @@ export default function RoleProtectedRoute({
   redirectTo 
 }: RoleProtectedRouteProps) {
   const { user } = useAuth();
-  const location = useLocation();
+  // const location = useLocation(); // Currently unused
 
   // Si pas d'utilisateur connecté, ne pas afficher (géré par ProtectedRoute parent)
   if (!user) {

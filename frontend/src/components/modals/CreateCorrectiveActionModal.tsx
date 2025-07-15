@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FiX, FiUser, FiCalendar, FiDollarSign, FiFileText, FiAlertTriangle } from 'react-icons/fi';
 
 interface NonConformity {
@@ -166,7 +166,7 @@ export default function CreateCorrectiveActionModal({
 
   useEffect(() => {
     if (action.non_conformity_id) {
-      const nc = nonConformities.find(nc => nc.id === parseInt(action.non_conformity_id));
+      const nc = nonConformities.find(nc => nc.id === parseInt(action.non_conformity_id.toString()));
       setSelectedNonConformity(nc || null);
     }
   }, [action.non_conformity_id, nonConformities]);
@@ -201,7 +201,7 @@ export default function CreateCorrectiveActionModal({
 
     // Only include non_conformity_id if it's actually selected
     if (action.non_conformity_id && action.non_conformity_id !== '') {
-      finalAction.non_conformity_id = parseInt(action.non_conformity_id);
+      finalAction.non_conformity_id = parseInt(action.non_conformity_id.toString());
     }
 
     onSubmit(finalAction);

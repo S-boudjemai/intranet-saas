@@ -108,6 +108,7 @@ export default function AuditExecutionPage() {
 
     setSaving(true);
     try {
+      console.log(`🚀 COMPLETE AUDIT - Tentative finalisation audit ID: ${execution.id}`);
       const response = await fetch(`${import.meta.env.VITE_API_URL}/audits/${execution.id}/complete`, {
         method: 'PATCH',
         headers: {
@@ -115,8 +116,15 @@ export default function AuditExecutionPage() {
         },
       });
 
+      console.log(`📊 COMPLETE AUDIT - Response status: ${response.status}`);
+      
       if (response.ok) {
-        navigate('/audit-planning');
+        const result = await response.json();
+        console.log(`✅ COMPLETE AUDIT - Success:`, result);
+        navigate('/audits?tab=planning');
+      } else {
+        const errorData = await response.json();
+        console.error(`❌ COMPLETE AUDIT - Error ${response.status}:`, errorData);
       }
     } catch (error) {
       console.error('Erreur lors de la finalisation:', error);

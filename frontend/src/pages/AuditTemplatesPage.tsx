@@ -327,7 +327,7 @@ export default function AuditTemplatesPage() {
       <CreateTemplateModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSubmit={handleCreateTemplate}
+        onSuccess={() => handleCreateTemplate()}
         restaurantType={(user as any)?.tenant?.restaurant_type || 'traditionnel'}
       />
 

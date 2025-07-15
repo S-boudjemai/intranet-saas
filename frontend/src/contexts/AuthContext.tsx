@@ -1,5 +1,5 @@
 // src/contexts/AuthContext.tsx
-import React, {
+import {
   createContext,
   useState,
   useContext,
@@ -23,6 +23,7 @@ interface AuthContextType {
   user: JwtUser | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  setAuthFromSignup: (accessToken: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   login: async () => {},
   logout: () => {},
+  setAuthFromSignup: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -38,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.getItem("token")
   );
   const [user, setUser] = useState<JwtUser | null>(null);
-  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshTimeoutRef = useRef<number | null>(null);
 
   // Fonction pour rafraîchir le token automatiquement
   const refreshToken = async (): Promise<boolean> => {
@@ -210,8 +212,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     window.location.href = '/login';
   };
 
+  const setAuthFromSignup = (accessToken: string) => {
+    console.log('🎯 SIGNUP - Setting auth from signup token');
+    
+    // Clear any existing refresh timeout
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+      console.log('🎯 SIGNUP - Cleared existing refresh timeout');
+    }
+    
+    // Clear old token first
+    localStorage.removeItem("token");
+    console.log('🎯 SIGNUP - Cleared old token');
+    
+    // Set new token
+    localStorage.setItem("token", accessToken);
+    setToken(accessToken);
+    console.log('🎯 SIGNUP - Set new token from signup');
+    
+    // useEffect will handle decoding and scheduling refresh
+  };
+
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, logout, setAuthFromSignup }}>
       {children}
     </AuthContext.Provider>
   );

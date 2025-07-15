@@ -1,5 +1,5 @@
 // src/components/ManageTagsModal.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import type { TagType } from "../types";
 
 // --- DÉBUT DES ICÔNES SVG ---

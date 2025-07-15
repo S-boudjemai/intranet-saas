@@ -1,5 +1,5 @@
 // src/pages/UsersPage.tsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import ConfirmModal from "../components/ConfirmModal";
 import type { InviteType } from "../types";
@@ -24,7 +24,9 @@ export default function UsersPage() {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/invites`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
+      const responseData = await res.json();
+      // L'API retourne {success: true, data: [...]} 
+      const data = responseData.data || responseData;
       setInvites(Array.isArray(data) ? data : []);
     } finally {
       setLoading(false);
@@ -45,7 +47,11 @@ export default function UsersPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ 
+          email,
+          // Ne pas envoyer les champs optionnels vides pour éviter les validations
+          // Optional fields can be added later
+        }),
       });
       setStatus(`✅ Invitation envoyée à ${email}`);
       setEmail("");

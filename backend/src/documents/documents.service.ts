@@ -124,7 +124,7 @@ export class DocumentsService {
   }
 
   /**
-   * Récupère la liste des documents :
+   * Récupère la liste des documents avec URLs présignées automatiques :
    * - Super-admin : tous les documents
    * - Manager/Admin : ceux de son tenant
    * - Viewer : ceux de son tenant aussi (ils ne créent pas)
@@ -160,7 +160,25 @@ export class DocumentsService {
       qb = qb.andWhere('t.id IN (:...tagIds)', { tagIds });
     }
 
-    return qb.orderBy('doc.created_at', 'DESC').getMany();
+    const documents = await qb.orderBy('doc.created_at', 'DESC').getMany();
+
+    // Appliquer les URLs présignées pour chaque document
+    const documentsWithPresignedUrls = await Promise.all(
+      documents.map(async (doc) => {
+        if (doc.url) {
+          try {
+            const presignedUrl = await this.getPresignedUrlForDocument(doc.url);
+            return { ...doc, url: presignedUrl };
+          } catch (error) {
+            console.warn(`⚠️ Could not generate presigned URL for document ${doc.id}:`, error);
+            return doc; // Fallback vers l'URL originale
+          }
+        }
+        return doc;
+      })
+    );
+
+    return documentsWithPresignedUrls;
   }
   /**
    * Soft-delete logique
@@ -202,31 +220,66 @@ export class DocumentsService {
   }
 
   /**
-   * Génère l'URL presignée pour le download depuis S3
+   * Génère l'URL presignée pour le download depuis S3 (endpoint public)
    */
   async getPresignedDownloadUrl(filenameOrUrl: string): Promise<string> {
-    let filename = filenameOrUrl;
+    console.log('🔗 Public download URL request for:', filenameOrUrl);
+    return this.getPresignedUrlForDocument(filenameOrUrl);
+  }
+
+  /**
+   * Génère l'URL presignée pour un document (méthode interne)
+   */
+  private async getPresignedUrlForDocument(currentUrl: string): Promise<string> {
+    // Si c'est déjà une URL présignée, la retourner telle quelle
+    if (currentUrl.includes('X-Amz-Algorithm')) {
+      return currentUrl;
+    }
+
+    // Si c'est une URL locale (développement), la retourner telle quelle
+    if (currentUrl.includes('localhost') || currentUrl.startsWith('/uploads/')) {
+      return currentUrl;
+    }
+
+    let filename = currentUrl;
     
-    // Si c'est une URL complète S3, extraire le nom du fichier
-    if (filenameOrUrl.includes('amazonaws.com/')) {
-      const urlParts = filenameOrUrl.split('/');
-      filename = urlParts[urlParts.length - 1];
-      console.log('🔗 Extracted filename from URL:', filename);
+    // Si c'est une URL complète S3, extraire le nom du fichier correctement
+    if (currentUrl.includes('amazonaws.com/')) {
+      try {
+        const url = new URL(currentUrl);
+        // Extraire le path et supprimer le leading slash
+        filename = url.pathname.substring(1);
+        // Décoder les caractères URL encodés (%20 -> espace, etc.)
+        filename = decodeURIComponent(filename);
+        console.log('🔗 Extracted and decoded filename from S3 URL:', filename);
+      } catch (urlError) {
+        // Fallback vers l'ancienne méthode si URL malformée
+        const urlParts = currentUrl.split('/');
+        filename = decodeURIComponent(urlParts[urlParts.length - 1]);
+        console.log('🔗 Fallback extracted filename:', filename);
+      }
+    } else {
+      // Pour les noms de fichiers simples, décoder les caractères URL
+      filename = decodeURIComponent(filename);
     }
     
-    console.log('🔗 Generating download URL for:', filename);
+    console.log('🔗 Generating presigned URL for document:', filename);
     
     try {
+      const awsBucket = process.env.AWS_S3_BUCKET as string;
       const cmd = new GetObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET as string,
+        Bucket: awsBucket,
         Key: filename,
       });
-      const url = await getSignedUrl(this.s3, cmd, { expiresIn: 300 });
-      console.log('✅ Download URL generated successfully');
+      const url = await getSignedUrl(this.s3, cmd, { expiresIn: 3600 }); // 1 heure
+      console.log('✅ Document presigned URL generated successfully');
       return url;
     } catch (error) {
-      console.error('❌ Error generating download URL:', error);
-      throw error;
+      console.error('❌ Error generating document presigned URL:', error);
+      console.error('❌ Failed filename:', filename);
+      console.error('❌ Original URL:', currentUrl);
+      // Fallback vers l'URL originale en cas d'erreur
+      return currentUrl;
     }
   }
 }

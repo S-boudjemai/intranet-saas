@@ -1,5 +1,5 @@
 // src/components/CityAutocomplete.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { frenchCities } from '../data/french-cities';
 
 interface CityAutocompleteProps {

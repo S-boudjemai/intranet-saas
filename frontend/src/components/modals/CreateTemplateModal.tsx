@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { FiX, FiPlus, FiTrash2, FiMove } from 'react-icons/fi';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface AuditItem {
   id: string;
@@ -14,8 +15,8 @@ interface AuditItem {
 interface CreateTemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (template: any) => void;
-  restaurantType: string;
+  onSuccess?: () => void;
+  restaurantType?: string;
 }
 
 const QUESTION_TYPES = {
@@ -111,7 +112,8 @@ const PREDEFINED_QUESTIONS = {
   ]
 };
 
-export default function CreateTemplateModal({ isOpen, onClose, onSubmit, restaurantType }: CreateTemplateModalProps) {
+export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restaurantType }: CreateTemplateModalProps) {
+  const { token } = useAuth();
   const [step, setStep] = useState(1);
   const [template, setTemplate] = useState({
     name: '',
@@ -172,15 +174,38 @@ export default function CreateTemplateModal({ isOpen, onClose, onSubmit, restaur
     setDraggedIndex(null);
   };
 
-  const handleSubmit = () => {
-    const finalTemplate = {
-      name: template.name,
-      description: template.description,
-      category: template.category,
-      items: questions.map((q, index) => ({ ...q, order: index + 1 }))
-    };
-    onSubmit(finalTemplate);
-    onClose();
+  const handleSubmit = async () => {
+    try {
+      const finalTemplate = {
+        name: template.name,
+        description: template.description,
+        category: template.category,
+        items: questions.map((q, index) => ({ ...q, order: index + 1 }))
+      };
+
+      // Utiliser le token du contexte d'auth
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/audit-templates`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(finalTemplate),
+      });
+
+      if (response.ok) {
+        onSuccess?.();
+        onClose();
+      } else {
+        const error = await response.json();
+        console.error('Erreur création template:', error);
+        alert('Erreur lors de la création du template');
+      }
+    } catch (error) {
+      console.error('Erreur création template:', error);
+      alert('Erreur lors de la création du template');
+    }
   };
 
   const nextStep = () => setStep(step + 1);

@@ -1,5 +1,4 @@
 // src/App.tsx
-import React from "react";
 import {
   BrowserRouter,
   Routes,
@@ -20,14 +19,14 @@ import Signup from "./pages/Signup";
 import DocumentsPage from "./pages/DocumentsPage";
 import TicketsPage from "./pages/TicketsPages";
 import NavBar from "./components/NavBar";
+import MobileNav from "./components/MobileNav";
 import DashboardPage from "./pages/DashboardPage";
 import Announcements from "./pages/AnnouncementsPage";
 import LandingPage from "./pages/LandingPage";
 import UsersPage from "./pages/UsersPage"; // <-- Import de la page Utilisateurs
-import AuditTemplatesPage from "./pages/AuditTemplatesPage";
-import AuditPlanningPage from "./pages/AuditPlanningPage";
+import AuditsPage from "./pages/AuditsPage";
 import AuditExecutionPage from "./pages/AuditExecutionPage";
-import CorrectiveActionsPage from "./pages/CorrectiveActionsPage";
+import ArchivesPage from "./pages/ArchivesPage";
 
 // Ce composant interne gère l'affichage conditionnel de la NavBar
 const AppContent = () => {
@@ -43,14 +42,20 @@ const AppContent = () => {
   return (
     <>
       {showNav && (
-        <header className="bg-card/80 backdrop-blur-sm sticky top-0 z-10 border-b border-border p-4">
-          <div className="flex justify-between items-center gap-6">
-            <NavBar />
-            <div className="flex items-center gap-4">
-              <ThemeSwitcher />
+        <>
+          {/* Desktop Navigation */}
+          <header className="hidden lg:block bg-card/80 backdrop-blur-sm sticky top-0 z-10 border-b border-border p-4">
+            <div className="flex justify-between items-center gap-6">
+              <NavBar />
+              <div className="flex items-center gap-4">
+                <ThemeSwitcher />
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
+          
+          {/* Mobile Navigation */}
+          <MobileNav />
+        </>
       )}
 
       {/* Le conteneur principal pour le contenu de la page */}
@@ -87,22 +92,12 @@ const AppContent = () => {
               } 
             />
             
-            {/* Audit Templates réservé aux admin/manager */}
+            {/* Audits unifié - réservé aux admin/manager */}
             <Route 
-              path="/audit-templates" 
+              path="/audits" 
               element={
                 <RoleProtectedRoute allowedRoles={['admin', 'manager']}>
-                  <AuditTemplatesPage />
-                </RoleProtectedRoute>
-              } 
-            />
-            
-            {/* Audit Planning réservé aux admin/manager */}
-            <Route 
-              path="/audit-planning" 
-              element={
-                <RoleProtectedRoute allowedRoles={['admin', 'manager']}>
-                  <AuditPlanningPage />
+                  <AuditsPage />
                 </RoleProtectedRoute>
               } 
             />
@@ -110,15 +105,20 @@ const AppContent = () => {
             {/* Audit Execution - Accessible à tous les rôles */}
             <Route path="/audit/:id" element={<AuditExecutionPage />} />
             
-            {/* Corrective Actions réservé aux admin/manager */}
+            {/* Archives - réservé aux admin/manager */}
             <Route 
-              path="/corrective-actions" 
+              path="/archives" 
               element={
                 <RoleProtectedRoute allowedRoles={['admin', 'manager']}>
-                  <CorrectiveActionsPage />
+                  <ArchivesPage />
                 </RoleProtectedRoute>
               } 
             />
+            
+            {/* Redirections pour compatibilité avec anciennes URLs */}
+            <Route path="/audit-templates" element={<Navigate to="/audits?tab=templates" replace />} />
+            <Route path="/audit-planning" element={<Navigate to="/audits?tab=planning" replace />} />
+            <Route path="/corrective-actions" element={<Navigate to="/audits?tab=actions" replace />} />
           </Route>
 
           {/* Redirige toute autre URL vers la page d'accueil */}

@@ -1,5 +1,5 @@
 // src/components/CreateAnnouncementForm.tsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import MultiSelect from "./MultiSelect"; // <-- ON IMPORTE LE NOUVEAU COMPOSANT
 import UploadDocument from "./UploadDocument"; // <-- IMPORT POUR L'UPLOAD
@@ -32,7 +32,7 @@ export default function CreateAnnouncementForm({
   const [selectedRestaurantIds, setSelectedRestaurantIds] = useState<number[]>(
     []
   );
-  const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<number[]>([]);
   const [showUploadDocument, setShowUploadDocument] = useState(false);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -103,7 +103,7 @@ export default function CreateAnnouncementForm({
     }
 
     if (selectedDocumentIds.length > 0) {
-      payload.document_ids = selectedDocumentIds;
+      payload.document_ids = selectedDocumentIds.map(id => id.toString());
     }
 
     try {
@@ -223,9 +223,9 @@ export default function CreateAnnouncementForm({
         ) : (
           // Mode Sélection
           <MultiSelect
-            options={documents.map((d) => ({ value: d.id, label: d.name }))}
+            options={documents.map((d) => ({ value: parseInt(d.id), label: d.name }))}
             selectedValues={selectedDocumentIds}
-            onChange={setSelectedDocumentIds}
+            onChange={(selected: number[]) => setSelectedDocumentIds(selected)}
             placeholder="Sélectionner des documents à joindre..."
           />
         )}

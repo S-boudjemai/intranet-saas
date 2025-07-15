@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuditExecution } from './entities/audit-execution.entity';
@@ -6,14 +6,18 @@ import { AuditResponse } from './entities/audit-response.entity';
 import { CreateAuditExecutionDto } from './dto/create-audit-execution.dto';
 import { SubmitAuditResponseDto } from './dto/submit-audit-response.dto';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
+import { AuditArchivesService } from './audit-archives.service';
 
 @Injectable()
 export class AuditExecutionsService {
+  private readonly logger = new Logger(AuditExecutionsService.name);
+
   constructor(
     @InjectRepository(AuditExecution)
     private auditExecutionRepository: Repository<AuditExecution>,
     @InjectRepository(AuditResponse)
     private auditResponseRepository: Repository<AuditResponse>,
+    private auditArchivesService: AuditArchivesService,
   ) {}
 
   async create(createDto: CreateAuditExecutionDto, user: JwtUser): Promise<AuditExecution> {
@@ -123,6 +127,16 @@ export class AuditExecutionsService {
   }
 
   async completeAudit(id: number, user: JwtUser): Promise<AuditExecution> {
+    this.logger.log(`🎯 COMPLETE AUDIT - Début finalisation audit ID: ${id} par user ${user.userId}`);
+    
+    try {
+      const execution = await this.findOne(id, user);
+      this.logger.log(`📋 COMPLETE AUDIT - Audit trouvé: ${execution.id}, statut: ${execution.status}`);
+    } catch (error) {
+      this.logger.error(`❌ COMPLETE AUDIT - Erreur lors de la recherche de l'audit ${id}: ${error.message}`);
+      throw error;
+    }
+    
     const execution = await this.findOne(id, user);
 
     if (execution.status === 'completed' || execution.status === 'reviewed') {
@@ -156,6 +170,34 @@ export class AuditExecutionsService {
       max_possible_score: maxPossibleScore,
     });
 
+    // PAS D'ARCHIVAGE AUTOMATIQUE - L'archivage doit être fait séparément
+    // pour éviter que l'audit disparaisse immédiatement après finalisation
+    this.logger.log(`✅ Audit ${id} finalisé avec succès. Status: completed`);
+
     return this.findOne(id, user);
+  }
+
+  /**
+   * Archiver manuellement un audit finalisé
+   */
+  async archiveAudit(id: number, user: JwtUser): Promise<any> {
+    this.logger.log(`🗄️ ARCHIVE AUDIT - Début archivage manuel audit ID: ${id} par user ${user.userId}`);
+    
+    // Vérifier que l'audit existe et est finalisé
+    const execution = await this.findOne(id, user);
+    
+    if (execution.status !== 'completed') {
+      throw new ForbiddenException('Seuls les audits terminés peuvent être archivés');
+    }
+
+    try {
+      this.logger.log(`🗄️ Archivage manuel de l'audit ${id}`);
+      const archive = await this.auditArchivesService.archiveCompletedAudit(id, user);
+      this.logger.log(`✅ Audit ${id} archivé manuellement avec succès (Archive ID: ${archive.id})`);
+      return archive;
+    } catch (error) {
+      this.logger.error(`❌ Échec archivage manuel pour audit ${id}: ${error.message}`);
+      throw error;
+    }
   }
 }

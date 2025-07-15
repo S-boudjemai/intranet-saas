@@ -1,5 +1,5 @@
 // src/components/MultiSelect.tsx
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 
 // --- ICÔNES SVG ---
 const XIcon = (props: React.SVGProps<SVGSVGElement>) => (

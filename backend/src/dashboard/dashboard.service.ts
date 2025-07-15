@@ -45,12 +45,13 @@ export class DashboardService {
       `📋 allTickets trouvés (${allTickets.length}): ${JSON.stringify(allTickets)}`,
     );
 
-    // 3. Tickets par statut
+    // 3. Tickets par statut (exclure les supprimés des stats principales)
     const ticketsByStatusRaw = await this.ticketRepo
       .createQueryBuilder('t')
       .select('t.status', 'status')
       .addSelect('COUNT(*)', 'count')
       .where('t.tenant_id = :tenantId', { tenantId })
+      .andWhere('t.status != :supprime', { supprime: 'supprime' })
       .groupBy('t.status')
       .getRawMany();
     this.logger.debug(
@@ -65,13 +66,14 @@ export class DashboardService {
       {},
     );
 
-    // 4. Tickets créés par jour (dernière semaine)
+    // 4. Tickets créés par jour (dernière semaine, exclure supprimés)
     const ticketsPerDayRaw = await this.ticketRepo
       .createQueryBuilder('t')
       .select('DATE(t.created_at)', 'date')
       .addSelect('COUNT(*)', 'count')
       .where('t.tenant_id = :tenantId', { tenantId })
       .andWhere('t.created_at > :oneWeekAgo', { oneWeekAgo })
+      .andWhere('t.status != :supprime', { supprime: 'supprime' })
       .groupBy('DATE(t.created_at)')
       .orderBy('DATE(t.created_at)', 'ASC')
       .getRawMany();

@@ -1,5 +1,5 @@
 // src/components/ui/Badge.tsx
-import React from 'react';
+
 
 export interface BadgeProps {
   variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'secondary';

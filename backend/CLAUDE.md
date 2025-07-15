@@ -511,9 +511,9 @@ GET    /reports/action-status        # Statut actions correctives
 - [ ] **Lazy loading** - Pagination intelligente
 - [ ] **Image optimization** - Compression/redimensionnement photos
 
-## 🎉 NOUVELLES FONCTIONNALITÉS IMPLÉMENTÉES (Décembre 2024)
+## 🎉 NOUVELLES FONCTIONNALITÉS IMPLÉMENTÉES (Juillet 2025)
 
-### ✅ Module Actions Correctives Complet
+### ✅ Module Actions Correctives COMPLET - FINALISÉ
 
 #### Entités et Relations
 - **CorrectiveAction Entity** : Entité complète avec relations vers NonConformity et User
@@ -539,7 +539,7 @@ GET    /corrective-actions/stats/summary # Statistiques par statut
 - ✅ **Guards de sécurité** : Contrôle d'accès par rôles (admin/manager)
 - ✅ **Logging détaillé** : Suivi des créations et modifications
 
-### ✅ Module Audit Templates Opérationnel
+### ✅ Module Audit Templates OPÉRATIONNEL - FINALISÉ
 
 #### APIs Audit Templates
 ```bash
@@ -583,10 +583,62 @@ DELETE /audit-templates/:id # Suppression (avec vérification usage)
 
 ---
 
-## 🎉 **CORRECTIONS BACKEND RÉCENTES** (Décembre 2024)
+## 🎉 **CORRECTIONS BACKEND RÉCENTES** (Juillet 2025)
 
-### ✅ **Upload & Aperçu Images Tickets**
-**Date:** 14 Décembre 2024
+### ✅ **Correction Système Archivage Audits - FINALISÉ**
+**Date:** 15 Juillet 2025 (Aujourd'hui)
+
+#### 🔧 **Erreur 400 Corrigée**
+- **Problème** : ValidationPipe global avec `forbidNonWhitelisted: true` rejetait les body vides
+- **Solution** : Ajout `@Body() body: any` dans audit-archives.controller.ts
+- **Résultat** : Route `POST /audit-archives/archive/{executionId}` opérationnelle
+
+```typescript
+// audit-archives.controller.ts - Correction
+@Post('archive/:executionId')
+@Roles(Role.Manager, Role.Admin)
+async archiveAudit(
+  @Param('executionId', ParseIntPipe) executionId: number,
+  @Body() body: any, // ← Accepte body vide pour éviter erreur validation
+  @Req() req: Request & { user: JwtUser },
+) {
+  return this.archivesService.archiveCompletedAudit(executionId, req.user);
+}
+```
+
+### ✅ **Correction Suppression Tags Documents - FINALISÉ**
+**Date:** 15 Juillet 2025 (Aujourd'hui)
+
+#### 🔍 **Problème Route 404**
+- **Erreur** : `DELETE /documents/{docId}/tags/{tagId}` introuvable
+- **Cause** : Décorateur `@Post(':tagId')` au lieu de `@Delete(':tagId')`
+- **Solution** : Correction décorateur + ajout guards JWT
+
+#### 🛠️ **Modifications Appliquées**
+```typescript
+// tags.controller.ts - Corrections
+import { Controller, Get, Post, Delete, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles/roles.guard';
+
+@Controller('documents/:docId/tags')
+@UseGuards(JwtAuthGuard, RolesGuard)  // ← Ajout guards
+export class DocumentTagsController {
+  @Delete(':tagId')  // ← Était @Post(':tagId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('docId') docId: string, @Param('tagId') tagId: string) {
+    return this.tagsService.removeTagFromDocument(docId, tagId);
+  }
+}
+```
+
+#### 📊 **Vérification Logs**
+- ✅ **Route mappée** : `RouterExplorer] Mapped {/documents/:docId/tags/:tagId, DELETE} route`
+- ✅ **Service opérationnel** : `removeTagFromDocument` fonctionne correctement
+- ✅ **Guards appliqués** : Authentification JWT requise
+
+### ✅ **Upload & Aperçu Images Tickets - FINALISÉ**
+**Date:** 15 Juillet 2025 (Aujourd'hui)
 
 #### 🔧 **Tickets Service - Migration AWS SDK**
 - **Avant:** aws-sdk v2 avec méthodes upload().promise()

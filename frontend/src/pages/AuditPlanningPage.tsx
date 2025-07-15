@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { AuditExecution, AuditTemplate, RestaurantInfo } from '../types';
-import type { Template, Restaurant, Inspector } from '../types/modals';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
@@ -10,7 +9,7 @@ import ScheduleAuditModal from '../components/modals/ScheduleAuditModal';
 import { HiPlus, HiCalendar, HiClock, HiUser, HiOfficeBuilding } from 'react-icons/hi';
 
 export default function AuditPlanningPage() {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const navigate = useNavigate();
   const [executions, setExecutions] = useState<AuditExecution[]>([]);
   const [templates, setTemplates] = useState<AuditTemplate[]>([]);

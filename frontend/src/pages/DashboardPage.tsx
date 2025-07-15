@@ -1,5 +1,5 @@
 // src/pages/DashboardPage.tsx
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
   CartesianGrid,
@@ -11,25 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import KpiCard from "../components/KipCard"; // Le fichier s'appelle KipCard mais exporte KpiCard
-import { ChartPieIcon, DocumentReportIcon, ExclamationCircleIcon, SpinnerIcon, ClockIcon } from "../components/icons";
-
-// TicketIcon manquante, ajoutons-la
-const TicketIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    {...props}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-12v.75m0 3v.75m0 3v.75m0 3V18m-3 .75h18A2.25 2.25 0 0021 16.5V7.5A2.25 2.25 0 0018.75 6H3.75A2.25 2.25 0 001.5 8.25v8.25A2.25 2.25 0 003.75 18z"
-    />
-  </svg>
-);
+import { ChartPieIcon, DocumentReportIcon, ExclamationCircleIcon, SpinnerIcon, ClockIcon, TicketIcon } from "../components/icons";
 
 interface DashboardData {
   totalDocuments: number;
@@ -54,7 +36,7 @@ const DashboardPage: React.FC = () => {
         return res.json();
       })
       .then((json: any) => setData(json.data || json))
-      .catch((err) => {})
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [token]);
 
@@ -117,14 +99,22 @@ const DashboardPage: React.FC = () => {
           value={data.docsThisWeek}
           icon={<ClockIcon />}
         />
-        {data.ticketsByStatus && Object.entries(data.ticketsByStatus).map(([status, count]) => (
-          <KpiCard
-            key={status}
-            title={`Tickets ${status.replace("_", " ")}`}
-            value={count}
-            icon={<TicketIcon />}
-          />
-        ))}
+        {data.ticketsByStatus && Object.entries(data.ticketsByStatus).map(([status, count]) => {
+          const statusLabels = {
+            'non_traitee': 'non traités',
+            'en_cours': 'en cours',
+            'traitee': 'traités',
+            'supprime': 'supprimés'
+          };
+          return (
+            <KpiCard
+              key={status}
+              title={`Tickets ${statusLabels[status as keyof typeof statusLabels] || status}`}
+              value={count}
+              icon={<TicketIcon />}
+            />
+          );
+        })}
       </div>
 
       <div className="bg-card border border-border rounded-lg p-6">

@@ -1,54 +1,13 @@
 // src/pages/TicketsPages.tsx
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import CreateTicketForm from "../components/CreateTicketForm";
 import TicketItem from "../components/TicketItem";
-import ConfirmModal from "../components/ConfirmModal"; // <-- Importer la modale
+import ConfirmModal from "../components/ConfirmModal";
 import { parseJwt, type JwtPayload } from "../utils/jwt";
 import type { TicketType } from "../types";
-
-// --- ICÔNES SVG ---
-const TicketIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    {...props}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-12v.75m0 3v.75m0 3v.75m0 3V18m-3 .75h18A2.25 2.25 0 0021 16.5V7.5A2.25 2.25 0 0018.75 6H3.75A2.25 2.25 0 001.5 8.25v8.25A2.25 2.25 0 003.75 18z"
-    />
-  </svg>
-);
-const SpinnerIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    className="animate-spin"
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    {...props}
-  >
-    <circle
-      className="opacity-25"
-      cx="12"
-      cy="12"
-      r="10"
-      stroke="currentColor"
-      strokeWidth="4"
-    ></circle>
-    <path
-      className="opacity-75"
-      fill="currentColor"
-      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-    ></path>
-  </svg>
-);
-// --- FIN ICÔNES SVG ---
+import { TicketIcon, SpinnerIcon } from "../components/icons";
 
 export default function TicketsPage() {
   const navigate = useNavigate();

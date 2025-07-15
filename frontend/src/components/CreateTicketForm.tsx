@@ -1,5 +1,5 @@
 // src/components/CreateTicketForm.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import type { TicketType } from "../types"; // <-- CORRECTION: Import depuis le fichier central
 import { HiOutlineArrowRight } from "react-icons/hi";

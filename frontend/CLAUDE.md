@@ -247,6 +247,93 @@ npm run lint
 
 ### Performance
 - Lazy loading des composants si nécessaire
+
+---
+
+## 🎉 **CORRECTIONS FRONTEND RÉCENTES** (Juillet 2025)
+
+### ✅ **Système d'Archivage Audits - Interface Complète**
+**Date:** 15 Juillet 2025 (Aujourd'hui)
+
+#### 🎯 **Composant PlanningTab.tsx - Nouvelles Fonctionnalités**
+- **Bouton Archiver** : Ajout à côté du badge "Terminé" pour audits completed/reviewed
+- **Permissions** : Affichage conditionnel selon rôle utilisateur (admin/manager uniquement)
+- **Modale confirmation** : Intégration ConfirmModal avec contexte détaillé de l'audit
+
+#### 🎨 **UX/UI Améliorée**
+```tsx
+// StatusBadgeWithArchive - Composant final
+<div className="flex items-center gap-2">
+  {getStatusBadge(status)}
+  
+  {isCompleted && canArchive && (
+    <button 
+      className="bg-orange-50 hover:bg-orange-100 text-orange-600 rounded border border-orange-200"
+      onClick={() => handleArchiveClick(execution)}
+    >
+      <ArchiveIcon className="w-3 h-3" />
+      Archiver
+    </button>
+  )}
+</div>
+```
+
+#### 🔧 **Gestion d'État et API**
+- **État local** : `archivingId`, `showArchiveModal`, `auditToArchive`
+- **API call** : `POST /audit-archives/archive/{executionId}` avec gestion erreurs
+- **Feedback** : Spinner pendant requête + rechargement liste après succès
+
+#### 📋 **Corrections Appliquées**
+- **Erreur HTML** : Remplacement `<div>` par `<>` dans modale pour éviter erreur hydratation
+- **TypeScript** : Correction types `RestaurantInfo` avec casting `(r as any).city`
+- **Workflow UX** : Archivage → Disparition audit → Confirmation visuelle
+
+### ✅ **Correction Gestion Tags Documents**
+**Date:** 15 Juillet 2025 (Aujourd'hui)
+
+#### 🔍 **Problème DocumentsPage.tsx**
+- **Erreur 404** : Route `DELETE /documents/{docId}/tags/{tagId}` introuvable
+- **Cause** : Backend avec décorateur incorrect `@Post` au lieu de `@Delete`
+- **Solution** : Correction côté backend, frontend déjà correct
+
+#### 🛠️ **Code Frontend Validé**
+```typescript
+// DocumentsPage.tsx - Appel DELETE correct
+const removePromises = tagsToRemove.map((tagId) =>
+  fetch(`${import.meta.env.VITE_API_URL}/documents/${docId}/tags/${tagId}`, {
+    method: "DELETE",  // ← Méthode correcte
+    headers: { Authorization: `Bearer ${token}` },
+  })
+);
+```
+
+### ✅ **Centralisation Icônes SVG - Impact Frontend**
+**Date:** 15 Juillet 2025 (Aujourd'hui)
+
+#### 📦 **Fichier Central : /src/components/icons/index.tsx**
+- **Architecture** : Interface `IconProps` commune + exports centralisés
+- **Corrections** : Toutes les icônes brisées dans DashboardPage, AnnouncementsPage, etc.
+- **Performance** : Suppression définitions dupliquées, réduction bundle size
+
+#### 🔧 **Composants Corrigés**
+```typescript
+// Import centralisé dans tous les composants
+import { 
+  ArchiveIcon, 
+  ChartPieIcon, 
+  DocumentReportIcon, 
+  ExclamationCircleIcon,
+  SpinnerIcon,
+  ClockIcon 
+} from '../components/icons';
+```
+
+### 📊 **Impact Global Frontend**
+- ✅ **Audit System** : Interface complète avec archivage fonctionnel
+- ✅ **Documents** : Gestion tags opérationnelle sans erreurs
+- ✅ **Icônes** : Toutes les icônes centralisées et fonctionnelles
+- ✅ **UX/UI** : Modales élégantes remplaçant alerts natives
+- ✅ **TypeScript** : Types corrigés, compilation sans erreurs
 - Optimisation des re-rendus avec useCallback/useMemo
 - Images optimisées
 

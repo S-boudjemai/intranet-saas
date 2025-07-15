@@ -1,5 +1,5 @@
 // src/components/NavBar.tsx
-import React from "react";
+
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { parseJwt, type JwtPayload } from "../utils/jwt"; // Assurez-vous que ce chemin est correct
@@ -10,7 +10,7 @@ import GlobalSearch from "./GlobalSearch";
 
 export default function NavBar() {
   const { token, logout } = useAuth();
-  const { notificationCounts, markAllAsRead, isProcessing } = useNotifications();
+  const { notificationCounts, markAllAsRead } = useNotifications();
   const navigate = useNavigate();
 
   const raw = token ? parseJwt<JwtPayload>(token) : null;
@@ -42,7 +42,7 @@ export default function NavBar() {
   const activeLinkClasses = "bg-secondary text-secondary-foreground font-semibold"; // Style pour le lien actif
 
   return (
-    <div className="flex items-center justify-between w-full">
+    <div className="hidden lg:flex items-center justify-between w-full">
       <nav className="flex items-center space-x-4">
         {/* Logo ou nom de l'application */}
         <Link
@@ -108,34 +108,28 @@ export default function NavBar() {
           />
         </NavLink>
 
-        {/* Liens Audits réservés aux admin/manager */}
+        {/* Lien Audits unifié réservé aux admin/manager */}
         {canManage && (
-          <>
-            <NavLink
-              to="/audit-templates"
-              className={({ isActive }) =>
-                `${linkClasses} ${isActive ? activeLinkClasses : ""}`
-              }
-            >
-              Templates Audits
-            </NavLink>
-            <NavLink
-              to="/audit-planning"
-              className={({ isActive }) =>
-                `${linkClasses} ${isActive ? activeLinkClasses : ""}`
-              }
-            >
-              Planning Audits
-            </NavLink>
-            <NavLink
-              to="/corrective-actions"
-              className={({ isActive }) =>
-                `${linkClasses} ${isActive ? activeLinkClasses : ""}`
-              }
-            >
-              Actions Correctives
-            </NavLink>
-          </>
+          <NavLink
+            to="/audits"
+            className={({ isActive }) =>
+              `${linkClasses} ${isActive ? activeLinkClasses : ""}`
+            }
+          >
+            Audits & Conformité
+          </NavLink>
+        )}
+
+        {/* Lien Archives réservé aux admin/manager */}
+        {canManage && (
+          <NavLink
+            to="/archives"
+            className={({ isActive }) =>
+              `${linkClasses} ${isActive ? activeLinkClasses : ""}`
+            }
+          >
+            Archives
+          </NavLink>
         )}
 
         {/* Le lien Utilisateurs est déjà correctement conditionné */}

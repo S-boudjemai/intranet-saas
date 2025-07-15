@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 
 // Types pour les résultats de recherche
 interface SearchResult {
@@ -96,8 +97,12 @@ const GlobalSearch: React.FC = () => {
       
       setIsLoading(true);
       try {
+        console.log('🔍 Searching with query:', query);
+        console.log('🔗 API URL:', import.meta.env.VITE_API_URL);
+        console.log('🔑 Token exists:', !!token);
+        
         const response = await fetch(
-          `http://localhost:3000/search?q=${encodeURIComponent(query)}`,
+          `${import.meta.env.VITE_API_URL}/search?q=${encodeURIComponent(query)}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -106,12 +111,20 @@ const GlobalSearch: React.FC = () => {
           }
         );
 
+        console.log('📡 Response status:', response.status);
+        
         if (response.ok) {
-          const data = await response.json();
+          const responseData = await response.json();
+          console.log('✅ Search results:', responseData);
+          // L'API retourne {success: true, data: {...}}, on extrait data
+          const data = responseData.data || responseData;
           setResults(data);
+        } else {
+          const errorData = await response.text();
+          console.error('❌ Search error:', response.status, errorData);
         }
       } catch (error) {
-        // Error searching
+        console.error('💥 Network error:', error);
       } finally {
         setIsLoading(false);
       }
@@ -150,10 +163,16 @@ const GlobalSearch: React.FC = () => {
   const highlightText = (text: string, searchQuery: string) => {
     if (!searchQuery) return text;
     
+    // Sanitize le texte d'entrée pour éviter les attaques XSS
+    const sanitizedText = DOMPurify.sanitize(text, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+    const sanitizedQuery = DOMPurify.sanitize(searchQuery, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+    
+    if (!sanitizedText || !sanitizedQuery) return text;
+    
     // Échapper le searchQuery pour éviter l'injection regex
-    const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedQuery = sanitizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`(${escapedQuery})`, 'gi');
-    const parts = text.split(regex);
+    const parts = sanitizedText.split(regex);
     
     return parts.map((part, index) => 
       regex.test(part) ? (

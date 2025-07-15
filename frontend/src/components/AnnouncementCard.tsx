@@ -1,5 +1,5 @@
 // src/components/AnnouncementCard.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import type { Announcement } from "../types"; // <-- Importer depuis le fichier central
 import { useAuth } from "../contexts/AuthContext";
 import DocumentPreviewModal from "./DocumentPreviewModal";

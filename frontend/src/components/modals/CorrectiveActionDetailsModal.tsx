@@ -1,4 +1,3 @@
-import React from 'react';
 import { FiX, FiUser, FiCalendar, FiClock, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
 import { HiOfficeBuilding, HiClipboardCheck } from 'react-icons/hi';
 import Badge from '../ui/Badge';

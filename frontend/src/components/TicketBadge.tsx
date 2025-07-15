@@ -1,5 +1,5 @@
 // src/components/TicketBadge.tsx
-import React from 'react';
+
 import Badge from './ui/Badge';
 
 interface TicketBadgeProps {

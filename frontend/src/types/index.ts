@@ -5,6 +5,7 @@
 export interface RestaurantInfo {
   id: number;
   name: string;
+  city?: string;
 }
 
 export interface TagType {
@@ -142,11 +143,11 @@ export interface AuditResponse {
 
 export type NonConformitySeverity = 'low' | 'medium' | 'high' | 'critical';
 export type NonConformityStatus = 'open' | 'in_progress' | 'resolved' | 'verified';
-export type CorrectiveActionStatus = 'pending' | 'in_progress' | 'completed';
+export type CorrectiveActionStatus = 'assigned' | 'in_progress' | 'completed' | 'verified';
 
 export interface NonConformity {
   id: number;
-  audit_execution_id: number;
+  execution_id: number;
   audit_item_id: number;
   description: string;
   severity: NonConformitySeverity;
@@ -159,12 +160,20 @@ export interface NonConformity {
   audit_execution: AuditExecution;
   audit_item: AuditItem;
   corrective_actions?: CorrectiveAction[];
+  corrective_action?: string;
+  due_date?: string;
+  responsible_user_id?: number;
+  title: string;
+  audit_name: string;
+  restaurant_name: string;
+  created_date: string;
 }
 
 export interface CorrectiveAction {
   id: number;
   non_conformity_id: number;
   description: string;
+  action_description: string;
   assigned_to_id: number;
   due_date: string;
   status: CorrectiveActionStatus;
@@ -173,12 +182,16 @@ export interface CorrectiveAction {
   created_by: number;
   created_at: string;
   updated_at: string;
-  non_conformity: NonConformity;
-  assigned_to: {
+  non_conformity?: NonConformity;
+  assigned_to?: {
     id: number;
     email: string;
   };
-  creator: {
+  assigned_user?: {
+    id: number;
+    email: string;
+  };
+  creator?: {
     id: number;
     email: string;
   };

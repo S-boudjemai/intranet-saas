@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FiX, FiCalendar, FiUser, FiFileText, FiClock, FiAlertTriangle } from 'react-icons/fi';
 
 interface Template {

@@ -58,4 +58,17 @@ export class AuditExecutionsController {
   complete(@Param('id', ParseIntPipe) id: number, @Request() req: { user: JwtUser }) {
     return this.auditExecutionsService.completeAudit(id, req.user);
   }
+
+  @Post(':id/archive')
+  async archiveAudit(@Param('id', ParseIntPipe) id: number, @Request() req: { user: JwtUser }) {
+    console.log(`🗄️ ARCHIVE AUDIT - Archivage audit ${id} par user ${req.user.userId}`);
+    try {
+      const result = await this.auditExecutionsService.archiveAudit(id, req.user);
+      console.log(`✅ ARCHIVE AUDIT - Success: Archive ID ${result.id}`);
+      return result;
+    } catch (error) {
+      console.error(`❌ ARCHIVE AUDIT - Error: ${error.message}`);
+      throw error;
+    }
+  }
 }

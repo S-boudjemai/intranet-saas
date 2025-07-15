@@ -1,5 +1,5 @@
 // src/pages/DocumentsPage.tsx
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import UploadDocument from "../components/UploadDocument";
 import DocumentCard from "../components/DocumentCard";
@@ -8,42 +8,7 @@ import DocumentPreviewModal from "../components/DocumentPreviewModal";
 import ManageTagsModal from "../components/ManageTagsModal";
 import ConfirmModal from "../components/ConfirmModal"; // <-- Import de la modale
 import type { DocumentType, TagType } from "../types";
-
-// --- ICÔNES SVG ---
-const DocumentTextIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    {...props}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-    />
-  </svg>
-);
-
-const SearchIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    {...props}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-    />
-  </svg>
-);
-// --- FIN ICÔNES SVG ---
+import { DocumentTextIcon, SearchIcon } from "../components/icons";
 
 export default function DocumentsPage() {
   const { token } = useAuth();
@@ -127,32 +92,14 @@ export default function DocumentsPage() {
   };
 
   // --- AUTRES HANDLERS ---
-  const handlePreview = async (filename: string, name: string) => {
-    const res = await fetch(
-      `${
-        import.meta.env.VITE_API_URL
-      }/documents/download-url?filename=${encodeURIComponent(filename)}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    const response = await res.json();
-    const { url } = response.data || response;
+  const handlePreview = (url: string, name: string) => {
+    // Les URLs sont déjà présignées depuis le backend
     setPreview({ url, name });
   };
 
-  const handleDownload = async (fileUrl: string) => {
-    try {
-      const res = await fetch(
-        `${
-          import.meta.env.VITE_API_URL
-        }/documents/download-url?filename=${encodeURIComponent(fileUrl)}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (!res.ok) throw new Error("Could not get download URL");
-      const response = await res.json();
-      const { url } = response.data || response;
-      window.open(url, "_blank", "noopener,noreferrer");
-    } catch (error) {
-    }
+  const handleDownload = (url: string) => {
+    // Les URLs sont déjà présignées depuis le backend
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const handleTagClick = (tagId: string) => {

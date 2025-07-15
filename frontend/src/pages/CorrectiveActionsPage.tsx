@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import type { NonConformity, CorrectiveAction } from '../types';
 import Button from '../components/ui/Button';
@@ -486,7 +486,7 @@ export default function CorrectiveActionsPage() {
                         <HiEye className="w-4 h-4 mr-1" />
                         Voir
                       </Button>
-                      {action.status !== 'completed' && action.status !== 'verified' && (
+                      {action.status !== 'completed' && (
                         <Button 
                           size="sm"
                           onClick={() => handleStatusChange(action.id, 'completed')}
@@ -541,7 +541,7 @@ export default function CorrectiveActionsPage() {
         onSubmit={handleCreateAction}
         nonConformities={nonConformities.map(nc => ({
           ...nc,
-          title: nc.title || 'Non-conformité',
+          title: nc.title || nc.description || 'Non-conformité',
           audit_name: 'Audit système',
           restaurant_name: 'Restaurant',
           created_date: new Date().toISOString()
@@ -553,7 +553,7 @@ export default function CorrectiveActionsPage() {
       <CorrectiveActionDetailsModal
         isOpen={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
-        action={selectedAction}
+        action={selectedAction as any}
         onStatusChange={handleStatusChange}
         userRole={user?.role}
       />

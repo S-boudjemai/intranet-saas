@@ -1,5 +1,5 @@
 // src/components/UploadDocument.tsx
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
 // --- ICÔNES SVG ---

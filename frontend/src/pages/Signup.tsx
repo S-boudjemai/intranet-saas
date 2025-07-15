@@ -1,26 +1,18 @@
 // src/pages/Signup.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import type { InviteType } from "../types";
 import CityAutocomplete from "../components/CityAutocomplete";
 import Button from "../components/ui/Button";
 import Card, { CardContent } from "../components/ui/Card";
-
-// --- ICÔNES SVG ---
-const SpinnerIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg className="animate-spin" {...props}>
-    {/* ... */}
-  </svg>
-);
-const ExclamationCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg {...props}>{/* ... */}</svg>
-);
-// --- FIN ICÔNES SVG ---
+import { SpinnerIcon, ExclamationCircleIcon } from "../components/icons";
 
 export default function Signup() {
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get("invite") || "";
   const navigate = useNavigate();
+  const { setAuthFromSignup } = useAuth();
 
   const [invite, setInvite] = useState<InviteType | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +21,13 @@ export default function Signup() {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantCity, setRestaurantCity] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [passwordValidation, setPasswordValidation] = useState({
+    minLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecialChar: false,
+  });
 
   useEffect(() => {
 
@@ -57,11 +56,31 @@ export default function Signup() {
       .finally(() => setLoadingInvite(false));
   }, [inviteToken]);
 
+  // Validation temps réel du mot de passe
+  useEffect(() => {
+    setPasswordValidation({
+      minLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecialChar: /[@$!%*?&]/.test(password),
+    });
+  }, [password]);
+
+  const isPasswordValid = Object.values(passwordValidation).every(Boolean);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
     try {
+      console.log('🔍 SIGNUP - Submitting with data:', {
+        token: inviteToken,
+        password: '***',
+        restaurant_name: restaurantName.trim() || undefined,
+        restaurant_city: restaurantCity.trim() || undefined,
+      });
+      
       // On appelle la route d'authentification sécurisée
       const res = await fetch(
         `${import.meta.env.VITE_API_URL}/auth/signup-with-invite`,
@@ -71,24 +90,56 @@ export default function Signup() {
           body: JSON.stringify({
             token: inviteToken,
             password: password,
-            restaurant_name: restaurantName.trim() || undefined,
-            restaurant_city: restaurantCity.trim() || undefined,
+            // Exclure complètement les champs vides pour éviter les validations
+            ...(restaurantName.trim() && { restaurant_name: restaurantName.trim() }),
+            ...(restaurantCity.trim() && { restaurant_city: restaurantCity.trim() }),
           }),
         }
       );
+      
+      console.log('📡 SIGNUP - Response status:', res.status);
+      
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || `Erreur de création (${res.status})`);
+        console.error('❌ SIGNUP - Error response:', body);
+        console.error('❌ SIGNUP - Full error object:', JSON.stringify(body, null, 2));
+        
+        // Extraire le message d'erreur correctement
+        let errorMessage = `Erreur de création (${res.status})`;
+        if (body.error?.message) {
+          if (Array.isArray(body.error.message)) {
+            errorMessage = body.error.message.join(', ');
+          } else {
+            errorMessage = body.error.message;
+          }
+        } else if (body.message) {
+          errorMessage = body.message;
+        }
+        
+        throw new Error(errorMessage);
       }
-      // Succès ! On redirige vers la page de connexion avec un message.
-      navigate("/login", {
-        state: {
-          successMessage:
-            "Compte créé avec succès ! Vous pouvez maintenant vous connecter.",
-        },
+      
+      // Succès ! Récupérer le token et connecter automatiquement
+      const responseData = await res.json();
+      console.log('✅ SIGNUP - Success response:', responseData);
+      
+      const access_token = responseData.access_token || responseData.data?.access_token;
+      if (!access_token) {
+        throw new Error('Token manquant dans la réponse signup');
+      }
+      
+      console.log('🎯 SIGNUP - Auto-connecting with token');
+      setAuthFromSignup(access_token);
+      
+      // Redirection automatique vers dashboard
+      navigate("/dashboard", {
+        replace: true // Remplace l'entrée signup dans l'historique
       });
     } catch (err: any) {
+      console.error('💥 SIGNUP - Final error:', err.message);
       setError(err.message);
+      // Scroller vers le haut pour voir l'erreur
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSubmitting(false);
     }
@@ -136,6 +187,19 @@ export default function Signup() {
             </p>
           </div>
 
+          {/* Affichage d'erreur directement dans le formulaire */}
+          {error && (
+            <div className="bg-destructive/10 text-destructive p-4 rounded-md text-sm border border-destructive/20">
+              <div className="flex items-start gap-3">
+                <ExclamationCircleIcon className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold mb-1">Erreur de validation</h4>
+                  <p>{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Informations du restaurant */}
           <Card padding="md" className="bg-accent/20 border-accent/30">
             <CardContent>
@@ -178,18 +242,108 @@ export default function Signup() {
             <input
               id="password"
               type="password"
-              className={inputClasses}
+              className={`${inputClasses} ${password && !isPasswordValid ? 'border-destructive focus:border-destructive focus:ring-destructive/30' : ''}`}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={8}
-              placeholder="8 caractères minimum"
+              placeholder="Ex: MonMotDePasse123!"
             />
+            
+            {/* Indicateurs de validation permanents */}
+            <div className="mt-2 space-y-1">
+              <div className="grid grid-cols-1 gap-1 text-xs">
+                <div className={`flex items-center gap-2 transition-colors ${
+                  !password ? 'text-muted-foreground' : 
+                  passwordValidation.minLength ? 'text-green-600' : 'text-destructive'
+                }`}>
+                  <span className={`w-3 h-3 rounded-full border-2 flex items-center justify-center transition-all ${
+                    !password ? 'border-muted-foreground bg-transparent' :
+                    passwordValidation.minLength ? 'border-green-600 bg-green-600' : 'border-destructive bg-transparent'
+                  }`}>
+                    {password && passwordValidation.minLength && (
+                      <span className="text-white text-[10px] font-bold">✓</span>
+                    )}
+                    {password && !passwordValidation.minLength && (
+                      <span className="text-destructive text-[10px] font-bold">✕</span>
+                    )}
+                  </span>
+                  Au moins 8 caractères
+                </div>
+                <div className={`flex items-center gap-2 transition-colors ${
+                  !password ? 'text-muted-foreground' : 
+                  passwordValidation.hasUppercase ? 'text-green-600' : 'text-destructive'
+                }`}>
+                  <span className={`w-3 h-3 rounded-full border-2 flex items-center justify-center transition-all ${
+                    !password ? 'border-muted-foreground bg-transparent' :
+                    passwordValidation.hasUppercase ? 'border-green-600 bg-green-600' : 'border-destructive bg-transparent'
+                  }`}>
+                    {password && passwordValidation.hasUppercase && (
+                      <span className="text-white text-[10px] font-bold">✓</span>
+                    )}
+                    {password && !passwordValidation.hasUppercase && (
+                      <span className="text-destructive text-[10px] font-bold">✕</span>
+                    )}
+                  </span>
+                  Une majuscule (A-Z)
+                </div>
+                <div className={`flex items-center gap-2 transition-colors ${
+                  !password ? 'text-muted-foreground' : 
+                  passwordValidation.hasLowercase ? 'text-green-600' : 'text-destructive'
+                }`}>
+                  <span className={`w-3 h-3 rounded-full border-2 flex items-center justify-center transition-all ${
+                    !password ? 'border-muted-foreground bg-transparent' :
+                    passwordValidation.hasLowercase ? 'border-green-600 bg-green-600' : 'border-destructive bg-transparent'
+                  }`}>
+                    {password && passwordValidation.hasLowercase && (
+                      <span className="text-white text-[10px] font-bold">✓</span>
+                    )}
+                    {password && !passwordValidation.hasLowercase && (
+                      <span className="text-destructive text-[10px] font-bold">✕</span>
+                    )}
+                  </span>
+                  Une minuscule (a-z)
+                </div>
+                <div className={`flex items-center gap-2 transition-colors ${
+                  !password ? 'text-muted-foreground' : 
+                  passwordValidation.hasNumber ? 'text-green-600' : 'text-destructive'
+                }`}>
+                  <span className={`w-3 h-3 rounded-full border-2 flex items-center justify-center transition-all ${
+                    !password ? 'border-muted-foreground bg-transparent' :
+                    passwordValidation.hasNumber ? 'border-green-600 bg-green-600' : 'border-destructive bg-transparent'
+                  }`}>
+                    {password && passwordValidation.hasNumber && (
+                      <span className="text-white text-[10px] font-bold">✓</span>
+                    )}
+                    {password && !passwordValidation.hasNumber && (
+                      <span className="text-destructive text-[10px] font-bold">✕</span>
+                    )}
+                  </span>
+                  Un chiffre (0-9)
+                </div>
+                <div className={`flex items-center gap-2 transition-colors ${
+                  !password ? 'text-muted-foreground' : 
+                  passwordValidation.hasSpecialChar ? 'text-green-600' : 'text-destructive'
+                }`}>
+                  <span className={`w-3 h-3 rounded-full border-2 flex items-center justify-center transition-all ${
+                    !password ? 'border-muted-foreground bg-transparent' :
+                    passwordValidation.hasSpecialChar ? 'border-green-600 bg-green-600' : 'border-destructive bg-transparent'
+                  }`}>
+                    {password && passwordValidation.hasSpecialChar && (
+                      <span className="text-white text-[10px] font-bold">✓</span>
+                    )}
+                    {password && !passwordValidation.hasSpecialChar && (
+                      <span className="text-destructive text-[10px] font-bold">✕</span>
+                    )}
+                  </span>
+                  Un caractère spécial (@$!%*?&)
+                </div>
+              </div>
+            </div>
           </div>
           <div className="pt-2">
             <Button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !isPasswordValid}
               loading={submitting}
               variant="primary"
               size="lg"
@@ -197,6 +351,11 @@ export default function Signup() {
             >
               Créer mon compte
             </Button>
+            {!isPasswordValid && password && (
+              <p className="text-xs text-destructive text-center mt-2">
+                Veuillez respecter tous les critères du mot de passe
+              </p>
+            )}
           </div>
         </form>
       );

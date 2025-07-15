@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { FiCheck, FiX, FiAlertTriangle, FiInfo } from 'react-icons/fi';
 
 interface ToastProps {

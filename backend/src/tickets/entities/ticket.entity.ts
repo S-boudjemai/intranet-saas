@@ -19,6 +19,7 @@ export enum TicketStatus {
   NonTraitee = 'non_traitee',
   EnCours = 'en_cours',
   Traitee = 'traitee',
+  Supprime = 'supprime',
 }
 
 @Entity('tickets') // Le nom de la table est 'tickets'

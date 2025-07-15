@@ -2,13 +2,17 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { TagsService } from './tags.service';
 import { Tag } from './entites/tag.entity';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles/roles.guard';
 
 @Controller('tags')
 export class TagsController {
@@ -29,6 +33,7 @@ export class TagsController {
 
 // Maintenant les routes pour association docs–tags
 @Controller('documents/:docId/tags')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class DocumentTagsController {
   constructor(private readonly tagsService: TagsService) {}
 
@@ -43,7 +48,7 @@ export class DocumentTagsController {
   }
 
   // DELETE /documents/:docId/tags/:tagId
-  @Post(':tagId')
+  @Delete(':tagId')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param('docId') docId: string,
