@@ -37,7 +37,7 @@ async function bootstrap() {
   // Cookie parser middleware
   app.use(cookieParser());
   
-  // CORS pour accepter les connexions depuis mobile et localhost
+  // CORS pour accepter les connexions depuis mobile, localhost et Vercel
   app.enableCors({
     origin: [
       'http://localhost:5173',
@@ -47,6 +47,7 @@ async function bootstrap() {
       'http://127.0.0.1:5174',
       'http://127.0.0.1:5175',
       'http://172.21.205.127:5173',
+      'https://intranet-saas.vercel.app', // Frontend Vercel
       'http://172.21.205.127:5174',
       'http://172.21.205.127:5175'
     ],
