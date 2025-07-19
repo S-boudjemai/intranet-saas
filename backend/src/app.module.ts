@@ -23,6 +23,7 @@ import { validationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { AuditsModule } from './audits/audits.module';
 import { AdminModule } from './admin/admin.module';
+import { SetupModule } from './setup/setup.module';
 
 @Module({
   imports: [
@@ -121,6 +122,7 @@ import { AdminModule } from './admin/admin.module';
     HealthModule,
     AuditsModule,
     AdminModule,
+    SetupModule,
   ],
 
   providers: [
