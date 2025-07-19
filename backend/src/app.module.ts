@@ -65,23 +65,45 @@ import { AdminModule } from './admin/admin.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (cfg: ConfigService) => ({
-        type: 'postgres',
-        host: cfg.get<string>('DB_HOST'),
-        port: cfg.get<number>('DB_PORT'),
-        username: cfg.get<string>('DB_USER'),
-        password: cfg.get<string>('DB_PASS'),
-        database: cfg.get<string>('DB_NAME'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: cfg.get<string>('NODE_ENV') !== 'production', // SECURITE: Désactivé en production
-        ssl: false, // Désactiver SSL pour connexion locale
-        connectTimeoutMS: 30000, // 30 secondes timeout
-        acquireTimeoutMS: 30000, // 30 secondes pour acquérir une connexion
-        retryAttempts: 5, // 5 tentatives de reconnexion
-        retryDelay: 3000, // 3 secondes entre chaque tentative
-        autoLoadEntities: true, // Chargement automatique des entités
-        logging: false, // Logs SQL désactivés pour éviter pollution console
-      }),
+      useFactory: (cfg: ConfigService) => {
+        // Support pour DATABASE_URL (Render, Heroku) ou variables séparées (local)
+        const databaseUrl = cfg.get<string>('DATABASE_URL');
+        
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: cfg.get<string>('NODE_ENV') !== 'production',
+            ssl: cfg.get<string>('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
+            connectTimeoutMS: 30000,
+            acquireTimeoutMS: 30000,
+            retryAttempts: 5,
+            retryDelay: 3000,
+            autoLoadEntities: true,
+            logging: false,
+          };
+        }
+        
+        // Fallback vers variables séparées pour développement local
+        return {
+          type: 'postgres',
+          host: cfg.get<string>('DB_HOST'),
+          port: cfg.get<number>('DB_PORT'),
+          username: cfg.get<string>('DB_USER'),
+          password: cfg.get<string>('DB_PASS'),
+          database: cfg.get<string>('DB_NAME'),
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          synchronize: cfg.get<string>('NODE_ENV') !== 'production',
+          ssl: false,
+          connectTimeoutMS: 30000,
+          acquireTimeoutMS: 30000,
+          retryAttempts: 5,
+          retryDelay: 3000,
+          autoLoadEntities: true,
+          logging: false,
+        };
+      },
     }),
     TenantsModule,
     UsersModule,

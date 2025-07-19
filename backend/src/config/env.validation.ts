@@ -3,12 +3,13 @@ import * as Joi from 'joi';
 export const validationSchema = Joi.object({
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
   
-  // Database
-  DB_HOST: Joi.string().required(),
+  // Database - soit DATABASE_URL soit variables séparées
+  DATABASE_URL: Joi.string().optional(),
+  DB_HOST: Joi.string().optional(),
   DB_PORT: Joi.number().default(5432),
-  DB_USER: Joi.string().required(),
-  DB_PASS: Joi.string().required(),
-  DB_NAME: Joi.string().required(),
+  DB_USER: Joi.string().optional(),
+  DB_PASS: Joi.string().optional(),
+  DB_NAME: Joi.string().optional(),
   
   // JWT
   JWT_SECRET: Joi.string().required(),
