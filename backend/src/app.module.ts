@@ -75,7 +75,7 @@ import { SetupModule } from './setup/setup.module';
             type: 'postgres',
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: cfg.get<string>('NODE_ENV') !== 'production',
+            synchronize: true, // Temporaire pour créer les tables
             ssl: cfg.get<string>('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
             connectTimeoutMS: 30000,
             acquireTimeoutMS: 30000,
