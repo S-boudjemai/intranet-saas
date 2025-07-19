@@ -12,6 +12,12 @@ export class RestaurantsService {
     @InjectRepository(Restaurant) private repo: Repository<Restaurant>,
   ) {}
 
+  // Créer un nouveau restaurant
+  async create(createData: { name: string; city: string; tenant_id: number }): Promise<Restaurant> {
+    const restaurant = this.repo.create(createData);
+    return this.repo.save(restaurant);
+  }
+
   // Renvoie les restaurants pour le tenant du manager connecté
   findAllForTenant(user: JwtUser): Promise<Restaurant[]> {
     // ----- CORRECTION APPLIQUÉE ICI -----
