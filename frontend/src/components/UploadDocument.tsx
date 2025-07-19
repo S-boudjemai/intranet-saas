@@ -54,7 +54,7 @@ const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
 // --- FIN ICÔNES SVG ---
 
 export interface UploadDocumentProps {
-  tenant_id: string;
+  tenant_id: number;
   categoryId?: string;
   onUploadSuccess: () => Promise<void>;
 }
@@ -69,15 +69,32 @@ export default function UploadDocument({
   const [name, setName] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lastUploadTime, setLastUploadTime] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation de base
     if (!file || !name || !token) {
       setStatus("Erreur : Le nom et le fichier sont obligatoires.");
       return;
     }
+    
+    // Protection contre les uploads trop rapides (minimum 2 secondes entre uploads)
+    const now = Date.now();
+    if (now - lastUploadTime < 2000) {
+      setStatus("Veuillez attendre quelques secondes avant le prochain upload.");
+      return;
+    }
+    
+    // Validation du tenant_id
+    if (!tenant_id || isNaN(tenant_id) || tenant_id <= 0) {
+      setStatus("Erreur : Identifiant tenant invalide. Veuillez recharger la page.");
+      return;
+    }
 
+    setLastUploadTime(now);
     setLoading(true);
     setStatus("Envoi en cours...");
     try {
@@ -91,7 +108,6 @@ export default function UploadDocument({
       );
       if (!res1.ok) throw new Error("URL S3 impossible");
       const response1 = await res1.json();
-      console.log('🔍 Upload URL response:', response1);
       const { url: uploadUrl } = response1.data || response1;
 
       const res2 = await fetch(uploadUrl, {
@@ -104,14 +120,19 @@ export default function UploadDocument({
       // Construire l'URL publique du fichier uploadé sur S3
       const fileUrl = `https://${import.meta.env.VITE_AWS_S3_BUCKET || 'internet-saas'}.s3.${import.meta.env.VITE_AWS_REGION || 'us-east-1'}.amazonaws.com/${safeName}`;
 
+      // Validation finale des données avant envoi
       const documentData = {
-        name,
+        name: name.trim(),
         url: fileUrl,
-        tenant_id,
+        tenant_id: Number(tenant_id), // S'assurer que c'est un nombre
         ...(categoryId ? { categoryId } : {}),
       };
       
-      console.log('📄 Sending document data:', documentData);
+      // Vérification finale
+      if (!documentData.name || !documentData.url || !documentData.tenant_id) {
+        throw new Error("Données document invalides");
+      }
+      
       
       const res3 = await fetch(`${import.meta.env.VITE_API_URL}/documents`, {
         method: "POST",
@@ -140,7 +161,7 @@ export default function UploadDocument({
     if (inputRef.current) inputRef.current.value = "";
   };
 
-  const inputClasses = `bg-input border border-border rounded-md w-full p-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all`;
+  const inputClasses = `bg-input border border-border rounded-md w-full p-3 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all`;
 
   return (
     <form

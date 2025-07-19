@@ -10,6 +10,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { DocumentsService } from './documents.service';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
 import { Document } from './entities/document.entity';
@@ -29,12 +30,24 @@ export class DocumentsController {
 
   /** Admin/Manager only: création */
   @Post()
+  @Throttle({ default: { limit: 3, ttl: 10000 } }) // Max 3 uploads par 10 secondes
   @Roles(Role.Admin, Role.Manager)
   async create(
     @Body() body: Partial<Document> & { categoryId?: string },
     @Req() req: Request & { user: JwtUser },
   ): Promise<Document> {
-    return this.svc.create(body, req.user);
+    // Validation robuste du JWT user pour éviter les erreurs de parsing
+    const user = req.user;
+    if (!user || !user.userId || isNaN(user.userId)) {
+      throw new Error('Token JWT invalide: userId manquant ou invalide');
+    }
+    
+    // Validation du tenant_id si l'utilisateur n'est pas admin global
+    if (user.tenant_id !== null && isNaN(user.tenant_id)) {
+      throw new Error('Token JWT invalide: tenant_id corrompu');
+    }
+    
+    return this.svc.create(body, user);
   }
 
   /** Admin/Manager/Viewer: liste, filtrée par categoryId, q et tags */

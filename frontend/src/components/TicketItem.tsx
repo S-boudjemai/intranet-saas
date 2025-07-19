@@ -1,5 +1,6 @@
 // src/components/TicketItem.tsx
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import type { TicketType, TicketAttachment } from "../types";
 import TicketBadge from "./TicketBadge";
 import ImageUpload from "./ImageUpload";
@@ -37,98 +38,188 @@ export default function TicketItem({
     }
   }, [isExpanded]);
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
+  const [commentError, setCommentError] = useState<string>("");
+  
+  const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (commentInputRef.current?.value) {
-      onAddComment(ticket.id, commentInputRef.current.value);
-      commentInputRef.current.value = "";
+      try {
+        setCommentError("");
+        await onAddComment(ticket.id, commentInputRef.current.value);
+        commentInputRef.current.value = "";
+      } catch (error: any) {
+        setCommentError(error.message || "Erreur lors de l'ajout du commentaire");
+      }
     }
   };
 
   const inputClasses =
-    "bg-input border border-border rounded-md w-full p-2 text-foreground focus:border-primary focus:ring-primary/30 focus:outline-none transition-all";
+    "bg-input border border-border rounded-md w-full p-2 text-gray-900 focus:border-primary focus:ring-primary/30 focus:outline-none transition-all";
 
   return (
-    <div className="bg-card border border-border rounded-lg">
-      <button
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.5, 
+        ease: "easeOut" 
+      }}
+      whileHover={{ 
+        y: -4,
+        transition: { type: "spring", stiffness: 300, damping: 20 }
+      }}
+      className="bg-card border border-border rounded-2xl"
+      style={{
+        boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
+      }}
+    >
+      <motion.button
+        whileHover={{ backgroundColor: "rgba(59, 130, 246, 0.02)" }}
+        whileTap={{ scale: 0.995 }}
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex justify-between items-center p-4"
+        className="w-full flex justify-between items-center p-6 transition-all duration-300"
       >
         <div className="flex items-center gap-4">
           {isManager && ticket.restaurant && (
-            <span className="text-sm font-semibold text-sky-400 bg-sky-500/10 px-2 py-1 rounded">
+            <motion.span 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20"
+            >
               {ticket.restaurant.name}
-            </span>
+            </motion.span>
           )}
-          <h2 className="font-bold text-lg text-card-foreground">
+          <motion.h2 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="font-bold text-lg text-card-foreground"
+          >
             {ticket.title}
-          </h2>
-          <TicketBadge status={ticket.status} />
+          </motion.h2>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <TicketBadge status={ticket.status} />
+          </motion.div>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-xs text-muted-foreground">
+          <motion.span 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-xs text-muted-foreground"
+          >
             M.à.j {new Date(ticket.updated_at).toLocaleDateString()}
-          </span>
-          <ChevronDownIcon
-            className={`h-6 w-6 text-muted-foreground transition-transform duration-300 ${
-              isExpanded ? "rotate-180" : ""
-            }`}
-          />
+          </motion.span>
+          <motion.div
+            whileHover={{ rotate: isExpanded ? 180 : -10 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <ChevronDownIcon
+              className={`h-6 w-6 text-muted-foreground transition-transform duration-300 ${
+                isExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </motion.div>
         </div>
-      </button>
+      </motion.button>
 
-      <div
-        className={`overflow-hidden transition-all duration-500 ease-in-out ${
-          isExpanded ? "max-h-[1000px]" : "max-h-0"
-        }`}
+      <motion.div
+        initial={false}
+        animate={{
+          height: isExpanded ? "auto" : 0,
+          opacity: isExpanded ? 1 : 0
+        }}
+        transition={{ 
+          duration: 0.5, 
+          ease: "easeInOut",
+          opacity: { delay: isExpanded ? 0.2 : 0 }
+        }}
+        className="overflow-hidden"
       >
-        <div className="border-t border-border p-4 space-y-6">
+        <div className="border-t border-border p-6 space-y-6">
           {ticket.description && (
-            <p className="text-foreground/80">{ticket.description}</p>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-muted-foreground leading-relaxed"
+            >
+              {ticket.description}
+            </motion.p>
           )}
           
           {/* Affichage des images du ticket */}
           {ticketAttachments.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="font-medium text-foreground text-sm">Images du ticket :</h4>
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="space-y-3"
+            >
+              <h4 className="font-medium text-foreground text-sm flex items-center gap-2">
+                <span className="w-2 h-2 bg-primary rounded-full"></span>
+                Images du ticket :
+              </h4>
               <AttachmentGallery attachments={ticketAttachments} />
-            </div>
+            </motion.div>
           )}
           
           {isManager && (
-            <div className="border-2 border-dashed border-border rounded-lg p-4 bg-gradient-to-r from-muted/30 to-muted/50">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="border-2 border-dashed border-primary/20 rounded-2xl p-5 bg-gradient-to-r from-primary/5 to-primary/10"
+            >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-foreground bg-accent/50 px-3 py-1 rounded-full border border-border">
+                <div className="flex items-center gap-4">
+                  <motion.span 
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    className="text-sm font-semibold text-primary bg-primary/10 px-4 py-2 rounded-full border border-primary/20"
+                  >
                     Gestion du ticket
-                  </span>
+                  </motion.span>
                   <div className="flex items-center gap-2">
                     {(["non_traitee", "en_cours", "traitee"] as const).map(
-                      (status) => (
-                        <button
+                      (status, index) => (
+                        <motion.button
                           key={status}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.6 + index * 0.1 }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => onStatusChange(ticket.id, status)}
                           disabled={ticket.status === status}
-                          className="disabled:cursor-not-allowed hover:scale-105 transition-transform duration-200"
+                          className="disabled:cursor-not-allowed transition-all duration-200"
                         >
                           <TicketBadge status={status} />
-                        </button>
+                        </motion.button>
                       )
                     )}
                   </div>
                 </div>
                 {/* Bouton suppression uniquement si ticket traité */}
                 {ticket.status === "traitee" && (
-                  <button
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={() => onDeleteRequest(ticket)}
-                    className="p-2 rounded-full text-muted-foreground hover:bg-destructive/20 hover:text-destructive border border-transparent hover:border-destructive/30 transition-all duration-200"
+                    className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-transparent hover:border-destructive/20 transition-all duration-300"
                     title="Supprimer le ticket traité"
                   >
                     <TrashIcon className="h-5 w-5" />
-                  </button>
+                  </motion.button>
                 )}
               </div>
-            </div>
+            </motion.div>
           )}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -230,10 +321,16 @@ export default function TicketItem({
                   Envoyer
                 </button>
               </form>
+              
+              {commentError && (
+                <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md border border-destructive/20">
+                  {commentError}
+                </div>
+              )}
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

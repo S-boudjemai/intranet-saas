@@ -1,5 +1,6 @@
 // src/pages/TicketsPages.tsx
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import CreateTicketForm from "../components/CreateTicketForm";
@@ -35,13 +36,11 @@ export default function TicketsPage() {
         return;
       }
       const response = await res.json();
-      console.log('🎫 Frontend - Tickets response:', response);
       
       // Gérer le format transformé par l'intercepteur global
       const list = response.data || response;
       setTickets(Array.isArray(list) ? list : []);
       
-      console.log('🎫 Frontend - Set tickets:', Array.isArray(list) ? list.length : 0, 'tickets');
     } finally {
       setLoading(false);
     }
@@ -104,57 +103,120 @@ export default function TicketsPage() {
     }
   };
   const addComment = async (ticketId: string, message: string) => {
-    await fetch(
-      `${import.meta.env.VITE_API_URL}/tickets/${ticketId}/comments`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ message }),
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/tickets/${ticketId}/comments`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ message }),
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        
+        // Extraire le message d'erreur de validation
+        let errorMessage = 'Erreur lors de l\'ajout du commentaire';
+        if (errorData.error && errorData.error.message) {
+          if (Array.isArray(errorData.error.message)) {
+            errorMessage = errorData.error.message[0]; // Prendre le premier message d'erreur
+          } else {
+            errorMessage = errorData.error.message;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
-    );
-    loadTickets();
+      
+      loadTickets();
+    } catch (error) {
+      console.error('Erreur complète:', error);
+      throw error; // Re-lancer l'erreur pour que TicketItem puisse la capturer
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-      <h1 className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
-        <div className="p-2 bg-card border border-border rounded-lg">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8"
+    >
+      <motion.h1 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3"
+      >
+        <motion.div 
+          initial={{ scale: 0, rotate: -45 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+          className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
+          style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+        >
           <TicketIcon className="h-6 w-6 text-primary" />
-        </div>
+        </motion.div>
         <span>Gestion des Tickets</span>
-      </h1>
+      </motion.h1>
 
       {isViewer && (
-        <div className="mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="mb-8"
+        >
           <CreateTicketForm onSuccess={handleCreated} />
-        </div>
+        </motion.div>
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center space-x-2 text-muted-foreground p-8">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center justify-center space-x-2 text-muted-foreground p-8"
+        >
           <SpinnerIcon className="h-6 w-6" />
           <span>Chargement…</span>
-        </div>
+        </motion.div>
       ) : tickets.length === 0 ? (
-        <div className="text-center text-muted-foreground py-16 border-2 border-dashed border-border rounded-lg">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-center text-muted-foreground py-16 border-2 border-dashed border-border rounded-2xl bg-muted"
+        >
           <p>Aucun ticket trouvé.</p>
-        </div>
+        </motion.div>
       ) : (
-        <ul className="space-y-4">
-          {tickets.map((t) => (
-            <TicketItem
+        <motion.ul 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="space-y-6"
+        >
+          {tickets.map((t, index) => (
+            <motion.li
               key={t.id}
-              ticket={t}
-              isManager={isManager}
-              onStatusChange={changeStatus}
-              onDeleteRequest={handleDeleteRequest} // <-- CORRIGÉ : On passe la bonne prop
-              onAddComment={addComment}
-            />
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 + index * 0.1 }}
+            >
+              <TicketItem
+                ticket={t}
+                isManager={isManager}
+                onStatusChange={changeStatus}
+                onDeleteRequest={handleDeleteRequest}
+                onAddComment={addComment}
+              />
+            </motion.li>
           ))}
-        </ul>
+        </motion.ul>
       )}
 
       {/* --- NOTRE MODALE DE CONFIRMATION --- */}
@@ -168,6 +230,6 @@ export default function TicketsPage() {
         <span className="font-bold">{ticketToDelete?.title}</span>" ? Cette
         action est irréversible.
       </ConfirmModal>
-    </div>
+    </motion.div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { AuditExecution, AuditTemplate, RestaurantInfo } from '../types';
@@ -41,14 +42,11 @@ export default function AuditPlanningPage() {
 
       if (executionsRes.ok) {
         const data = await executionsRes.json();
-        console.log('🔍 EXECUTIONS loaded:', data);
-        console.log('🔍 EXECUTIONS data content:', data.data);
         setExecutions(data.data || data);
       }
 
       if (templatesRes.ok) {
         const data = await templatesRes.json();
-        console.log('Templates loaded:', data); // Debug pour voir les templates
         setTemplates(data.data || data);
       }
 
@@ -69,7 +67,7 @@ export default function AuditPlanningPage() {
         setInspectors(filteredInspectors);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement:', error);
+      // Erreur lors du chargement des données
     } finally {
       setLoading(false);
     }
@@ -77,8 +75,6 @@ export default function AuditPlanningPage() {
 
   const handleScheduleAudit = async (auditData: any) => {
     try {
-      console.log('🚀 FRONTEND - Sending audit planning data:', JSON.stringify(auditData, null, 2));
-      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/audits`, {
         method: 'POST',
         headers: {
@@ -90,14 +86,12 @@ export default function AuditPlanningPage() {
 
       if (response.ok) {
         await fetchData(); // Recharger la liste
-        console.log('Audit planifié avec succès');
       } else {
         const errorData = await response.text();
-        console.error('❌ Erreur lors de la planification de l\'audit. Status:', response.status);
-        console.error('❌ Error details:', errorData);
+        // Erreur lors de la planification de l'audit
       }
     } catch (error) {
-      console.error('❌ Erreur lors de la planification de l\'audit:', error);
+      // Erreur lors de la planification de l'audit
     }
   };
 
@@ -136,89 +130,165 @@ export default function AuditPlanningPage() {
     overdue: executions.filter(e => isOverdue(e.scheduled_date, e.status)),
   };
 
-  console.log('🔍 GROUPED EXECUTIONS:', {
-    total: executions.length,
-    today: groupedExecutions.today.length,
-    upcoming: groupedExecutions.upcoming.length,
-    future: groupedExecutions.future.length,
-    overdue: groupedExecutions.overdue.length,
-    executions: executions
-  });
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-64">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex items-center justify-center min-h-64"
+      >
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="flex justify-between items-center"
+      >
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Planning des Audits</h1>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-4">
+            <motion.div 
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+              className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
+              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+            >
+              <HiCalendar className="h-6 w-6 text-primary" />
+            </motion.div>
+            <span>Planning des Audits</span>
+          </h1>
           <p className="text-muted-foreground mt-1">
             Planifiez et suivez vos audits de conformité
           </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <HiPlus className="w-4 h-4 mr-2" />
-          Planifier un Audit
-        </Button>
-      </div>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          <Button onClick={() => setShowCreateModal(true)}>
+            <HiPlus className="w-4 h-4 mr-2" />
+            Planifier un Audit
+          </Button>
+        </motion.div>
+      </motion.div>
 
       {/* Stats rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
-              <HiCalendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="grid grid-cols-1 md:grid-cols-4 gap-4"
+      >
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+        >
+          <Card className="p-4" hover>
+            <div className="flex items-center">
+              <motion.div 
+                initial={{ scale: 0, rotate: -45 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.6, type: "spring", stiffness: 300 }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="p-2 bg-primary/10 rounded-xl"
+              >
+                <HiCalendar className="w-6 h-6 text-primary" />
+              </motion.div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">Aujourd'hui</p>
+                <p className="text-2xl font-bold text-foreground">{groupedExecutions.today.length}</p>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">Aujourd'hui</p>
-              <p className="text-2xl font-bold text-foreground">{groupedExecutions.today.length}</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </motion.div>
 
-        <Card className="p-4">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg dark:bg-yellow-900">
-              <HiClock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <Card className="p-4" hover>
+            <div className="flex items-center">
+              <motion.div 
+                initial={{ scale: 0, rotate: -45 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.7, type: "spring", stiffness: 300 }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="p-2 bg-yellow-500/10 rounded-xl"
+              >
+                <HiClock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+              </motion.div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">Cette semaine</p>
+                <p className="text-2xl font-bold text-foreground">{groupedExecutions.upcoming.length}</p>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">Cette semaine</p>
-              <p className="text-2xl font-bold text-foreground">{groupedExecutions.upcoming.length}</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </motion.div>
 
-        <Card className="p-4">
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg dark:bg-red-900">
-              <HiUser className="w-6 h-6 text-red-600 dark:text-red-400" />
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+        >
+          <Card className="p-4" hover>
+            <div className="flex items-center">
+              <motion.div 
+                initial={{ scale: 0, rotate: -45 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.8, type: "spring", stiffness: 300 }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="p-2 bg-destructive/10 rounded-xl"
+              >
+                <HiUser className="w-6 h-6 text-destructive" />
+              </motion.div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">En retard</p>
+                <p className="text-2xl font-bold text-foreground">{groupedExecutions.overdue.length}</p>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">En retard</p>
-              <p className="text-2xl font-bold text-foreground">{groupedExecutions.overdue.length}</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </motion.div>
 
-        <Card className="p-4">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg dark:bg-green-900">
-              <HiOfficeBuilding className="w-6 h-6 text-green-600 dark:text-green-400" />
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+        >
+          <Card className="p-4" hover>
+            <div className="flex items-center">
+              <motion.div 
+                initial={{ scale: 0, rotate: -45 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.9, type: "spring", stiffness: 300 }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="p-2 bg-green-500/10 rounded-xl"
+              >
+                <HiOfficeBuilding className="w-6 h-6 text-green-600 dark:text-green-400" />
+              </motion.div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">Total audits</p>
+                <p className="text-2xl font-bold text-foreground">{executions.length}</p>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">Total audits</p>
-              <p className="text-2xl font-bold text-foreground">{executions.length}</p>
-            </div>
-          </div>
-        </Card>
-      </div>
+          </Card>
+        </motion.div>
+      </motion.div>
 
       {/* En retard - Section prioritaire */}
       {groupedExecutions.overdue.length > 0 && (
@@ -328,22 +398,40 @@ export default function AuditPlanningPage() {
                 >
                   Voir détails
                 </Button>
-              </Card>
+                </Card>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Audits futurs */}
       {groupedExecutions.future.length > 0 && (
-        <div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.9, duration: 0.5 }}
+        >
           <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center">
-            <HiOfficeBuilding className="w-5 h-5 mr-2" />
+            <motion.div
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 2.0, type: "spring", stiffness: 300 }}
+              whileHover={{ scale: 1.1, rotate: 5 }}
+            >
+              <HiOfficeBuilding className="w-5 h-5 mr-2" />
+            </motion.div>
             Audits futurs ({groupedExecutions.future.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {groupedExecutions.future.map((execution) => (
-              <Card key={execution.id} className="p-4">
+            {groupedExecutions.future.map((execution, index) => (
+              <motion.div
+                key={execution.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 2.1 + index * 0.1, duration: 0.5 }}
+              >
+                <Card className="p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h3 className="font-semibold text-foreground">{execution.template.name}</h3>
@@ -370,10 +458,11 @@ export default function AuditPlanningPage() {
                 >
                   Voir détails
                 </Button>
-              </Card>
+                </Card>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* État vide */}
@@ -412,6 +501,6 @@ export default function AuditPlanningPage() {
         }))}
         inspectors={inspectors}
       />
-    </div>
+    </motion.div>
   );
 }

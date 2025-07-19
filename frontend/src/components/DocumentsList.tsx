@@ -2,14 +2,7 @@
 
 import { DocumentTextIcon, DownloadIcon } from "../components/icons";
 
-// Note: L'interface DocumentType devrait être importée depuis un fichier central `src/types`
-export interface DocumentType {
-  id: string;
-  name: string;
-  tenant_id: string;
-  is_deleted: boolean;
-  url: string;
-}
+import { DocumentType } from '../types';
 
 interface DocumentsListProps {
   documents: DocumentType[];

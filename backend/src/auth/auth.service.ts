@@ -1,18 +1,20 @@
 // src/auth/auth.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { User } from 'src/users/entities/user.entity';
 import { InvitesService } from '../invites/invites.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThan } from 'typeorm';
 import { Restaurant } from '../restaurant/entites/restaurant.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { Announcement } from '../announcements/entities/announcement.entity';
 import { LoginDto } from './dto/login.dto';
+import { PasswordReset } from './entities/password-reset.entity';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
@@ -24,8 +26,11 @@ export class AuthService {
     private restaurantRepo: Repository<Restaurant>,
     @InjectRepository(Announcement)
     private announcementRepo: Repository<Announcement>,
+    @InjectRepository(PasswordReset)
+    private passwordResetRepo: Repository<PasswordReset>,
     private notificationsService: NotificationsService,
     private notificationsGateway: NotificationsGateway,
+    private mailerService: MailerService,
   ) {}
 
   async validateUser(email: string, pass: string): Promise<User> {
@@ -54,9 +59,6 @@ export class AuthService {
   }
 
   async login(user: User) {
-    console.log('🔍 LOGIN - User from DB:', JSON.stringify(user, null, 2));
-    console.log('🔍 LOGIN - user.id:', user.id, 'Type:', typeof user.id);
-    
     const payload = {
       userId: user.id, // Utiliser userId dans le token
       email: user.email,
@@ -65,14 +67,7 @@ export class AuthService {
       restaurant_id: user.restaurant_id,
     };
     
-    console.log('🔍 LOGIN - Payload to sign:', JSON.stringify(payload, null, 2));
-    
     const token = this.jwtService.sign(payload);
-    console.log('🔍 LOGIN - Generated token:', token);
-    
-    // Décoder immédiatement le token pour vérifier
-    const decoded = this.jwtService.decode(token);
-    console.log('🔍 LOGIN - Decoded token:', JSON.stringify(decoded, null, 2));
     
     return { 
       access_token: token,
@@ -173,5 +168,117 @@ export class AuthService {
       restaurantCity: restaurant.city,
       message
     });
+  }
+
+  async requestPasswordReset(email: string): Promise<{ success: boolean; message: string }> {
+    const user = await this.usersService.findByEmail(email);
+    
+    if (!user) {
+      // Ne pas révéler si l'email existe ou non
+      return { 
+        success: true, 
+        message: 'Si cet email existe, un code de réinitialisation a été envoyé.' 
+      };
+    }
+
+    // Invalider tous les codes précédents pour cet utilisateur
+    await this.passwordResetRepo.update(
+      { user_id: user.id, is_used: false },
+      { is_used: true }
+    );
+
+    // Générer un code à 6 chiffres
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Créer une nouvelle entrée avec expiration dans 15 minutes
+    const passwordReset = this.passwordResetRepo.create({
+      user_id: user.id,
+      code,
+      expires_at: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+    });
+    
+    await this.passwordResetRepo.save(passwordReset);
+
+    // Envoyer l'email avec le code
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'Réinitialisation de votre mot de passe - FranchiseHUB',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #4F46E5;">Réinitialisation de mot de passe</h2>
+            <p>Vous avez demandé une réinitialisation de votre mot de passe.</p>
+            <p>Voici votre code de validation :</p>
+            <div style="background-color: #f3f4f6; padding: 20px; text-align: center; margin: 20px 0;">
+              <h1 style="color: #4F46E5; margin: 0; letter-spacing: 5px;">${code}</h1>
+            </div>
+            <p>Ce code expire dans 15 minutes.</p>
+            <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+            <p style="color: #6b7280; font-size: 12px;">
+              Cet email a été envoyé par FranchiseHUB. Ne répondez pas à cet email.
+            </p>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      throw new BadRequestException('Erreur lors de l\'envoi de l\'email');
+    }
+
+    return { 
+      success: true, 
+      message: 'Si cet email existe, un code de réinitialisation a été envoyé.' 
+    };
+  }
+
+  async validateResetCode(email: string, code: string): Promise<boolean> {
+    const user = await this.usersService.findByEmail(email);
+    
+    if (!user) {
+      return false;
+    }
+
+    const passwordReset = await this.passwordResetRepo.findOne({
+      where: {
+        user_id: user.id,
+        code,
+        is_used: false,
+        expires_at: MoreThan(new Date()),
+      },
+    });
+
+    return !!passwordReset;
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    const user = await this.usersService.findByEmail(email);
+    
+    if (!user) {
+      return { success: false, message: 'Code invalide ou expiré' };
+    }
+
+    const passwordReset = await this.passwordResetRepo.findOne({
+      where: {
+        user_id: user.id,
+        code,
+        is_used: false,
+        expires_at: MoreThan(new Date()),
+      },
+    });
+
+    if (!passwordReset) {
+      return { success: false, message: 'Code invalide ou expiré' };
+    }
+
+    // Marquer le code comme utilisé
+    passwordReset.is_used = true;
+    await this.passwordResetRepo.save(passwordReset);
+
+    // Mettre à jour le mot de passe
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.updatePassword(user.id, hashedPassword);
+
+    return { success: true, message: 'Mot de passe réinitialisé avec succès' };
   }
 }

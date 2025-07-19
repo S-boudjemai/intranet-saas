@@ -14,6 +14,8 @@ import { Restaurant } from 'src/restaurant/entites/restaurant.entity';
 import { Announcement } from '../announcements/entities/announcement.entity';
 import { User } from '../users/entities/user.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { PasswordReset } from './entities/password-reset.entity';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
@@ -22,8 +24,9 @@ import { NotificationsModule } from '../notifications/notifications.module';
     PassportModule.register({ defaultStrategy: 'jwt', session: false }),
     ConfigModule,
     InvitesModule, // <-- AJOUTÉ ICI : On rend InvitesService disponible
-    TypeOrmModule.forFeature([Restaurant, Announcement, User]), // <-- AJOUT DU REPOSITORY RESTAURANT, ANNOUNCEMENT ET USER
+    TypeOrmModule.forFeature([Restaurant, Announcement, User, PasswordReset]), // <-- AJOUT DU REPOSITORY RESTAURANT, ANNOUNCEMENT, USER ET PASSWORDRESET
     NotificationsModule, // <-- AJOUT DU MODULE NOTIFICATIONS
+    MailerModule, // <-- AJOUT DU MODULE MAILER
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

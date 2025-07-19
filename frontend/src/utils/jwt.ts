@@ -21,7 +21,7 @@ export function parseJwt<T = any>(token: string): T | null {
     );
     return JSON.parse(jsonPayload) as T;
   } catch (error) {
-    console.error("Invalid token:", error);
+    // Invalid token error
     return null;
   }
 }

@@ -19,19 +19,16 @@ export default function Login() {
 
   // Fonction pour déterminer la redirection basée sur le rôle
   const getRedirectPath = (userRole?: string) => {
-    if (state?.from?.pathname) {
-      return state.from.pathname;
-    }
-    
-    // Redirection basée sur le rôle
+    // Toujours rediriger vers la page d'accueil du rôle, ignorer state.from
     switch (userRole) {
       case 'admin':
+        return '/admin';  // Interface admin dédiée
       case 'manager':
-        return '/dashboard';
+        return '/dashboard';  // Dashboard tenant pour managers
       case 'viewer':
-        return '/documents';
+        return '/dashboard';  // Dashboard pour viewers aussi
       default:
-        return '/documents';
+        return '/dashboard';
     }
   };
 
@@ -138,6 +135,15 @@ export default function Login() {
             >
               Se connecter
             </Button>
+          </div>
+
+          <div className="flex items-center justify-between text-sm mt-4">
+            <Link
+              to="/forgot-password"
+              className="text-primary hover:text-primary/80 transition-colors"
+            >
+              Mot de passe oublié ?
+            </Link>
           </div>
         </form>
 

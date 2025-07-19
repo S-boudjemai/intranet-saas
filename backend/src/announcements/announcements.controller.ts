@@ -37,8 +37,8 @@ export class AnnouncementsController {
 
   /**
    * POST /announcements
-   * - Manager & Super-admin : création d’une annonce
-   * - Body : { title, content, restaurant_id, tenant_id? (super-admin) }
+   * - Manager & Admin global : création d'une annonce
+   * - Body : { title, content, restaurant_id, tenant_id? (admin global) }
    */
   @Post()
   @Roles(Role.Admin, Role.Manager)

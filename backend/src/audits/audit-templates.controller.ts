@@ -19,17 +19,7 @@ export class AuditTemplatesController {
 
   @Post()
   async create(@Body() createDto: CreateAuditTemplateDto, @Request() req: { user: JwtUser }) {
-    try {
-      console.log('🎯 Creating audit template with data:', JSON.stringify(createDto, null, 2));
-      console.log('👤 User:', req.user);
-      const result = await this.auditTemplatesService.create(createDto, req.user);
-      console.log('✅ Template created successfully:', result.id);
-      return result;
-    } catch (error) {
-      console.error('❌ Error creating template:', error.message);
-      console.error('❌ Error stack:', error.stack);
-      throw error;
-    }
+    return this.auditTemplatesService.create(createDto, req.user);
   }
 
   @Get()

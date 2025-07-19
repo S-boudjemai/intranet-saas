@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { Invite } from './entities/invite.entity';
 import { randomBytes } from 'crypto';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -18,6 +19,7 @@ export class InvitesService {
     @InjectRepository(Invite)
     private repo: Repository<Invite>,
     private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(
@@ -37,7 +39,8 @@ export class InvitesService {
       restaurant_city,
     });
     const savedInvite = await this.repo.save(invite);
-    const invitationLink = `http://localhost:5173/signup?invite=${token}`;
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5174';
+    const invitationLink = `${frontendUrl}/signup?invite=${token}`;
     
     // Email personnalisé selon si un restaurant est spécifié
     const restaurantInfo = restaurant_name 

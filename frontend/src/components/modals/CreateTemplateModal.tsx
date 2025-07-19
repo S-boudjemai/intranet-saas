@@ -199,11 +199,11 @@ export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restau
         onClose();
       } else {
         const error = await response.json();
-        console.error('Erreur création template:', error);
+        // Template creation error
         alert('Erreur lors de la création du template');
       }
     } catch (error) {
-      console.error('Erreur création template:', error);
+      // Template creation error
       alert('Erreur lors de la création du template');
     }
   };
@@ -274,7 +274,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restau
                   value={template.name}
                   onChange={(e) => setTemplate({ ...template, name: e.target.value })}
                   placeholder="Ex: Hygiène Cuisine Q1"
-                  className="w-full px-3 py-2 border bg-background text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border bg-background text-gray-900 placeholder:text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 />
               </div>
@@ -288,7 +288,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restau
                   onChange={(e) => setTemplate({ ...template, description: e.target.value })}
                   placeholder="Description du template..."
                   rows={3}
-                  className="w-full px-3 py-2 border bg-background text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border bg-background text-gray-900 placeholder:text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
 
@@ -444,7 +444,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restau
                             value={question.question}
                             onChange={(e) => updateQuestion(question.id, 'question', e.target.value)}
                             placeholder="Votre question..."
-                            className="w-full px-3 py-2 border bg-background text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 border bg-background text-gray-900 placeholder:text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                           
                           <div className="flex items-center space-x-4">
@@ -465,7 +465,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restau
                                 max="10"
                                 value={question.max_score || 5}
                                 onChange={(e) => updateQuestion(question.id, 'max_score', parseInt(e.target.value))}
-                                className="w-20 px-2 py-1 border bg-background text-foreground placeholder:text-muted-foreground rounded-md text-sm"
+                                className="w-20 px-2 py-1 border bg-background text-gray-900 placeholder:text-gray-500 rounded-md text-sm"
                                 placeholder="Max"
                               />
                             )}
@@ -496,7 +496,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restau
                             value={question.help_text || ''}
                             onChange={(e) => updateQuestion(question.id, 'help_text', e.target.value)}
                             placeholder="Texte d'aide (optionnel)"
-                            className="w-full px-3 py-2 border bg-background text-foreground placeholder:text-muted-foreground rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 border bg-background text-gray-900 placeholder:text-gray-500 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                         </div>
                         <button

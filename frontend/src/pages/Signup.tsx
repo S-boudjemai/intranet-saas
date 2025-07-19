@@ -74,12 +74,6 @@ export default function Signup() {
     setSubmitting(true);
     setError(null);
     try {
-      console.log('🔍 SIGNUP - Submitting with data:', {
-        token: inviteToken,
-        password: '***',
-        restaurant_name: restaurantName.trim() || undefined,
-        restaurant_city: restaurantCity.trim() || undefined,
-      });
       
       // On appelle la route d'authentification sécurisée
       const res = await fetch(
@@ -97,12 +91,9 @@ export default function Signup() {
         }
       );
       
-      console.log('📡 SIGNUP - Response status:', res.status);
       
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        console.error('❌ SIGNUP - Error response:', body);
-        console.error('❌ SIGNUP - Full error object:', JSON.stringify(body, null, 2));
         
         // Extraire le message d'erreur correctement
         let errorMessage = `Erreur de création (${res.status})`;
@@ -121,14 +112,12 @@ export default function Signup() {
       
       // Succès ! Récupérer le token et connecter automatiquement
       const responseData = await res.json();
-      console.log('✅ SIGNUP - Success response:', responseData);
       
       const access_token = responseData.access_token || responseData.data?.access_token;
       if (!access_token) {
         throw new Error('Token manquant dans la réponse signup');
       }
       
-      console.log('🎯 SIGNUP - Auto-connecting with token');
       setAuthFromSignup(access_token);
       
       // Redirection automatique vers dashboard
@@ -136,7 +125,7 @@ export default function Signup() {
         replace: true // Remplace l'entrée signup dans l'historique
       });
     } catch (err: any) {
-      console.error('💥 SIGNUP - Final error:', err.message);
+      // Error handling complete
       setError(err.message);
       // Scroller vers le haut pour voir l'erreur
       window.scrollTo({ top: 0, behavior: 'smooth' });

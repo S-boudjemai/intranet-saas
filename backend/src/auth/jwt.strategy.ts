@@ -30,16 +30,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any): Promise<JwtUser> {
-    console.log('🔍 JWT STRATEGY - Raw payload:', JSON.stringify(payload, null, 2));
-    
     // Si userId manque, le récupérer via email
     let userId = payload.userId || payload.id;
     if (!userId && payload.email) {
-      console.log('⚠️ userId manquant, récupération via email:', payload.email);
       const dbUser = await this.userRepository.findOne({ where: { email: payload.email } });
       if (dbUser) {
         userId = dbUser.id;
-        console.log('✅ userId récupéré:', userId);
       }
     }
     
@@ -51,7 +47,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       restaurant_id: payload.restaurant_id,
     };
     
-    console.log('🔍 JWT STRATEGY - Final user object:', JSON.stringify(user, null, 2));
     return user;
   }
 }

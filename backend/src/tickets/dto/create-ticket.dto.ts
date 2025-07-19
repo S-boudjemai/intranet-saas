@@ -7,6 +7,7 @@ import {
   IsNumber,
   IsPositive
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateTicketDto {
   @IsString({ message: 'Le titre doit être une chaîne de caractères' })
@@ -21,6 +22,7 @@ export class CreateTicketDto {
   description?: string;
 
   @IsOptional()
+  @Transform(({ value }) => value === undefined || value === null || value === '' ? undefined : Number(value))
   @IsNumber({}, { message: 'L\'ID du restaurant doit être un nombre' })
   @IsPositive({ message: 'L\'ID du restaurant doit être positif' })
   restaurantId?: number;

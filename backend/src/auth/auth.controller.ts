@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request, Res } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Res, Patch, Param, BadRequestException } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { TokensService } from './tokens.service';
@@ -154,5 +154,71 @@ export class AuthController {
   async logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('refreshToken');
     return { message: 'Logged out successfully' };
+  }
+
+  @Public()
+  @Post('request-password-reset')
+  @ApiOperation({ summary: 'Demander une réinitialisation de mot de passe' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' }
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Email de réinitialisation envoyé' })
+  @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
+  async requestPasswordReset(@Body('email') email: string) {
+    const result = await this.authService.requestPasswordReset(email);
+    return {
+      message: result.message,
+      success: result.success
+    };
+  }
+
+  @Public()
+  @Post('validate-reset-code')
+  @ApiOperation({ summary: 'Valider le code de réinitialisation' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        code: { type: 'string', example: '123456' }
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Code valide' })
+  @ApiResponse({ status: 400, description: 'Code invalide ou expiré' })
+  async validateResetCode(@Body() body: { email: string; code: string }) {
+    const isValid = await this.authService.validateResetCode(body.email, body.code);
+    if (!isValid) {
+      throw new BadRequestException('Code invalide ou expiré');
+    }
+    return { valid: true };
+  }
+
+  @Public()
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Réinitialiser le mot de passe avec un code' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        code: { type: 'string', example: '123456' },
+        newPassword: { type: 'string', example: 'newPassword123' }
+      }
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Mot de passe réinitialisé avec succès' })
+  @ApiResponse({ status: 400, description: 'Code invalide ou expiré' })
+  async resetPassword(@Body() body: { email: string; code: string; newPassword: string }) {
+    const result = await this.authService.resetPassword(body.email, body.code, body.newPassword);
+    if (!result.success) {
+      throw new BadRequestException(result.message);
+    }
+    return { message: result.message, success: true };
   }
 }

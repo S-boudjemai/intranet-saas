@@ -1,5 +1,5 @@
 // src/components/DocumentCard.tsx
-
+import { motion } from "framer-motion";
 import type { DocumentType } from "../types";
 import Card from "./ui/Card";
 import { DocumentTextIcon, DownloadIcon, TagIcon, TrashIcon, EyeIcon } from "../components/icons";
@@ -26,70 +26,124 @@ export default function DocumentCard({
   onManageTags,
 }: DocumentCardProps) {
   return (
-    <Card 
-      hover={true} 
-      className="flex flex-col group animate-slide-up"
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.5, 
+        ease: "easeOut" 
+      }}
+      whileHover={{ 
+        y: -8,
+        transition: { type: "spring", stiffness: 300, damping: 20 }
+      }}
+      whileTap={{ scale: 0.98 }}
+      className="bg-card border border-border rounded-2xl p-6 flex flex-col group cursor-pointer"
+      style={{
+        boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
+      }}
     >
-      <div className="p-5 flex-grow">
-        <div className="flex items-start justify-between">
-          <div className="p-2 bg-primary/10 rounded-lg mb-4">
+      <div className="flex-grow">
+        <div className="flex items-start justify-between mb-4">
+          <motion.div 
+            whileHover={{ 
+              scale: 1.1,
+              rotate: 3,
+              transition: { type: "spring", stiffness: 400, damping: 17 }
+            }}
+            className="p-3 bg-primary/10 rounded-xl"
+          >
             <DocumentTextIcon className="h-6 w-6 text-primary" />
-          </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 0, x: 0 }}
+            whileHover={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300"
+          >
             {canManage && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={onManageTags}
-                className="p-2 rounded-full text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                className="p-2 rounded-full text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300"
                 title="Gérer les tags"
               >
                 <TagIcon className="h-5 w-5" />
-              </button>
+              </motion.button>
             )}
             {canManage && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => onDelete(doc.id)}
-                className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
                 title="Supprimer le document"
               >
                 <TrashIcon className="h-5 w-5" />
-              </button>
+              </motion.button>
             )}
-          </div>
+          </motion.div>
         </div>
 
-        <h3 className="font-bold text-lg text-card-foreground truncate mb-3">
+        <motion.h3 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="font-bold text-lg text-foreground truncate mb-4"
+        >
           {doc.name}
-        </h3>
+        </motion.h3>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 min-h-[52px]">
-          {doc.tags?.map((tag) => (
-            <button
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="flex flex-wrap items-center gap-2 min-h-[40px]"
+        >
+          {doc.tags?.map((tag, index) => (
+            <motion.button
               key={tag.id}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4 + index * 0.1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => onTagClick(tag.id)}
-              className="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
+              className="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted rounded-full hover:bg-primary/10 hover:text-primary transition-all duration-300"
             >
-              # {tag.name}
-            </button>
+              #{tag.name}
+            </motion.button>
           ))}
-        </div>
+        </motion.div>
       </div>
 
-      <div className="border-t border-border p-2 bg-secondary/30 rounded-b-lg flex items-center justify-around">
-        <button
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="border-t border-border pt-4 mt-4 flex items-center justify-around gap-2"
+      >
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => onPreview(doc.url, doc.name)}
-          className="w-full text-sm font-semibold text-foreground/80 hover:text-primary flex items-center justify-center gap-2 p-2 rounded-md hover:bg-primary/10 transition-colors"
+          className="flex-1 text-sm font-medium text-muted-foreground hover:text-primary flex items-center justify-center gap-2 p-3 rounded-xl hover:bg-primary/10 transition-all duration-300"
         >
-          <EyeIcon className="h-5 w-5" />
+          <EyeIcon className="h-4 w-4" />
           <span>Aperçu</span>
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => onDownload(doc.url)}
-          className="w-full text-sm font-semibold text-foreground/80 hover:text-primary flex items-center justify-center gap-2 p-2 rounded-md hover:bg-primary/10 transition-colors"
+          className="flex-1 text-sm font-medium text-muted-foreground hover:text-primary flex items-center justify-center gap-2 p-3 rounded-xl hover:bg-primary/10 transition-all duration-300"
         >
-          <DownloadIcon className="h-5 w-5" />
+          <DownloadIcon className="h-4 w-4" />
           <span>Télécharger</span>
-        </button>
-      </div>
-    </Card>
+        </motion.button>
+      </motion.div>
+    </motion.div>
   );
 }

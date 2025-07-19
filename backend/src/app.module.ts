@@ -22,6 +22,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { validationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { AuditsModule } from './audits/audits.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -73,6 +74,13 @@ import { AuditsModule } from './audits/audits.module';
         database: cfg.get<string>('DB_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: cfg.get<string>('NODE_ENV') !== 'production', // SECURITE: Désactivé en production
+        ssl: false, // Désactiver SSL pour connexion locale
+        connectTimeoutMS: 30000, // 30 secondes timeout
+        acquireTimeoutMS: 30000, // 30 secondes pour acquérir une connexion
+        retryAttempts: 5, // 5 tentatives de reconnexion
+        retryDelay: 3000, // 3 secondes entre chaque tentative
+        autoLoadEntities: true, // Chargement automatique des entités
+        logging: false, // Logs SQL désactivés pour éviter pollution console
       }),
     }),
     TenantsModule,
@@ -90,6 +98,7 @@ import { AuditsModule } from './audits/audits.module';
     SearchModule,
     HealthModule,
     AuditsModule,
+    AdminModule,
   ],
 
   providers: [

@@ -15,14 +15,22 @@ export default function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
   const [status, setStatus] = useState("");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title) {
+    
+    // Empêcher la double soumission
+    if (isSubmitting) return;
+    
+    if (!title.trim()) {
       setStatus("Erreur : Le titre est obligatoire.");
       return;
     }
+    
+    setIsSubmitting(true);
     setStatus("Création en cours...");
+    
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/tickets`, {
         method: "POST",
@@ -30,9 +38,17 @@ export default function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title, description }),
+        body: JSON.stringify({ 
+          title: title.trim(), 
+          description: description.trim() 
+        }),
       });
-      if (!res.ok) throw new Error(`Erreur du serveur (${res.status})`);
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        const errorMessage = errorData?.error?.message || errorData?.message || `Erreur du serveur (${res.status})`;
+        throw new Error(errorMessage);
+      }
 
       const response = await res.json();
       const created: TicketType = response.data || response;
@@ -65,8 +81,17 @@ export default function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
       setPendingFiles([]);
       setPreviewImages([]);
       setStatus("✅ Ticket créé avec succès !");
+      
+      // Réinitialiser le statut après 3 secondes
+      setTimeout(() => {
+        setStatus("");
+        setIsSubmitting(false);
+      }, 3000);
+      
     } catch (err: any) {
+      console.error("Erreur création ticket:", err);
       setStatus(`Erreur : ${err.message}`);
+      setIsSubmitting(false);
     }
   };
 
@@ -98,7 +123,7 @@ export default function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
     setPreviewImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const inputClasses = `bg-input border border-border rounded-md w-full p-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all`;
+  const inputClasses = `bg-input border border-border rounded-md w-full p-3 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all`;
 
   return (
     <form
@@ -219,10 +244,11 @@ export default function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
       <div className="pt-2">
         <button
           type="submit"
-          className="w-full flex items-center justify-center space-x-2 bg-primary text-primary-foreground font-bold py-3 px-4 rounded-md hover:bg-primary/90 active:scale-95 transition-all"
+          disabled={isSubmitting || !title.trim()}
+          className="w-full flex items-center justify-center space-x-2 bg-primary text-primary-foreground font-bold py-3 px-4 rounded-md hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:active:scale-100"
         >
-          <span>Créer le Ticket</span>
-          <HiOutlineArrowRight className="h-5 w-5" />
+          <span>{isSubmitting ? "Création..." : "Créer le Ticket"}</span>
+          {!isSubmitting && <HiOutlineArrowRight className="h-5 w-5" />}
         </button>
       </div>
 

@@ -1,6 +1,8 @@
 // src/pages/DashboardPage.tsx
 import { useEffect, useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
   CartesianGrid,
   Line,
@@ -11,7 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import KpiCard from "../components/KipCard"; // Le fichier s'appelle KipCard mais exporte KpiCard
-import { ChartPieIcon, DocumentReportIcon, ExclamationCircleIcon, SpinnerIcon, ClockIcon, TicketIcon } from "../components/icons";
+import { ChartPieIcon, DocumentReportIcon, ExclamationCircleIcon, SpinnerIcon, ClockIcon, TicketIcon, ArchiveIcon } from "../components/icons";
 
 interface DashboardData {
   totalDocuments: number;
@@ -23,7 +25,8 @@ interface DashboardData {
 const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!token) return;
@@ -40,66 +43,95 @@ const DashboardPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, [token]);
 
-  // Récupération des couleurs du thème pour le graphique
+  // Couleurs Waitify pour le graphique
   const chartColors = useMemo(() => {
-    const getCssVar = (name: string) => {
-      if (typeof window === "undefined") return "";
-      return getComputedStyle(document.documentElement)
-        .getPropertyValue(name)
-        .trim();
-    };
-
     return {
-      grid: `hsl(${getCssVar("--border")})`,
-      text: `hsl(${getCssVar("--muted-foreground")})`,
-      line: `hsl(${getCssVar("--primary")})`,
-      tooltipBg: `hsl(${getCssVar("--popover")})`,
-      tooltipBorder: `hsl(${getCssVar("--border")})`,
-      tooltipText: `hsl(${getCssVar("--popover-foreground")})`,
+      grid: "#e5e7eb",
+      text: "#6b7280",
+      line: "#2563eb",
+      tooltipBg: "#ffffff",
+      tooltipBorder: "#e5e7eb",
+      tooltipText: "#1f2937",
     };
   }, []);
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center space-x-2 text-muted-foreground">
-        <SpinnerIcon className="h-6 w-6 animate-spin" />
-        <span>Chargement du tableau de bord...</span>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex h-64 items-center justify-center space-x-3 text-muted-foreground"
+      >
+        <SpinnerIcon className="h-8 w-8 animate-spin text-primary" />
+        <span className="text-lg font-medium">Chargement du tableau de bord...</span>
+      </motion.div>
     );
   }
 
   if (!data) {
     return (
-      <div className="bg-destructive/10 text-destructive p-4 rounded-md flex items-center space-x-3 m-6">
-        <ExclamationCircleIcon className="h-6 w-6" />
-        <span className="font-medium">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-destructive/10 border border-destructive/20 text-destructive p-6 rounded-2xl flex items-center space-x-4 m-6 shadow-sm"
+      >
+        <ExclamationCircleIcon className="h-8 w-8" />
+        <span className="font-medium text-lg">
           Erreur : Impossible de charger les données du tableau de bord.
         </span>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
-      <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-        <div className="p-2 bg-card border border-border rounded-lg">
-          <ChartPieIcon className="h-6 w-6 text-primary" />
-        </div>
-        <span>Tableau de bord</span>
-      </h1>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-6 space-y-8"
+    >
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="flex justify-between items-center"
+      >
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-4">
+          <motion.div 
+            initial={{ scale: 0, rotate: -45 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+            className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+          >
+            <ChartPieIcon className="h-7 w-7 text-primary" />
+          </motion.div>
+          <span>Tableau de bord</span>
+        </h1>
+        
+      </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
         <KpiCard
           title="Total documents"
           value={data.totalDocuments}
           icon={<DocumentReportIcon />}
+          index={0}
         />
         <KpiCard
           title="Docs cette semaine"
           value={data.docsThisWeek}
           icon={<ClockIcon />}
+          index={1}
         />
-        {data.ticketsByStatus && Object.entries(data.ticketsByStatus).map(([status, count]) => {
+        {data.ticketsByStatus && Object.entries(data.ticketsByStatus).map(([status, count], index) => {
           const statusLabels = {
             'non_traitee': 'non traités',
             'en_cours': 'en cours',
@@ -112,13 +144,20 @@ const DashboardPage: React.FC = () => {
               title={`Tickets ${statusLabels[status as keyof typeof statusLabels] || status}`}
               value={count}
               icon={<TicketIcon />}
+              index={index + 2}
             />
           );
         })}
-      </div>
+      </motion.div>
 
-      <div className="bg-card border border-border rounded-lg p-6">
-        <h2 className="text-xl font-bold text-card-foreground mb-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="bg-card rounded-2xl p-8 border border-border shadow-sm hover:shadow-md transition-all duration-300"
+      >
+        <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
+          <div className="w-2 h-2 bg-primary rounded-full"></div>
           Tickets créés (7 derniers jours)
         </h2>
         <ResponsiveContainer width="100%" height={300}>
@@ -167,8 +206,8 @@ const DashboardPage: React.FC = () => {
             />
           </LineChart>
         </ResponsiveContainer>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

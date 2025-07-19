@@ -54,7 +54,7 @@ export default function AuditExecutionPage() {
         setResponses(existingResponses);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement de l\'audit:', error);
+      // Erreur lors du chargement de l'audit
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export default function AuditExecutionPage() {
         }));
       }
     } catch (error) {
-      console.error('Erreur lors de l\'enregistrement:', error);
+      // Erreur lors de l'enregistrement
     } finally {
       setSaving(false);
     }
@@ -108,7 +108,6 @@ export default function AuditExecutionPage() {
 
     setSaving(true);
     try {
-      console.log(`🚀 COMPLETE AUDIT - Tentative finalisation audit ID: ${execution.id}`);
       const response = await fetch(`${import.meta.env.VITE_API_URL}/audits/${execution.id}/complete`, {
         method: 'PATCH',
         headers: {
@@ -116,18 +115,15 @@ export default function AuditExecutionPage() {
         },
       });
 
-      console.log(`📊 COMPLETE AUDIT - Response status: ${response.status}`);
-      
       if (response.ok) {
         const result = await response.json();
-        console.log(`✅ COMPLETE AUDIT - Success:`, result);
         navigate('/audits?tab=planning');
       } else {
         const errorData = await response.json();
-        console.error(`❌ COMPLETE AUDIT - Error ${response.status}:`, errorData);
+        // Erreur lors de la finalisation
       }
     } catch (error) {
-      console.error('Erreur lors de la finalisation:', error);
+      // Erreur lors de la finalisation
     } finally {
       setSaving(false);
     }
@@ -275,7 +271,7 @@ export default function AuditExecutionPage() {
               {currentItem.type === 'text' && (
                 <div>
                   <textarea
-                    className="w-full p-3 border border-border rounded-md resize-none h-32"
+                    className="w-full p-3 border border-border rounded-md resize-none h-32 text-gray-900 placeholder-gray-500"
                     placeholder="Entrez votre commentaire..."
                     value={responses[currentItem.id]?.value || ''}
                     onChange={(e) => handleTextResponse(currentItem, e.target.value)}

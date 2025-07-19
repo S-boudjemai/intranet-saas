@@ -66,4 +66,8 @@ export class UsersService {
   findAll() {
     return this.repo.find();
   }
+
+  async updatePassword(userId: number, hashedPassword: string) {
+    return this.repo.update(userId, { password_hash: hashedPassword });
+  }
 }

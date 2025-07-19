@@ -4,7 +4,10 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Tenant } from '../../tenants/entities/tenant.entity';
 
 @Entity('users')
 export class User {
@@ -30,4 +33,9 @@ export class User {
   // Elle doit être nullable car les managers/admins n'ont pas de restaurant_id.
   @Column({ type: 'int', nullable: true })
   restaurant_id: number | null;
+
+  // Relations
+  @ManyToOne(() => Tenant, (tenant) => tenant.users)
+  @JoinColumn({ name: 'tenant_id' })
+  tenant: Tenant;
 }

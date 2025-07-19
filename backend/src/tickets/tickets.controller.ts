@@ -38,12 +38,28 @@ export class TicketsController {
    * - Viewer only: création d’un ticket par un franchisé
    */
   @Post()
-  @Roles(Role.Viewer)
+  @Roles(Role.Viewer, Role.Manager, Role.Admin)
   async create(
     @Body() createTicketDto: CreateTicketDto,
     @Req() req: Request & { user: JwtUser },
   ): Promise<Ticket> {
-    return this.svc.create(createTicketDto, req.user);
+    // Validation JWT user avant traitement
+    const user = req.user;
+    if (!user || !user.userId || isNaN(user.userId)) {
+      throw new Error('Token JWT invalide: userId manquant ou invalide');
+    }
+    
+    // Validation tenant_id
+    if (user.tenant_id !== null && isNaN(user.tenant_id)) {
+      throw new Error('Token JWT invalide: tenant_id corrompu');
+    }
+    
+    // Validation restaurant_id pour les viewers
+    if (user.role === Role.Viewer && (!user.restaurant_id || isNaN(user.restaurant_id))) {
+      throw new Error('Token JWT invalide: restaurant_id manquant pour un viewer');
+    }
+    
+    return this.svc.create(createTicketDto, user);
   }
 
   /**

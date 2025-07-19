@@ -66,8 +66,10 @@ export default defineConfig({
     })
   ],
   server: {
+    host: '0.0.0.0', // Permet l'accès depuis d'autres appareils du réseau
+    port: 5174,
     proxy: {
       "/api": "http://localhost:3000", // Ne proxifie QUE les routes /api/...
     },
-  },
+  }
 });

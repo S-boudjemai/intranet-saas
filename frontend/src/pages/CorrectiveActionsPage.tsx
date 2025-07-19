@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import type { NonConformity, CorrectiveAction } from '../types';
 import Button from '../components/ui/Button';
@@ -81,7 +82,7 @@ export default function CorrectiveActionsPage() {
         setCorrectiveActions(actionsData.data || actionsData);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
+      // Error loading corrective actions data
     } finally {
       setLoading(false);
     }
@@ -121,7 +122,6 @@ export default function CorrectiveActionsPage() {
 
   const handleCreateAction = async (actionData: any) => {
     try {
-      console.log('🚀 FRONTEND - Sending corrective action data:', JSON.stringify(actionData, null, 2));
       
       const response = await fetch(`${import.meta.env.VITE_API_URL}/corrective-actions`, {
         method: 'POST',
@@ -138,8 +138,7 @@ export default function CorrectiveActionsPage() {
       } else {
         const errorData = await response.text();
         showToast('error', 'Erreur de création', 'Impossible de créer l\'action corrective. Vérifiez les données saisies.');
-        console.error('❌ Erreur lors de la création de l\'action corrective. Status:', response.status);
-        console.error('❌ Error details:', errorData);
+        // Error during corrective action creation
       }
     } catch (error) {
       showToast('error', 'Erreur réseau', 'Une erreur est survenue lors de la création.');
@@ -212,30 +211,67 @@ export default function CorrectiveActionsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-64">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center justify-center min-h-64"
+      >
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="flex justify-between items-center"
+      >
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Actions Correctives</h1>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-4">
+            <motion.div 
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+              className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
+              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+            >
+              <HiClipboardCheck className="h-6 w-6 text-primary" />
+            </motion.div>
+            <span>Actions Correctives</span>
+          </h1>
           <p className="text-muted-foreground mt-1">
             Suivi des non-conformités et des actions correctives
           </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <HiPlusCircle className="w-4 h-4 mr-2" />
-          Nouvelle Action
-        </Button>
-      </div>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          <Button onClick={() => setShowCreateModal(true)}>
+            <HiPlusCircle className="w-4 h-4 mr-2" />
+            Nouvelle Action
+          </Button>
+        </motion.div>
+      </motion.div>
 
       {/* Stats Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="grid grid-cols-1 md:grid-cols-4 gap-4"
+      >
         <Card className="p-4">
           <div className="flex items-center">
             <div className="p-2 bg-red-100 rounded-lg dark:bg-red-900">
@@ -283,10 +319,15 @@ export default function CorrectiveActionsPage() {
             </div>
           </div>
         </Card>
-      </div>
+      </motion.div>
 
       {/* Tabs */}
-      <div className="border-b border-border">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+        className="border-b border-border"
+      >
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('non-conformities')}
@@ -309,10 +350,15 @@ export default function CorrectiveActionsPage() {
             Actions correctives ({filteredActions.length})
           </button>
         </nav>
-      </div>
+      </motion.div>
 
       {/* Filters */}
-      <div className="flex gap-4 items-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+        className="flex gap-4 items-center"
+      >
         <div className="flex items-center gap-2">
           <HiFilter className="w-4 h-4 text-muted-foreground" />
           <select
@@ -341,11 +387,16 @@ export default function CorrectiveActionsPage() {
             <option value="critical">Critique</option>
           </select>
         )}
-      </div>
+      </motion.div>
 
       {/* Content */}
-      {activeTab === 'non-conformities' ? (
-        <div className="space-y-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.7 }}
+      >
+        {activeTab === 'non-conformities' ? (
+          <div className="space-y-4">
           {filteredNonConformities.length === 0 ? (
             <Card className="p-12 text-center">
               <HiCheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
@@ -357,8 +408,14 @@ export default function CorrectiveActionsPage() {
               </p>
             </Card>
           ) : (
-            filteredNonConformities.map((nc) => (
-              <Card key={nc.id} className="p-6">
+            filteredNonConformities.map((nc, index) => (
+              <motion.div
+                key={nc.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8 + index * 0.1 }}
+              >
+                <Card className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -421,7 +478,8 @@ export default function CorrectiveActionsPage() {
                     </div>
                   </div>
                 )}
-              </Card>
+                </Card>
+              </motion.div>
             ))
           )}
         </div>
@@ -438,12 +496,18 @@ export default function CorrectiveActionsPage() {
               </p>
             </Card>
           ) : (
-            filteredActions.map((action) => {
+            filteredActions.map((action, index) => {
               const daysUntilDue = getDaysUntilDue(action.due_date);
               const isOverdue = daysUntilDue < 0;
               
               return (
-                <Card key={action.id} className={`p-6 ${isOverdue ? 'border-l-4 border-red-500' : ''}`}>
+                <motion.div
+                  key={action.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                >
+                  <Card className={`p-6 ${isOverdue ? 'border-l-4 border-red-500' : ''}`}>
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -527,12 +591,14 @@ export default function CorrectiveActionsPage() {
                       </div>
                     </div>
                   )}
-                </Card>
+                  </Card>
+                </motion.div>
               );
             })
           )}
         </div>
       )}
+      </motion.div>
 
       {/* Modal de création d'action corrective */}
       <CreateCorrectiveActionModal
@@ -566,6 +632,6 @@ export default function CorrectiveActionsPage() {
         title={toast.title}
         message={toast.message}
       />
-    </div>
+    </motion.div>
   );
 }

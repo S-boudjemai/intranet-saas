@@ -97,9 +97,6 @@ const GlobalSearch: React.FC = () => {
       
       setIsLoading(true);
       try {
-        console.log('🔍 Searching with query:', query);
-        console.log('🔗 API URL:', import.meta.env.VITE_API_URL);
-        console.log('🔑 Token exists:', !!token);
         
         const response = await fetch(
           `${import.meta.env.VITE_API_URL}/search?q=${encodeURIComponent(query)}`,
@@ -111,20 +108,16 @@ const GlobalSearch: React.FC = () => {
           }
         );
 
-        console.log('📡 Response status:', response.status);
         
         if (response.ok) {
           const responseData = await response.json();
-          console.log('✅ Search results:', responseData);
           // L'API retourne {success: true, data: {...}}, on extrait data
           const data = responseData.data || responseData;
           setResults(data);
         } else {
           const errorData = await response.text();
-          console.error('❌ Search error:', response.status, errorData);
         }
       } catch (error) {
-        console.error('💥 Network error:', error);
       } finally {
         setIsLoading(false);
       }

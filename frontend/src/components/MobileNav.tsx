@@ -6,6 +6,7 @@ import Button from "./ui/Button";
 import NotificationBadge from "./NotificationBadge";
 import { useNotifications } from "../contexts/NotificationContext";
 import GlobalSearch from "./GlobalSearch";
+import { useServiceWorker } from "../hooks/useServiceWorker";
 
 const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
   <svg 
@@ -25,6 +26,7 @@ const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
 export default function MobileNav() {
   const { token, logout } = useAuth();
   const { notificationCounts, markAllAsRead } = useNotifications();
+  const { isOnline } = useServiceWorker();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -50,13 +52,27 @@ export default function MobileNav() {
     <div className="lg:hidden">
       {/* Mobile Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
-        <Link
-          to={canManage ? "/dashboard" : "/documents"}
-          className="text-xl font-bold text-foreground tracking-wider"
-          onClick={() => setIsOpen(false)}
-        >
-          FRANCHISE<span className="text-primary">HUB</span>
-        </Link>
+        <div className="flex items-center space-x-3">
+          <Link
+            to={canManage ? "/dashboard" : "/documents"}
+            className="text-xl font-bold text-foreground tracking-wider"
+            onClick={() => setIsOpen(false)}
+          >
+            FRANCHISE<span className="text-primary">HUB</span>
+          </Link>
+          
+          {/* Online/Offline Indicator */}
+          <div className="flex items-center space-x-1">
+            <div 
+              className={`w-2 h-2 rounded-full ${
+                isOnline ? 'bg-green-500' : 'bg-red-500'
+              }`}
+            />
+            <span className="text-xs text-muted-foreground">
+              {isOnline ? 'En ligne' : 'Hors ligne'}
+            </span>
+          </div>
+        </div>
         
         <button
           onClick={() => setIsOpen(!isOpen)}

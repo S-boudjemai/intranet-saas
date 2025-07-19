@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { SpinnerIcon, ExclamationCircleIcon, ArchiveIcon, FilterIcon, EyeIcon } from '../components/icons';
 
@@ -141,46 +142,93 @@ const ArchivesPage: React.FC = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-4 sm:p-6 lg:p-8 space-y-6"
+    >
       {/* En-tête */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-          <div className="p-2 bg-card border border-border rounded-lg">
-            <ArchiveIcon className="h-6 w-6 text-primary" />
-          </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="flex items-center justify-between"
+      >
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-4">
+          <motion.div 
+            initial={{ scale: 0, rotate: -45 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+            className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+          >
+            <ArchiveIcon className="h-7 w-7 text-primary" />
+          </motion.div>
           <span>Archives des audits</span>
         </h1>
         
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
         >
-          <FilterIcon className="h-4 w-4" />
-          Filtres
-        </button>
-      </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
+          >
+            <FilterIcon className="h-4 w-4" />
+            Filtres
+          </button>
+        </motion.div>
+      </motion.div>
 
       {/* Statistiques */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-card border border-border rounded-lg p-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="bg-card border border-border rounded-lg p-4"
+          >
             <div className="text-2xl font-bold text-card-foreground">{stats.total_archives}</div>
             <div className="text-sm text-muted-foreground">Audits archivés</div>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="bg-card border border-border rounded-lg p-4"
+          >
             <div className="text-2xl font-bold text-card-foreground">{formatScore(stats.average_score)}</div>
             <div className="text-sm text-muted-foreground">Score moyen</div>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+            className="bg-card border border-border rounded-lg p-4"
+          >
             <div className="text-2xl font-bold text-card-foreground">{stats.categories.length}</div>
             <div className="text-sm text-muted-foreground">Catégories</div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* Filtres */}
       {showFilters && (
-        <div className="bg-card border border-border rounded-lg p-6 space-y-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+          className="bg-card border border-border rounded-lg p-6 space-y-4"
+        >
           <h3 className="font-semibold text-card-foreground">Filtres de recherche</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -267,11 +315,16 @@ const ArchivesPage: React.FC = () => {
               />
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Liste des archives */}
-      <div className="bg-card border border-border rounded-lg">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9, duration: 0.5 }}
+        className="bg-card border border-border rounded-lg"
+      >
         <div className="p-6 border-b border-border">
           <h2 className="text-xl font-semibold text-card-foreground">
             Archives ({archives.length})
@@ -346,7 +399,7 @@ const ArchivesPage: React.FC = () => {
             })}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Modal des détails */}
       {selectedArchive && (
@@ -474,7 +527,7 @@ const ArchivesPage: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

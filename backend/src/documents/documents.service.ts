@@ -32,12 +32,6 @@ export class DocumentsService {
     private notificationsService: NotificationsService,
     private notificationsGateway: NotificationsGateway,
   ) {
-    console.log('🔧 Initializing S3 client with:', {
-      region: process.env.AWS_REGION,
-      bucket: process.env.AWS_S3_BUCKET,
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID ? `${process.env.AWS_ACCESS_KEY_ID.substring(0, 5)}...` : 'undefined',
-      hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
-    });
     
     this.s3 = new S3Client({
       region: process.env.AWS_REGION,
@@ -59,19 +53,26 @@ export class DocumentsService {
     data: Partial<Document> & { categoryId?: string },
     user: JwtUser,
   ): Promise<Document> {
-    console.log('📄 Creating document with user:', JSON.stringify(user, null, 2));
-    console.log('📄 Document data:', JSON.stringify(data, null, 2));
     
-    // Gestion du tenant_id
+    // Gestion du tenant_id avec validation stricte
     if (user.tenant_id === null) {
-      // super-admin : doit préciser
+      // admin global : doit préciser
       if (!data.tenant_id) {
         throw new ForbiddenException(
-          'Le super-admin doit préciser tenant_id dans le body',
+          'L\'admin global doit préciser tenant_id dans le body',
         );
       }
+      // Valider que tenant_id est un nombre valide
+      const tenantIdNum = parseInt(data.tenant_id.toString());
+      if (isNaN(tenantIdNum)) {
+        throw new ForbiddenException('tenant_id doit être un nombre valide');
+      }
+      data.tenant_id = tenantIdNum.toString();
     } else {
-      // manager ou admin de franchise
+      // manager ou admin de franchise - validation du tenant_id de l'utilisateur
+      if (user.tenant_id === null || isNaN(user.tenant_id)) {
+        throw new ForbiddenException('Token JWT invalide: tenant_id manquant ou invalide');
+      }
       data.tenant_id = user.tenant_id.toString();
     }
 
@@ -86,7 +87,7 @@ export class DocumentsService {
       created_by: user.userId,
     });
     
-    console.log('📄 Created document object:', JSON.stringify(doc, null, 2));
+    // Log supprimé pour éviter fuite données en production
 
     // Liaison de la catégorie si fournie
     if (data.categoryId) {
@@ -102,23 +103,33 @@ export class DocumentsService {
     const savedDoc = await this.documentsRepository.save(doc);
 
     // Créer des notifications pour tous les utilisateurs du tenant (sauf l'auteur)
-    const tenantId = parseInt(savedDoc.tenant_id);
-    const message = `Nouveau document: ${savedDoc.name}`;
-    
-    await this.notificationsService.createNotificationsForTenant(
-      tenantId,
-      NotificationType.DOCUMENT_UPLOADED,
-      parseInt(savedDoc.id),
-      message,
-      user.userId
-    );
+    // Encapsuler dans un try-catch pour éviter que les notifications cassent l'upload
+    try {
+      const tenantId = parseInt(savedDoc.tenant_id);
+      if (isNaN(tenantId)) {
+        console.error(`tenant_id invalide pour les notifications: ${savedDoc.tenant_id}`);
+        return savedDoc; // Retourner le document même si les notifications échouent
+      }
+      const message = `Nouveau document: ${savedDoc.name}`;
+      
+      await this.notificationsService.createNotificationsForTenant(
+        tenantId,
+        NotificationType.DOCUMENT_UPLOADED,
+        parseInt(savedDoc.id),
+        message,
+        user.userId
+      );
 
-    // Envoyer notification temps réel
-    this.notificationsGateway.notifyDocumentUploaded(tenantId, {
-      id: savedDoc.id,
-      name: savedDoc.name,
-      message
-    });
+      // Envoyer notification temps réel
+      this.notificationsGateway.notifyDocumentUploaded(tenantId, {
+        id: savedDoc.id,
+        name: savedDoc.name,
+        message
+      });
+    } catch (notificationError) {
+      // Ne pas faire échouer l'upload si les notifications échouent
+      console.error('Erreur lors des notifications document:', notificationError);
+    }
 
     return savedDoc;
   }
@@ -170,7 +181,6 @@ export class DocumentsService {
             const presignedUrl = await this.getPresignedUrlForDocument(doc.url);
             return { ...doc, url: presignedUrl };
           } catch (error) {
-            console.warn(`⚠️ Could not generate presigned URL for document ${doc.id}:`, error);
             return doc; // Fallback vers l'URL originale
           }
         }
@@ -195,35 +205,43 @@ export class DocumentsService {
     filename: string,
     mimetype: string,
   ): Promise<string> {
-    try {
-      console.log('🔗 Generating upload URL for:', filename, mimetype);
-      console.log('🔧 AWS Config:', {
-        bucket: process.env.AWS_S3_BUCKET,
-        region: process.env.AWS_REGION,
-        hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
-        hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
-      });
-      
-      const cmd = new PutObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET as string,
-        Key: filename,
-        ContentType: mimetype,
-      });
-      
-      const url = await getSignedUrl(this.s3, cmd, { expiresIn: 300 });
-      console.log('✅ Upload URL generated successfully');
-      return url;
-    } catch (error) {
-      console.error('❌ Error generating upload URL:', error);
-      throw error;
+    const maxRetries = 3;
+    let lastError: Error;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        
+        const cmd = new PutObjectCommand({
+          Bucket: process.env.AWS_S3_BUCKET as string,
+          Key: filename,
+          ContentType: mimetype,
+        });
+        
+        const url = await getSignedUrl(this.s3, cmd, { expiresIn: 300 });
+        
+        
+        return url;
+      } catch (error) {
+        lastError = error;
+        
+        
+        // Si ce n'est pas la dernière tentative, attendre avec backoff exponentiel
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
     }
+    
+    // Après tous les tentatives échouées, throw HttpException avec message générique
+    throw new Error('Service d\'upload temporairement indisponible. Veuillez réessayer dans quelques instants.');
   }
 
   /**
    * Génère l'URL presignée pour le download depuis S3 (endpoint public)
    */
   async getPresignedDownloadUrl(filenameOrUrl: string): Promise<string> {
-    console.log('🔗 Public download URL request for:', filenameOrUrl);
     return this.getPresignedUrlForDocument(filenameOrUrl);
   }
 
@@ -251,19 +269,16 @@ export class DocumentsService {
         filename = url.pathname.substring(1);
         // Décoder les caractères URL encodés (%20 -> espace, etc.)
         filename = decodeURIComponent(filename);
-        console.log('🔗 Extracted and decoded filename from S3 URL:', filename);
       } catch (urlError) {
         // Fallback vers l'ancienne méthode si URL malformée
         const urlParts = currentUrl.split('/');
         filename = decodeURIComponent(urlParts[urlParts.length - 1]);
-        console.log('🔗 Fallback extracted filename:', filename);
       }
     } else {
       // Pour les noms de fichiers simples, décoder les caractères URL
       filename = decodeURIComponent(filename);
     }
     
-    console.log('🔗 Generating presigned URL for document:', filename);
     
     try {
       const awsBucket = process.env.AWS_S3_BUCKET as string;
@@ -272,12 +287,8 @@ export class DocumentsService {
         Key: filename,
       });
       const url = await getSignedUrl(this.s3, cmd, { expiresIn: 3600 }); // 1 heure
-      console.log('✅ Document presigned URL generated successfully');
       return url;
     } catch (error) {
-      console.error('❌ Error generating document presigned URL:', error);
-      console.error('❌ Failed filename:', filename);
-      console.error('❌ Original URL:', currentUrl);
       // Fallback vers l'URL originale en cas d'erreur
       return currentUrl;
     }

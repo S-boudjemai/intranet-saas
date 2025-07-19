@@ -44,82 +44,71 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   const isPdf = fileName.toLowerCase().endsWith(".pdf");
   const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(fileName);
   
-  console.log('🔍 Preview Modal - Original name:', name);
-  console.log('🔍 Preview Modal - Detected fileName:', fileName);
-  console.log('🔍 Preview Modal - isPdf:', isPdf);
-  console.log('🔍 Preview Modal - isImage:', isImage);
 
   return (
-    // L'overlay avec un effet de flou et une animation de fondu
+    // Overlay Waitify
     <div
-      className="
-        fixed inset-0 
-        bg-background/80 backdrop-blur-sm 
-        flex items-center justify-center 
-        z-50
-        animate-fade-in
-      "
-      onClick={onClose} // Permet de fermer la modale en cliquant sur le fond
+      className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in p-4"
+      onClick={onClose}
     >
-      {/* On stoppe la propagation du clic pour ne pas fermer la modale en cliquant dessus */}
+      {/* Container Waitify */}
       <div
-        className="
-          bg-popover border border-border
-          rounded-2xl shadow-xl 
-          max-w-4xl w-full max-h-[90vh] 
-          flex flex-col
-          animate-scale-in
-        "
+        className="bg-white border border-gray-200 rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col animate-scale-in overflow-hidden"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
+        }}
       >
-        {/* Header de la modale */}
-        <div className="flex justify-between items-center p-4 border-b border-border flex-shrink-0">
-          <h2 className="text-lg font-bold text-popover-foreground">{name}</h2>
+        {/* Header Waitify */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
+          <h2 className="text-xl font-bold text-gray-900">{name}</h2>
           <button
             onClick={onClose}
-            className="
-              p-2 rounded-full text-muted-foreground
-              hover:bg-accent hover:text-accent-foreground hover:rotate-90 
-              transition-all duration-300
-            "
+            className="p-2 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-all duration-300"
           >
-            <XIcon className="h-6 w-6" />
+            <XIcon className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Contenu de la prévisualisation */}
-        <div className="p-4 overflow-auto">
+        {/* Contenu Waitify */}
+        <div className="p-6 overflow-auto bg-gray-50">
           {isPdf ? (
-            <iframe
-              src={url}
-              title={name}
-              className="w-full h-[75vh] rounded-lg"
-              onError={(e) => {
-                console.error('❌ Error loading PDF in iframe:', e);
-              }}
-            />
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <iframe
+                src={url}
+                title={name}
+                className="w-full h-[75vh]"
+                onError={() => {
+                  // PDF loading error
+                }}
+              />
+            </div>
           ) : isImage ? (
-            <img
-              src={url}
-              alt={name}
-              className="w-full h-auto max-h-[75vh] object-contain"
-              onError={(e) => {
-                console.error('❌ Error loading image:', e);
-              }}
-              onLoad={() => {
-                console.log('✅ Image loaded successfully');
-              }}
-            />
+            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-center">
+              <img
+                src={url}
+                alt={name}
+                className="max-w-full max-h-[75vh] object-contain rounded-lg"
+                onError={() => {
+                  // Image loading error
+                }}
+                onLoad={() => {
+                  // Image loaded successfully
+                }}
+              />
+            </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-[75vh] text-center">
-              <div className="text-4xl mb-4">📄</div>
-              <p className="text-lg font-medium text-foreground mb-2">{name}</p>
-              <p className="text-sm text-muted-foreground mb-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-8 flex flex-col items-center justify-center h-[75vh] text-center">
+              <div className="p-4 bg-blue-50 rounded-2xl mb-4">
+                <div className="text-4xl">📄</div>
+              </div>
+              <p className="text-xl font-bold text-gray-900 mb-2">{name}</p>
+              <p className="text-gray-600 mb-6">
                 Aperçu non disponible pour ce type de fichier
               </p>
               <button
                 onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
               >
                 Ouvrir dans un nouvel onglet
               </button>

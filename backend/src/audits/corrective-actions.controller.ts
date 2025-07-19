@@ -30,16 +30,7 @@ export class CorrectiveActionsController {
   @Post()
   @Roles(Role.Admin, Role.Manager)
   async create(@Body() createCorrectiveActionDto: CreateCorrectiveActionDto) {
-    try {
-      console.log('🎯 CORRECTIVE ACTION - Data received:', JSON.stringify(createCorrectiveActionDto, null, 2));
-      const result = await this.correctiveActionsService.create(createCorrectiveActionDto);
-      console.log('✅ CORRECTIVE ACTION - Success:', result.id);
-      return result;
-    } catch (error) {
-      console.error('❌ CORRECTIVE ACTION - Error:', error.message);
-      console.error('❌ CORRECTIVE ACTION - Stack:', error.stack);
-      throw error;
-    }
+    return this.correctiveActionsService.create(createCorrectiveActionDto);
   }
 
   @Put(':id')

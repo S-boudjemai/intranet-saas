@@ -72,7 +72,7 @@ export default function PlanningTab() {
         setInspectors(filteredInspectors);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement:', error);
+      // Error loading audit data
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,6 @@ export default function PlanningTab() {
 
   const handleScheduleAudit = async (auditData: any) => {
     try {
-      console.log('🚀 FRONTEND - Sending audit planning data:', JSON.stringify(auditData, null, 2));
       
       const response = await fetch(`${import.meta.env.VITE_API_URL}/audits`, {
         method: 'POST',
@@ -93,14 +92,12 @@ export default function PlanningTab() {
 
       if (response.ok) {
         await fetchData(); // Recharger la liste
-        console.log('Audit planifié avec succès');
       } else {
         const errorData = await response.text();
-        console.error('❌ Erreur lors de la planification de l\'audit. Status:', response.status);
-        console.error('❌ Error details:', errorData);
+        // Error during audit scheduling
       }
     } catch (error) {
-      console.error('❌ Erreur lors de la planification de l\'audit:', error);
+      // Audit planning error
     }
   };
 
@@ -123,14 +120,12 @@ export default function PlanningTab() {
 
       if (response.ok) {
         await fetchData(); // Recharger la liste
-        console.log('✅ Audit archivé avec succès');
       } else {
         const errorData = await response.text();
-        console.error('❌ Erreur lors de l\'archivage. Status:', response.status);
-        console.error('❌ Error details:', errorData);
+        // Error during archiving
       }
     } catch (error) {
-      console.error('❌ Erreur lors de l\'archivage:', error);
+      // Archiving error
     } finally {
       setArchivingId(null);
       setShowArchiveModal(false);

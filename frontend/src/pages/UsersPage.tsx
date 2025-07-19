@@ -1,5 +1,6 @@
 // src/pages/UsersPage.tsx
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 import ConfirmModal from "../components/ConfirmModal";
 import type { InviteType } from "../types";
@@ -80,25 +81,61 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
-        <div className="p-2 bg-card border border-border rounded-lg">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-4 sm:p-6 lg:p-8"
+    >
+      <motion.h1 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3"
+      >
+        <motion.div 
+          initial={{ scale: 0, rotate: -45 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+          className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
+          style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+        >
           <UsersIcon className="h-6 w-6 text-primary" />
-        </div>
+        </motion.div>
         <span>Gestion des Utilisateurs</span>
-      </h1>
+      </motion.h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+      >
         {/* Colonne de gauche : Formulaire d'invitation */}
-        <div className="lg:col-span-1">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="lg:col-span-1"
+        >
           <form
             onSubmit={handleInviteSubmit}
-            className="p-6 bg-card border border-border rounded-lg space-y-4"
+            className="p-6 bg-card border border-border rounded-2xl space-y-4"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
           >
-            <h2 className="text-lg font-bold text-card-foreground">
+            <motion.h2 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-lg font-bold text-card-foreground"
+            >
               Inviter un nouveau franchisé
-            </h2>
-            <div>
+            </motion.h2>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
               <label
                 htmlFor="email-invite"
                 className="block text-sm font-medium text-muted-foreground mb-2"
@@ -112,46 +149,74 @@ export default function UsersPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="nom@exemple.com"
-                className="bg-input border border-border rounded-md w-full p-2 text-foreground focus:border-primary focus:ring-primary/30 focus:outline-none"
+                className="bg-input border border-border rounded-xl w-full p-3 text-foreground focus:border-primary focus:ring-primary/20 focus:outline-none transition-all duration-300"
               />
-            </div>
-            <button
+            </motion.div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 px-4 rounded-xl hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               <PaperAirplaneIcon className="h-5 w-5" />
               <span>Envoyer l'invitation</span>
-            </button>
+            </motion.button>
             {status && (
-              <p className="text-sm text-center text-muted-foreground">
+              <motion.p 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-sm text-center text-muted-foreground"
+              >
                 {status}
-              </p>
+              </motion.p>
             )}
           </form>
-        </div>
+        </motion.div>
 
         {/* Colonne de droite : Liste des invitations */}
-        <div className="lg:col-span-2">
-          <h2 className="text-lg font-bold text-foreground mb-4">
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="lg:col-span-2"
+        >
+          <motion.h2 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-lg font-bold text-foreground mb-4"
+          >
             Invitations en attente
-          </h2>
-          <div className="bg-card border border-border rounded-lg">
+          </motion.h2>
+          <div className="bg-card border border-border rounded-2xl" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
             <ul className="divide-y divide-border">
               {loading ? (
-                <li className="p-4 text-center text-muted-foreground">
+                <motion.li 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="p-4 text-center text-muted-foreground"
+                >
                   Chargement...
-                </li>
+                </motion.li>
               ) : invites.filter((inv) => !inv.used_at).length === 0 ? (
-                <li className="p-4 text-center text-muted-foreground">
+                <motion.li 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7 }}
+                  className="p-4 text-center text-muted-foreground"
+                >
                   Aucune invitation en attente.
-                </li>
+                </motion.li>
               ) : (
                 invites
                   .filter((inv) => !inv.used_at)
-                  .map((invite) => (
-                    <li
+                  .map((invite, index) => (
+                    <motion.li
                       key={invite.id}
-                      className="p-4 flex justify-between items-center"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.7 + index * 0.1 }}
+                      className="p-4 flex justify-between items-center hover:bg-accent transition-colors duration-200"
                     >
                       <div>
                         <p className="font-medium text-foreground">
@@ -164,19 +229,21 @@ export default function UsersPage() {
                           )}
                         </p>
                       </div>
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={() => handleRevokeRequest(invite)}
-                        className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
                       >
                         <TrashIcon className="h-5 w-5" />
-                      </button>
-                    </li>
+                      </motion.button>
+                    </motion.li>
                   ))
               )}
             </ul>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       <ConfirmModal
         isOpen={isConfirmModalOpen}
@@ -188,6 +255,6 @@ export default function UsersPage() {
         <span className="font-bold">{inviteToRevoke?.invite_email}</span>" ? Le
         lien ne sera plus valide.
       </ConfirmModal>
-    </div>
+    </motion.div>
   );
 }

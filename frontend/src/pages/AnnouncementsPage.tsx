@@ -1,11 +1,12 @@
 // src/pages/AnnouncementsPage.tsx
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 import CreateAnnouncementForm from "../components/CreateAnnouncementForm";
 import AnnouncementCard from "../components/AnnouncementCard";
-import ConfirmModal from "../components/ConfirmModal"; // <-- Importer la modale
+import ConfirmModal from "../components/ConfirmModal";
 import { parseJwt, type JwtPayload } from "../utils/jwt";
-import type { Announcement } from "../types"; // <-- Importer depuis le fichier central
+import type { Announcement } from "../types";
 import { SpeakerphoneIcon, ExclamationCircleIcon, SpinnerIcon } from "../components/icons";
 
 // --- ICÔNES LOCALES SUPPRIMÉES, UTILISATION CENTRALISÉE ---
@@ -77,54 +78,100 @@ export default function AnnouncementsPage() {
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center space-x-2 text-muted-foreground p-8">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center justify-center space-x-2 text-muted-foreground p-8"
+        >
           <SpinnerIcon className="h-6 w-6" />
           <span>Chargement...</span>
-        </div>
+        </motion.div>
       );
     }
     if (err) {
       return (
-        <div className="bg-destructive/10 text-destructive p-4 rounded-md flex items-center space-x-3">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-destructive/10 text-destructive p-4 rounded-2xl flex items-center space-x-3 border border-destructive/20"
+          style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+        >
           <ExclamationCircleIcon className="h-6 w-6" />
           <span>Erreur : {err}</span>
-        </div>
+        </motion.div>
       );
     }
     if (anns.length === 0) {
       return (
-        <div className="text-center text-muted-foreground py-16 border-2 border-dashed border-border rounded-lg">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-center text-muted-foreground py-16 border-2 border-dashed border-border rounded-2xl bg-muted"
+        >
           <p>Aucune annonce pour le moment.</p>
-        </div>
+        </motion.div>
       );
     }
     return (
-      <div className="space-y-8">
-        {anns.map((a) => (
-          <AnnouncementCard
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="space-y-8"
+      >
+        {anns.map((a, index) => (
+          <motion.div
             key={a.id}
-            announcement={a}
-            canManage={canManage}
-            onDeleteRequest={handleDeleteRequest} // <-- On passe la nouvelle fonction
-          />
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 + index * 0.1 }}
+          >
+            <AnnouncementCard
+              announcement={a}
+              canManage={canManage}
+              onDeleteRequest={handleDeleteRequest}
+            />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     );
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
-        <div className="p-2 bg-card border border-border rounded-lg">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-4 sm:p-6 lg:p-8"
+    >
+      <motion.h1 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3"
+      >
+        <motion.div 
+          initial={{ scale: 0, rotate: -45 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+          className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
+          style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+        >
           <SpeakerphoneIcon className="h-6 w-6 text-primary" />
-        </div>
+        </motion.div>
         <span>Fil d'Annonces</span>
-      </h1>
+      </motion.h1>
 
       {canManage && (
-        <div className="mb-12">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="mb-12"
+        >
           <CreateAnnouncementForm onSuccess={loadAnnouncements} />
-        </div>
+        </motion.div>
       )}
 
       {renderContent()}
@@ -140,6 +187,6 @@ export default function AnnouncementsPage() {
         <span className="font-bold">{announcementToDelete?.title}</span>" ?
         Cette action est irréversible.
       </ConfirmModal>
-    </div>
+    </motion.div>
   );
 }

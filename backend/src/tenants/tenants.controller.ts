@@ -2,9 +2,10 @@ import { Controller, Get, Post, Body, UseGuards, Patch, Param } from '@nestjs/co
 import { TenantsService } from './tenants.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('tenants')
-@UseGuards()
+@UseGuards(JwtAuthGuard)
 export class TenantsController {
   // <- constructeur bien orthographié
   constructor(private readonly svc: TenantsService) {}
@@ -17,6 +18,11 @@ export class TenantsController {
   @Get()
   list() {
     return this.svc.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.svc.findOne(+id);
   }
 
   @Patch(':id')

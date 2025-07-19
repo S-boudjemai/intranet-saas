@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import type { AuditTemplate } from '../types';
 import Button from '../components/ui/Button';
@@ -54,7 +55,7 @@ export default function AuditTemplatesPage() {
         setTemplates(data.data || data);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des templates:', error);
+      // Erreur lors du chargement des templates
     } finally {
       setLoading(false);
     }
@@ -104,8 +105,6 @@ export default function AuditTemplatesPage() {
 
   const handleCreateTemplate = async (templateData: any) => {
     try {
-      console.log('🚀 Frontend - Sending template data:', JSON.stringify(templateData, null, 2));
-      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/audit-templates`, {
         method: 'POST',
         headers: {
@@ -121,8 +120,6 @@ export default function AuditTemplatesPage() {
       } else {
         const errorData = await response.text();
         showToast('error', 'Erreur de création', 'Impossible de créer le template. Vérifiez les données saisies.');
-        console.error('❌ Erreur lors de la création du template. Status:', response.status);
-        console.error('❌ Error details:', errorData);
       }
     } catch (error) {
       showToast('error', 'Erreur réseau', 'Une erreur est survenue lors de la création.');
@@ -131,8 +128,6 @@ export default function AuditTemplatesPage() {
 
   const handleEditTemplateSubmit = async (templateData: any) => {
     try {
-      console.log('🚀 Frontend - Sending edited template data:', JSON.stringify(templateData, null, 2));
-      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/audit-templates/${templateData.id}`, {
         method: 'PATCH',
         headers: {
@@ -150,8 +145,6 @@ export default function AuditTemplatesPage() {
       } else {
         const errorData = await response.text();
         showToast('error', 'Erreur de modification', 'Impossible de modifier le template. Vérifiez les données saisies.');
-        console.error('❌ Erreur lors de la modification du template. Status:', response.status);
-        console.error('❌ Error details:', errorData);
       }
     } catch (error) {
       showToast('error', 'Erreur réseau', 'Une erreur est survenue lors de la modification.');
@@ -186,90 +179,164 @@ export default function AuditTemplatesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-64">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center justify-center min-h-64"
+      >
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="flex justify-between items-center"
+      >
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Templates d'Audit</h1>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-4">
+            <motion.div 
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
+              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+            >
+              <HiClipboardList className="h-6 w-6 text-primary" />
+            </motion.div>
+            <span>Templates d'Audit</span>
+          </h1>
           <p className="text-muted-foreground mt-1">
             Créez et gérez vos modèles d'audit personnalisés
           </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <HiPlus className="w-4 h-4 mr-2" />
-          Nouveau Template
-        </Button>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
-              <HiClipboardList className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">Total Templates</p>
-              <p className="text-2xl font-bold text-foreground">{templates.length}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg dark:bg-green-900">
-              <span className="text-2xl">🧼</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">Hygiène</p>
-              <p className="text-2xl font-bold text-foreground">
-                {templates.filter(t => t.category.toLowerCase() === 'hygiene').length}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg dark:bg-red-900">
-              <span className="text-2xl">🔒</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">Sécurité</p>
-              <p className="text-2xl font-bold text-foreground">
-                {templates.filter(t => t.category.toLowerCase() === 'security').length}
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Templates Grid */}
-      {templates.length === 0 ? (
-        <Card className="p-12 text-center">
-          <HiClipboardList className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            Aucun template d'audit
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            Commencez par créer votre premier template d'audit pour planifier des inspections.
-          </p>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
           <Button onClick={() => setShowCreateModal(true)}>
             <HiPlus className="w-4 h-4 mr-2" />
-            Créer un Template
+            Nouveau Template
           </Button>
-        </Card>
+        </motion.div>
+      </motion.div>
+
+      {/* Stats */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+      >
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+        >
+          <Card className="p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg dark:bg-blue-900">
+                <HiClipboardList className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">Total Templates</p>
+                <p className="text-2xl font-bold text-foreground">{templates.length}</p>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <Card className="p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg dark:bg-green-900">
+                <span className="text-2xl">🧼</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">Hygiène</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {templates.filter(t => t.category.toLowerCase() === 'hygiene').length}
+                </p>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+        >
+          <Card className="p-4">
+            <div className="flex items-center">
+              <div className="p-2 bg-red-100 rounded-lg dark:bg-red-900">
+                <span className="text-2xl">🔒</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">Sécurité</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {templates.filter(t => t.category.toLowerCase() === 'security').length}
+                </p>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      </motion.div>
+
+      {/* Templates Grid */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8, duration: 0.5 }}
+      >
+        {templates.length === 0 ? (
+          <Card className="p-12 text-center">
+            <motion.div
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.9, type: "spring", stiffness: 300 }}
+              whileHover={{ scale: 1.1, rotate: 5 }}
+            >
+              <HiClipboardList className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            </motion.div>
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              Aucun template d'audit
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Commencez par créer votre premier template d'audit pour planifier des inspections.
+            </p>
+            <Button onClick={() => setShowCreateModal(true)}>
+              <HiPlus className="w-4 h-4 mr-2" />
+              Créer un Template
+            </Button>
+          </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {templates.map((template) => (
-            <Card key={template.id} className="p-6 hover:shadow-lg transition-shadow">
+          {templates.map((template, index) => (
+            <motion.div
+              key={template.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.9 + index * 0.1, duration: 0.5 }}
+            >
+              <Card className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center">
                   <span className="text-2xl mr-3">{getCategoryIcon(template.category)}</span>
@@ -318,10 +385,12 @@ export default function AuditTemplatesPage() {
                   <HiTrash className="w-4 h-4" />
                 </Button>
               </div>
-            </Card>
+              </Card>
+            </motion.div>
           ))}
         </div>
       )}
+      </motion.div>
 
       {/* Modal de création */}
       <CreateTemplateModal
@@ -383,6 +452,6 @@ export default function AuditTemplatesPage() {
         title={toast.title}
         message={toast.message}
       />
-    </div>
+    </motion.div>
   );
 }

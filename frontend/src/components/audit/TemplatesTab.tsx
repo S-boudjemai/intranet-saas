@@ -55,7 +55,7 @@ export default function TemplatesTab() {
         setTemplates(data.data || data);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des templates:', error);
+      // Templates loading error
     } finally {
       setLoading(false);
     }

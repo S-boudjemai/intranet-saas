@@ -138,7 +138,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
       const category = categoryMapping[notificationType];
       if (!category) {
-        console.warn('Type de notification non reconnu:', notificationType);
+        // Unknown notification type
         return;
       }
 
@@ -158,7 +158,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       // Rafraîchir les compteurs après avoir marqué comme lu
       await refreshCounts();
     } catch (error) {
-      console.error('Erreur lors du marquage des notifications comme lues:', error);
+      // Error marking notifications as read
       // TODO: Afficher une notification d'erreur à l'utilisateur
     } finally {
       setIsProcessing(false);

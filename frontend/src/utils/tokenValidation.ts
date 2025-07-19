@@ -41,24 +41,8 @@ export function validateJWTStructure(token: string): { isValid: boolean; error?:
 
 export function clearInvalidToken(): void {
   localStorage.removeItem('token');
-  console.warn('Token JWT invalide supprimé du localStorage');
 }
 
 export function debugToken(token: string): void {
-  console.group('🐛 Debug Token JWT');
-  console.log('Token brut:', token);
-  console.log('Longueur:', token?.length);
-  console.log('Type:', typeof token);
-  
-  if (token) {
-    const parts = token.split('.');
-    console.log('Nombre de parties:', parts.length);
-    parts.forEach((part, index) => {
-      console.log(`Partie ${index + 1}:`, part.substring(0, 50) + (part.length > 50 ? '...' : ''));
-    });
-  }
-  
-  const validation = validateJWTStructure(token);
-  console.log('Validation:', validation);
-  console.groupEnd();
+  // Debug désactivé en production
 }

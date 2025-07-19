@@ -14,6 +14,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { User } from '../users/entities/user.entity';
+import { Restaurant } from '../restaurant/entites/restaurant.entity';
 import { UploadAttachmentDto } from './dto/upload-attachment.dto';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
@@ -35,6 +36,8 @@ export class TicketsService {
     private attachmentsRepo: Repository<TicketAttachment>,
     @InjectRepository(User)
     private usersRepo: Repository<User>,
+    @InjectRepository(Restaurant)
+    private restaurantsRepo: Repository<Restaurant>,
     private notificationsService: NotificationsService,
     private notificationsGateway: NotificationsGateway,
     private configService: ConfigService,
@@ -63,11 +66,29 @@ export class TicketsService {
       throw new ForbiddenException('Utilisateur non associé à un restaurant.');
     }
 
-    console.log('🎫 Creating ticket with user:', JSON.stringify(user, null, 2));
-    console.log('🎫 User.userId:', user.userId, 'Type:', typeof user.userId);
-    
     if (!user.userId) {
       throw new ForbiddenException('Token JWT invalide: userId manquant. Veuillez vous reconnecter.');
+    }
+    
+    // Vérification que le restaurant existe et récupération des infos complètes
+    const restaurant = await this.restaurantsRepo.findOne({
+      where: { id: user.restaurant_id }
+    });
+    if (!restaurant) {
+      throw new ForbiddenException(`Restaurant avec l'ID ${user.restaurant_id} introuvable.`);
+    }
+    
+    // Vérification que l'utilisateur existe
+    const userExists = await this.usersRepo.findOne({
+      where: { id: user.userId }
+    });
+    if (!userExists) {
+      throw new ForbiddenException(`Utilisateur avec l'ID ${user.userId} introuvable.`);
+    }
+    
+    // Vérification de compatibilité tenant_id
+    if (restaurant.tenant_id !== user.tenant_id) {
+      throw new ForbiddenException(`Le restaurant n'appartient pas au même tenant. Restaurant tenant: ${restaurant.tenant_id}, User tenant: ${user.tenant_id}`);
     }
     
     const ticket = this.ticketsRepo.create({
@@ -79,7 +100,7 @@ export class TicketsService {
     });
 
     const savedTicket = await this.ticketsRepo.save(ticket);
-
+      
     // Notifier tous les managers du tenant
     const tenantId = user.tenant_id!;
     const message = `Nouveau ticket: ${savedTicket.title}`;
@@ -104,18 +125,12 @@ export class TicketsService {
       title: savedTicket.title,
       message
     });
-
+    
     return savedTicket;
   }
 
   // ----- CORRECTION 2 : Liste des tickets -----
   async findAll(user: JwtUser): Promise<Ticket[]> {
-    console.log('🎫 Finding tickets for user:', {
-      userId: user.userId,
-      role: user.role,
-      tenant_id: user.tenant_id,
-      restaurant_id: user.restaurant_id
-    });
 
     const qb = this.ticketsRepo
       .createQueryBuilder('ticket')
@@ -128,18 +143,14 @@ export class TicketsService {
     if (user.role === Role.Viewer) {
       // Un viewer ne voit que les tickets de son restaurant
       if (!user.restaurant_id) {
-        console.log('🎫 Viewer without restaurant_id, returning empty array');
         return [];
       }
-      console.log('🎫 Filtering tickets for restaurant_id:', user.restaurant_id);
       qb.andWhere('ticket.restaurant_id = :rid', { rid: user.restaurant_id });
     } else if (user.role === Role.Manager) {
       // Un manager voit tous les tickets de sa franchise
       if (!user.tenant_id) {
-        console.log('🎫 Manager without tenant_id, returning empty array');
         return [];
       }
-      console.log('🎫 Filtering tickets for tenant_id:', user.tenant_id);
       qb.andWhere('ticket.tenant_id = :tid', {
         tid: user.tenant_id.toString(),
       });
@@ -147,18 +158,6 @@ export class TicketsService {
     // Un admin voit tout (pas de filtre de tenant)
 
     const tickets = await qb.orderBy('ticket.updated_at', 'DESC').getMany();
-    console.log('🎫 Found tickets:', tickets.length, 'tickets for user role:', user.role);
-    
-    // Log des premiers tickets pour debug
-    if (tickets.length > 0) {
-      console.log('🎫 First ticket data:', {
-        id: tickets[0].id,
-        title: tickets[0].title,
-        restaurant_id: tickets[0].restaurant_id,
-        tenant_id: tickets[0].tenant_id,
-        status: tickets[0].status
-      });
-    }
 
     // Générer des URLs présignées pour les attachments S3
     for (const ticket of tickets) {
@@ -260,16 +259,19 @@ export class TicketsService {
     author_id: number,
     message: string,
   ): Promise<Comment> {
+    // Vérifier que le ticket existe
+    const ticket = await this.ticketsRepo.findOne({
+      where: { id: ticket_id }
+    });
+    if (!ticket) {
+      throw new ForbiddenException(`Ticket avec l'ID ${ticket_id} introuvable.`);
+    }
+    
     const comment = this.commentsRepo.create({ ticket_id, author_id, message });
     const savedComment = await this.commentsRepo.save(comment);
-
-    // Récupérer le ticket pour notifier le créateur
-    const ticket = await this.ticketsRepo.findOne({
-      where: { id: ticket_id, is_deleted: false }
-    });
-
-    if (ticket && ticket.created_by !== author_id) {
-      // Notifier le créateur du ticket du nouveau commentaire
+    
+    // Notifier le créateur du ticket du nouveau commentaire si différent de l'auteur
+    if (ticket.created_by !== author_id) {
       const notificationMessage = `Nouveau commentaire sur: ${ticket.title}`;
       
       await this.notificationsService.createNotification(
@@ -288,7 +290,7 @@ export class TicketsService {
         type: 'comment'
       });
     }
-
+    
     return savedComment;
   }
 
@@ -456,7 +458,6 @@ export class TicketsService {
       const presignedUrl = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
       return presignedUrl;
     } catch (error) {
-      console.error('Erreur génération URL présignée pour attachment:', error);
       return currentUrl; // Fallback sur l'URL originale
     }
   }

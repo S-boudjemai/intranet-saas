@@ -1,6 +1,7 @@
 // src/components/AnnouncementCard.tsx
 import { useState } from "react";
-import type { Announcement } from "../types"; // <-- Importer depuis le fichier central
+import { motion } from "framer-motion";
+import type { Announcement } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import DocumentPreviewModal from "./DocumentPreviewModal";
 import { SpeakerphoneIcon, EyeIcon, TrashIcon } from "./icons";
@@ -45,8 +46,6 @@ export default function AnnouncementCard({
         filename = urlParts[urlParts.length - 1].split('?')[0]; // Enlever les paramètres query
       }
       
-      console.log('🔍 Preview - Original URL:', documentUrl);
-      console.log('🔍 Preview - Extracted filename:', filename);
       
       // Utiliser l'endpoint de téléchargement pour avoir une URL présignée fraîche
       const res = await fetch(
@@ -61,82 +60,143 @@ export default function AnnouncementCard({
       const response = await res.json();
       const { url } = response.data || response;
       
-      console.log('✅ Preview - Got presigned URL:', url);
       setPreview({ url, name });
     } catch (error) {
-      console.error("❌ Error getting preview URL:", error);
+      // Error getting preview URL
       // Fallback: essayer avec l'URL originale
       setPreview({ url: documentUrl, name });
     }
   };
 
   return (
-    <div className="relative pl-12">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.5, 
+        ease: "easeOut" 
+      }}
+      className="relative pl-12"
+    >
       {/* Timeline Dot & Line */}
       <div className="absolute left-4 top-1 h-full border-l-2 border-border"></div>
-      <div className="absolute left-4 top-1 transform -translate-x-1/2 bg-secondary rounded-full p-1">
+      <motion.div 
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+        className="absolute left-4 top-1 transform -translate-x-1/2 bg-primary/10 rounded-full p-2"
+      >
         <SpeakerphoneIcon className="h-4 w-4 text-primary" />
-      </div>
+      </motion.div>
 
       {/* Announcement Card */}
-      <div className="bg-card border border-border rounded-lg p-5 group">
+      <motion.div 
+        whileHover={{ 
+          y: -8,
+          transition: { type: "spring", stiffness: 300, damping: 20 }
+        }}
+        whileTap={{ scale: 0.98 }}
+        className="bg-card border border-border rounded-2xl p-6 group cursor-pointer"
+        style={{
+          boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
+        }}
+      >
         <div className="flex justify-between items-start gap-4">
-          <h2 className="font-bold text-lg text-card-foreground">
+          <motion.h2 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="font-bold text-lg text-card-foreground"
+          >
             {announcement.title}
-          </h2>
+          </motion.h2>
           <div className="flex items-center gap-2">
-            <small className="text-muted-foreground text-xs text-right flex-shrink-0">
+            <motion.small 
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-muted-foreground text-xs text-right flex-shrink-0"
+            >
               {formatDate(announcement.created_at)}
-            </small>
+            </motion.small>
             {canManage && (
-              <button
-                onClick={() => onDeleteRequest(announcement)} // <-- MODIFIÉ
-                className="p-1 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+              <motion.button
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 0, x: 0 }}
+                whileHover={{ opacity: 1, x: 0, scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.3 }}
+                onClick={() => onDeleteRequest(announcement)}
+                className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all duration-300"
               >
                 <TrashIcon className="h-5 w-5" />
-              </button>
+              </motion.button>
             )}
           </div>
         </div>
-        <p className="mt-2 text-foreground/80 leading-relaxed">
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mt-4 text-muted-foreground leading-relaxed"
+        >
           {announcement.content}
-        </p>
+        </motion.p>
 
         {/* Documents attachés */}
         {announcement.documents && announcement.documents.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-border">
-            <p className="text-sm font-medium text-muted-foreground mb-2">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-6 pt-4 border-t border-border"
+          >
+            <p className="text-sm font-medium text-muted-foreground mb-3">
               Documents joints :
             </p>
             <div className="space-y-2">
-              {announcement.documents.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-2 bg-secondary/30 rounded-md">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="text-primary">📄</span>
-                    <span className="text-sm font-medium text-secondary-foreground truncate">
+              {announcement.documents.map((doc, index) => (
+                <motion.div 
+                  key={doc.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 + index * 0.1 }}
+                  whileHover={{ x: 4 }}
+                  className="flex items-center justify-between p-3 bg-muted rounded-xl hover:bg-primary/5 transition-all duration-300"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <motion.div
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      className="p-2 bg-primary/10 rounded-lg"
+                    >
+                      <span className="text-primary text-sm">📄</span>
+                    </motion.div>
+                    <span className="text-sm font-medium text-foreground truncate">
                       {doc.name}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => handlePreview(doc.url, doc.name)}
-                      className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                      className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-all duration-300"
                       title="Aperçu"
                     >
                       <EyeIcon className="h-4 w-4" />
-                    </button>
+                    </motion.button>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
 
       {/* Modal de prévisualisation */}
       {preview && (
         <DocumentPreviewModal {...preview} onClose={() => setPreview(null)} />
       )}
-    </div>
+    </motion.div>
   );
 }

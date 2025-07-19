@@ -82,7 +82,7 @@ export default function ActionsTab() {
         setCorrectiveActions(actionsData.data || actionsData);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
+      // Error loading corrective actions data
     } finally {
       setLoading(false);
     }
@@ -122,7 +122,6 @@ export default function ActionsTab() {
 
   const handleCreateAction = async (actionData: any) => {
     try {
-      console.log('🚀 FRONTEND - Sending corrective action data:', JSON.stringify(actionData, null, 2));
       
       const response = await fetch(`${import.meta.env.VITE_API_URL}/corrective-actions`, {
         method: 'POST',
@@ -139,8 +138,7 @@ export default function ActionsTab() {
       } else {
         const errorData = await response.text();
         showToast('error', 'Erreur de création', 'Impossible de créer l\'action corrective. Vérifiez les données saisies.');
-        console.error('❌ Erreur lors de la création de l\'action corrective. Status:', response.status);
-        console.error('❌ Error details:', errorData);
+        // Error during corrective action creation
       }
     } catch (error) {
       showToast('error', 'Erreur réseau', 'Une erreur est survenue lors de la création.');

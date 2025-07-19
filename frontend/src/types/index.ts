@@ -39,7 +39,7 @@ export interface DocumentType {
   id: string;
   name: string;
   url: string;
-  tenant_id: string;
+  tenant_id: number;
   is_deleted: boolean;
   tags?: TagType[];
 }
@@ -49,7 +49,7 @@ export interface TicketType {
   title: string;
   description?: string;
   status: "non_traitee" | "en_cours" | "traitee";
-  tenant_id: string;
+  tenant_id: number;
   created_at: string;
   updated_at: string;
   comments: CommentType[];

@@ -1,5 +1,6 @@
 // src/components/ui/Button.tsx
 import React from 'react';
+import { motion } from 'framer-motion';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'destructive' | 'outline' | 'ghost';
@@ -10,20 +11,20 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className = '', variant = 'primary', size = 'md', loading = false, icon, children, disabled, ...props }, ref) => {
-    const baseClasses = 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+    const baseClasses = 'inline-flex items-center justify-center font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
     
     const variants = {
-      primary: 'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary shadow-custom',
-      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 focus:ring-secondary shadow-custom',
-      destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:ring-destructive shadow-custom',
-      outline: 'border border-border bg-transparent hover:bg-accent hover:text-accent-foreground focus:ring-primary',
+      primary: 'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary shadow-lg hover:shadow-xl',
+      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 focus:ring-secondary shadow-md hover:shadow-lg',
+      destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:ring-destructive shadow-lg hover:shadow-xl',
+      outline: 'border border-border bg-card hover:bg-accent hover:border-accent focus:ring-primary shadow-sm hover:shadow-md',
       ghost: 'hover:bg-accent hover:text-accent-foreground focus:ring-primary'
     };
     
     const sizes = {
-      sm: 'h-8 px-3 text-xs rounded-md',
-      md: 'h-10 px-4 text-sm rounded-md',
-      lg: 'h-12 px-6 text-base rounded-lg'
+      sm: 'h-8 px-3 text-xs rounded-xl',
+      md: 'h-10 px-4 text-sm rounded-xl',
+      lg: 'h-12 px-6 text-base rounded-xl'
     };
     
     const LoadingSpinner = () => (
@@ -34,7 +35,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     );
     
     return (
-      <button
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
         className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
         disabled={disabled || loading}
         ref={ref}
@@ -43,7 +47,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {loading && <LoadingSpinner />}
         {!loading && icon && <span className="mr-2">{icon}</span>}
         {children}
-      </button>
+      </motion.button>
     );
   }
 );

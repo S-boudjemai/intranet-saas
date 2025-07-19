@@ -1,6 +1,7 @@
 // src/pages/AuditsPage.tsx
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import TabNavigation, { type Tab } from '../components/ui/TabNavigation';
 import { ClipboardIcon, CalendarIcon, ExclamationTriangleIcon } from '../components/icons';
 
@@ -64,22 +65,44 @@ export default function AuditsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-4 sm:p-6 lg:p-8"
+    >
       {/* Header */}
-      <div className="mb-8">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="mb-8"
+      >
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-          <div className="p-2 bg-card border border-border rounded-lg">
+          <motion.div 
+            initial={{ scale: 0, rotate: -45 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+          >
             <ClipboardIcon className="h-6 w-6 text-primary" />
-          </div>
+          </motion.div>
           <span>Audits & Conformité</span>
         </h1>
         <p className="mt-2 text-muted-foreground">
           Gestion complète des audits, planification et actions correctives
         </p>
-      </div>
+      </motion.div>
 
       {/* Tab Navigation */}
-      <div className="bg-card border border-border rounded-lg">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="bg-card border border-border rounded-lg"
+      >
         <div className="px-6 pt-6">
           <TabNavigation
             tabs={tabs}
@@ -89,12 +112,17 @@ export default function AuditsPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="p-6"
+        >
           <div className="animate-tab-content">
             {renderTabContent()}
           </div>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -95,44 +95,50 @@ export default function ManageTagsModal({
     (t) => !currentTagIds.includes(t.id)
   );
 
-  const inputClasses = `flex-grow bg-input border border-border rounded-md p-2 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition`;
+  const inputClasses = `flex-grow bg-gray-50 border border-gray-200 rounded-xl p-3 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-300`;
 
   return (
     <div
-      className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-popover border border-border rounded-lg shadow-xl w-full max-w-lg"
+        className="bg-white border border-gray-200 rounded-2xl w-full max-w-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
+        }}
       >
-        <div className="p-5 border-b border-border">
+        <div className="p-6 border-b border-gray-200 bg-gray-50">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold text-lg text-popover-foreground flex items-center gap-2">
-              <TagIcon className="h-6 w-6" />
+            <h3 className="font-bold text-xl text-gray-900 flex items-center gap-3">
+              <div className="p-2 bg-blue-50 rounded-xl">
+                <TagIcon className="h-5 w-5 text-blue-600" />
+              </div>
               Gérer les Tags
             </h3>
             <button
               onClick={onClose}
-              className="p-1 rounded-full text-muted-foreground hover:bg-accent"
+              className="p-2 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-all duration-300"
             >
               <XIcon className="h-5 w-5" />
             </button>
           </div>
-          <p className="text-sm text-muted-foreground mt-1 truncate">
+          <p className="text-gray-600 mt-2">
             Pour le document:{" "}
-            <span className="font-medium text-popover-foreground/90">
+            <span className="font-medium text-gray-900">
               {documentName}
             </span>
           </p>
         </div>
 
-        <div className="p-5 max-h-[60vh] overflow-y-auto">
-          <div className="mb-6">
-            <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+        <div className="p-6 max-h-[60vh] overflow-y-auto space-y-6">
+          <div>
+            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
               Créer un nouveau tag
             </h4>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <input
                 type="text"
                 value={newTagName}
@@ -143,31 +149,32 @@ export default function ManageTagsModal({
               <button
                 onClick={handleCreateClick}
                 disabled={isCreating || !newTagName.trim()}
-                className="bg-secondary hover:bg-accent text-secondary-foreground font-bold py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
               >
                 {isCreating ? "..." : "Créer"}
               </button>
             </div>
           </div>
 
-          <div className="mb-4">
-            <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+          <div>
+            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-600 rounded-full"></div>
               Tags assignés
             </h4>
-            <div className="flex flex-wrap gap-2 min-h-[36px] bg-secondary/50 p-3 rounded-md border border-border">
+            <div className="flex flex-wrap gap-2 min-h-[48px] bg-gray-50 p-4 rounded-xl border border-gray-200">
               {assignedTagObjects.length > 0 ? (
                 assignedTagObjects.map((tag) => (
                   <button
                     key={tag.id}
                     onClick={() => handleToggleTag(tag.id)}
-                    className="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-primary/30 transition-colors"
+                    className="bg-blue-100 text-blue-700 px-3 py-2 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-blue-200 transition-all duration-300"
                   >
                     {tag.name}
-                    <XIcon className="h-4 w-4" />
+                    <XIcon className="h-3 w-3" />
                   </button>
                 ))
               ) : (
-                <p className="text-muted-foreground text-sm">
+                <p className="text-gray-500 text-sm">
                   Aucun tag assigné.
                 </p>
               )}
@@ -175,7 +182,8 @@ export default function ManageTagsModal({
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
               Tags disponibles
             </h4>
             <div className="flex flex-wrap gap-2">
@@ -184,13 +192,13 @@ export default function ManageTagsModal({
                   <button
                     key={tag.id}
                     onClick={() => handleToggleTag(tag.id)}
-                    className="bg-accent hover:bg-accent/80 text-accent-foreground px-3 py-1 rounded-full text-sm font-medium transition-colors"
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 border border-gray-200 hover:border-gray-300"
                   >
                     + {tag.name}
                   </button>
                 ))
               ) : (
-                <p className="text-muted-foreground text-sm">
+                <p className="text-gray-500 text-sm">
                   Aucun autre tag disponible.
                 </p>
               )}
@@ -198,17 +206,17 @@ export default function ManageTagsModal({
           </div>
         </div>
 
-        <div className="p-4 bg-secondary/30 border-t border-border flex justify-end gap-3">
+        <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-md text-secondary-foreground font-semibold hover:bg-accent transition-colors"
+            className="px-4 py-2.5 rounded-xl text-gray-700 font-medium hover:bg-gray-200 transition-all duration-300"
           >
             Annuler
           </button>
           <button
             onClick={handleSaveClick}
             disabled={isSaving}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
           >
             {isSaving ? "Sauvegarde..." : "Sauvegarder les changements"}
           </button>

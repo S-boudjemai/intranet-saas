@@ -44,23 +44,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Fonction pour rafraîchir le token automatiquement
   const refreshToken = async (): Promise<boolean> => {
-    console.log('🔄 Tentative de refresh du token...');
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
         method: 'POST',
         credentials: 'include', // Pour envoyer les cookies
       });
 
-      console.log('🔄 Refresh response status:', res.status);
 
       if (!res.ok) {
         const errorText = await res.text();
-        console.error('🔄 Refresh failed with error:', errorText);
-        throw new Error(`Token refresh failed: ${res.status} ${errorText}`);
+        throw new Error(`Token refresh failed: ${res.status}`);
       }
 
       const responseData = await res.json();
-      console.log('🔄 Refresh response data:', responseData);
       
       const access_token = responseData.access_token || responseData.data?.access_token;
       if (!access_token) {
@@ -69,11 +65,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       localStorage.setItem("token", access_token);
       setToken(access_token);
-      console.log('✅ Token refreshed successfully');
       return true;
     } catch (error) {
-      console.error('❌ Failed to refresh token:', error);
-      console.log('🚪 Calling logout due to refresh failure...');
       logout();
       return false;
     }
@@ -84,7 +77,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const validation = validateJWTStructure(token);
       if (!validation.isValid) {
-        console.error('Token malformé pour refresh scheduling:', validation.error);
         return;
       }
 
@@ -95,23 +87,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Rafraîchir 2 minutes avant expiration (120 secondes)
       const refreshTime = Math.max(0, (timeUntilExpiry - 120) * 1000);
       
-      console.log('⏰ Programming token refresh:');
-      console.log(`   Current time: ${new Date().toISOString()}`);
-      console.log(`   Token expires: ${new Date(payload.exp * 1000).toISOString()}`);
-      console.log(`   Time until expiry: ${Math.round(timeUntilExpiry)} seconds`);
-      console.log(`   Refresh scheduled in: ${Math.round(refreshTime / 1000)} seconds`);
       
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);
-        console.log('⏰ Cleared previous refresh timeout');
       }
       
       refreshTimeoutRef.current = setTimeout(() => {
-        console.log('⏰ Executing scheduled token refresh...');
         refreshToken();
       }, refreshTime);
     } catch (error) {
-      console.error('Error scheduling token refresh:', error);
       debugToken(token);
     }
   };
@@ -123,7 +107,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const validation = validateJWTStructure(token);
       
       if (!validation.isValid) {
-        console.error('Token JWT invalide:', validation.error);
         debugToken(token);
         clearInvalidToken();
         setToken(null);
@@ -144,7 +127,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Programmer le refresh automatique
         scheduleTokenRefresh(token);
       } catch (e) {
-        console.error("Impossible de décoder le JWT", e);
         debugToken(token);
         clearInvalidToken();
         setToken(null);
@@ -182,19 +164,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    console.log('🚪 Logout called - clearing session...');
     
     // Clear timeout
     if (refreshTimeoutRef.current) {
       clearTimeout(refreshTimeoutRef.current);
-      console.log('🚪 Cleared refresh timeout');
     }
     
     // Clear localStorage
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
-    console.log('🚪 Cleared localStorage and state');
     
     // Appeler endpoint logout pour clear le cookie
     try {
@@ -202,33 +181,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         method: 'POST',
         credentials: 'include',
       });
-      console.log('🚪 Backend logout successful');
     } catch (error) {
-      console.error('🚪 Logout request failed:', error);
     }
     
     // Rediriger vers login après déconnexion
-    console.log('🚪 Redirecting to login...');
     window.location.href = '/login';
   };
 
   const setAuthFromSignup = (accessToken: string) => {
-    console.log('🎯 SIGNUP - Setting auth from signup token');
     
     // Clear any existing refresh timeout
     if (refreshTimeoutRef.current) {
       clearTimeout(refreshTimeoutRef.current);
-      console.log('🎯 SIGNUP - Cleared existing refresh timeout');
     }
     
     // Clear old token first
     localStorage.removeItem("token");
-    console.log('🎯 SIGNUP - Cleared old token');
     
     // Set new token
     localStorage.setItem("token", accessToken);
     setToken(accessToken);
-    console.log('🎯 SIGNUP - Set new token from signup');
     
     // useEffect will handle decoding and scheduling refresh
   };

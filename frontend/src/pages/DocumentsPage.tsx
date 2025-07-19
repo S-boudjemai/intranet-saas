@@ -1,5 +1,6 @@
 // src/pages/DocumentsPage.tsx
 import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 import UploadDocument from "../components/UploadDocument";
 import DocumentCard from "../components/DocumentCard";
@@ -34,7 +35,6 @@ export default function DocumentsPage() {
   const canManage = raw?.role === "manager" || raw?.role === "admin";
   const tenantId = raw?.tenant_id;
   
-  console.log('🔍 DocumentsPage - tenantId from JWT:', tenantId, typeof tenantId);
 
   // Data fetching logic
   const loadDocs = async () => {
@@ -160,20 +160,49 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-          <div className="p-2 bg-card border border-border rounded-lg">
-            <DocumentTextIcon className="h-6 w-6 text-primary" />
-          </div>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-6 space-y-8"
+    >
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="mb-8"
+      >
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-4">
+          <motion.div 
+            initial={{ scale: 0, rotate: -45 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+            className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+          >
+            <DocumentTextIcon className="h-7 w-7 text-primary" />
+          </motion.div>
           <span>Gestion des Documents</span>
         </h1>
-      </div>
+      </motion.div>
 
-      <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-        <aside className="lg:col-span-3 space-y-8">
-          <div className="p-5 bg-card border border-border rounded-lg">
-            <h2 className="font-bold text-card-foreground mb-4">Catégories</h2>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="lg:grid lg:grid-cols-12 lg:gap-8"
+      >
+        <motion.aside 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="lg:col-span-3 space-y-6"
+        >
+          <div className="p-6 bg-card border border-border rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+            <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-primary rounded-full"></div>
+              Catégories
+            </h2>
             <CategoryTree
               selectedId={category}
               onSelect={(id) =>
@@ -188,10 +217,15 @@ export default function DocumentsPage() {
               onUploadSuccess={loadDocs}
             />
           )}
-        </aside>
+        </motion.aside>
 
-        <main className="lg:col-span-9 mt-8 lg:mt-0">
-          <div className="space-y-4 p-5 bg-card border border-border rounded-lg">
+        <motion.main 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="lg:col-span-9 mt-8 lg:mt-0"
+        >
+          <div className="space-y-6 p-6 bg-card border border-border rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
             <div className="relative">
               <SearchIcon className="absolute top-1/2 left-4 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
@@ -199,10 +233,10 @@ export default function DocumentsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Rechercher un document par nom..."
-                className="bg-input border border-border rounded-md w-full p-3 pl-12 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition"
+                className="bg-background border border-border rounded-xl w-full p-4 pl-12 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all duration-300"
               />
             </div>
-            <div className="flex flex-wrap gap-2 pt-2">
+            <div className="flex flex-wrap gap-3 pt-2">
               {tags.map((t) => {
                 const active = filterTags.includes(t.id);
                 return (
@@ -215,10 +249,10 @@ export default function DocumentsPage() {
                           : [...p, t.id]
                       )
                     }
-                    className={`px-3 py-1.5 text-sm font-medium rounded-full transition-all duration-200 ${
+                    className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
                       active
-                        ? "bg-primary/10 text-primary ring-1 ring-primary/50"
-                        : "bg-secondary text-secondary-foreground hover:bg-accent"
+                        ? "bg-primary/10 text-primary ring-2 ring-primary/30 shadow-sm"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80 hover:shadow-sm"
                     }`}
                   >
                     {t.name}
@@ -228,30 +262,45 @@ export default function DocumentsPage() {
             </div>
           </div>
 
-          <div className="mt-8">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-8"
+          >
             {docs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {docs.map((d) => (
-                  <DocumentCard
+                {docs.map((d, index) => (
+                  <motion.div
                     key={d.id}
-                    doc={d}
-                    canManage={canManage}
-                    onDelete={() => handleDeleteRequest(d)} // <-- On appelle la nouvelle fonction
-                    onPreview={handlePreview}
-                    onTagClick={handleTagClick}
-                    onDownload={handleDownload}
-                    onManageTags={() => setManagingTagsDoc(d)}
-                  />
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.7 + index * 0.1 }}
+                  >
+                    <DocumentCard
+                      doc={d}
+                      canManage={canManage}
+                      onDelete={() => handleDeleteRequest(d)} // <-- On appelle la nouvelle fonction
+                      onPreview={handlePreview}
+                      onTagClick={handleTagClick}
+                      onDownload={handleDownload}
+                      onManageTags={() => setManagingTagsDoc(d)}
+                    />
+                  </motion.div>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-muted-foreground py-16 border-2 border-dashed border-border rounded-lg">
-                <p>Aucun document ne correspond à vos critères.</p>
+              <div className="text-center text-muted-foreground py-16 border-2 border-dashed border-border rounded-2xl bg-muted/50">
+                <div className="flex flex-col items-center gap-3">
+                  <DocumentTextIcon className="h-12 w-12 text-muted-foreground" />
+                  <p className="text-lg font-medium">Aucun document trouvé</p>
+                  <p className="text-sm">Essayez d'ajuster vos critères de recherche</p>
+                </div>
               </div>
             )}
-          </div>
-        </main>
-      </div>
+          </motion.div>
+        </motion.main>
+      </motion.div>
 
       {preview && (
         <DocumentPreviewModal {...preview} onClose={() => setPreview(null)} />
@@ -279,6 +328,6 @@ export default function DocumentsPage() {
         <span className="font-bold">{docToDelete?.name}</span>" ? Cette action
         est irréversible.
       </ConfirmModal>
-    </div>
+    </motion.div>
   );
 }

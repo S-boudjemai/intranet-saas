@@ -1,5 +1,6 @@
 // src/components/ui/Card.tsx
-
+import React from 'react';
+import { motion } from 'framer-motion';
 
 export interface CardProps {
   children: React.ReactNode;
@@ -20,7 +21,7 @@ const Card: React.FC<CardProps> = ({
   border = true,
   onClick
 }) => {
-  const baseClasses = 'bg-card text-card-foreground rounded-lg transition-all duration-200';
+  const baseClasses = 'bg-card text-card-foreground rounded-2xl transition-all duration-300';
   
   const paddings = {
     none: '',
@@ -31,21 +32,31 @@ const Card: React.FC<CardProps> = ({
   
   const shadows = {
     none: '',
-    sm: 'shadow-custom-sm',
-    md: 'shadow-custom',
-    lg: 'shadow-custom-lg'
+    sm: 'shadow-sm',
+    md: 'shadow-md',
+    lg: 'shadow-lg'
   };
   
   const borderClass = border ? 'border border-border' : '';
-  const hoverClass = hover ? 'hover:shadow-custom-lg hover:-translate-y-0.5' : '';
+  const hoverClass = hover ? 'hover:shadow-xl' : '';
+  
+  const cardStyle = {
+    boxShadow: shadow !== 'none' ? '0 4px 20px rgba(0,0,0,0.06)' : undefined
+  };
   
   return (
-    <div 
-      className={`${baseClasses} ${paddings[padding]} ${shadows[shadow]} ${borderClass} ${hoverClass} ${className}`}
+    <motion.div
+      whileHover={hover ? { 
+        y: -4,
+        transition: { type: "spring", stiffness: 300, damping: 20 }
+      } : {}}
+      whileTap={onClick ? { scale: 0.98 } : {}}
+      className={`${baseClasses} ${paddings[padding]} ${borderClass} ${hoverClass} ${className} ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
+      style={cardStyle}
     >
       {children}
-    </div>
+    </motion.div>
   );
 };
 

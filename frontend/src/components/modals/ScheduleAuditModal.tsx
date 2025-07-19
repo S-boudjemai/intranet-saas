@@ -466,7 +466,7 @@ export default function ScheduleAuditModal({
                   onChange={(e) => setAudit({ ...audit, notes: e.target.value })}
                   placeholder="Instructions spéciales, contexte, points à vérifier..."
                   rows={3}
-                  className="w-full px-3 py-2 border bg-background text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border bg-background text-gray-900 placeholder:text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
             </div>

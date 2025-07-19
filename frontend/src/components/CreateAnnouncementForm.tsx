@@ -48,15 +48,12 @@ export default function CreateAnnouncementForm({
         headers: { Authorization: `Bearer ${token}` },
       });
       const response = await res.json();
-      console.log('📄 Documents response:', response);
       const data = response.data || response;
-      console.log('📄 Documents data:', data);
       if (Array.isArray(data)) {
         setDocuments(data);
-        console.log('📄 Documents loaded:', data.length);
       }
     } catch (error) {
-      console.error('📄 Error loading documents:', error);
+      // Error loading documents
       setStatus("Erreur: Impossible de charger les documents.");
     }
   };
@@ -136,7 +133,7 @@ export default function CreateAnnouncementForm({
     }
   };
 
-  const inputClasses = `bg-input border border-border rounded-md w-full p-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all`;
+  const inputClasses = `bg-input border border-border rounded-md w-full p-3 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all`;
 
   return (
     <form
@@ -213,7 +210,7 @@ export default function CreateAnnouncementForm({
           // Mode Upload
           tenantId && (
             <UploadDocument
-              tenant_id={tenantId.toString()}
+              tenant_id={tenantId}
               onUploadSuccess={async () => {
                 await loadDocuments();
                 setShowUploadDocument(false);
