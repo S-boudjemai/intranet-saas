@@ -1,4 +1,14 @@
-import { Controller, Post, Body, UseGuards, Request, Res, Patch, Param, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  Res,
+  Patch,
+  Param,
+  BadRequestException,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { TokensService } from './tokens.service';
@@ -24,32 +34,36 @@ export class AuthController {
       type: 'object',
       properties: {
         email: { type: 'string', example: 'user@example.com' },
-        password: { type: 'string', example: 'password123' }
-      }
-    }
+        password: { type: 'string', example: 'password123' },
+      },
+    },
   })
-  @ApiResponse({ status: 200, description: 'Connexion réussie', schema: { 
-    type: 'object',
-    properties: {
-      success: { type: 'boolean', example: true },
-      data: {
-        type: 'object',
-        properties: {
-          access_token: { type: 'string' },
-          user: {
-            type: 'object',
-            properties: {
-              userId: { type: 'number' },
-              email: { type: 'string' },
-              role: { type: 'string' },
-              tenant_id: { type: 'number' },
-              restaurant_id: { type: 'number' }
-            }
-          }
-        }
-      }
-    }
-  }})
+  @ApiResponse({
+    status: 200,
+    description: 'Connexion réussie',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        data: {
+          type: 'object',
+          properties: {
+            access_token: { type: 'string' },
+            user: {
+              type: 'object',
+              properties: {
+                userId: { type: 'number' },
+                email: { type: 'string' },
+                role: { type: 'string' },
+                tenant_id: { type: 'number' },
+                restaurant_id: { type: 'number' },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 401, description: 'Identifiants invalides' })
   async login(@Request() req, @Res({ passthrough: true }) res: Response) {
     const user = req.user;
@@ -81,15 +95,17 @@ export class AuthController {
     };
   }
 
-
   @Public()
   @Post('signup-with-invite')
-  async signup(@Body() signupDto: SignupWithInviteDto, @Res({ passthrough: true }) res: Response) {
+  async signup(
+    @Body() signupDto: SignupWithInviteDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.authService.signupWithInvite(
-      signupDto.token, 
-      signupDto.password, 
-      signupDto.restaurant_name, 
-      signupDto.restaurant_city
+      signupDto.token,
+      signupDto.password,
+      signupDto.restaurant_name,
+      signupDto.restaurant_city,
     );
 
     const tokens = this.tokensService.generateTokenPair({
@@ -118,7 +134,7 @@ export class AuthController {
   @Post('refresh')
   async refresh(@Request() req, @Res({ passthrough: true }) res: Response) {
     const refreshToken = req.cookies?.refreshToken;
-    
+
     if (!refreshToken) {
       throw new Error('No refresh token provided');
     }
@@ -126,7 +142,7 @@ export class AuthController {
     try {
       const decoded = await this.tokensService.verifyRefreshToken(refreshToken);
       const user = await this.authService.validateUserById(decoded.userId);
-      
+
       if (!user) {
         throw new Error('User not found');
       }
@@ -163,9 +179,9 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        email: { type: 'string', example: 'user@example.com' }
-      }
-    }
+        email: { type: 'string', example: 'user@example.com' },
+      },
+    },
   })
   @ApiResponse({ status: 200, description: 'Email de réinitialisation envoyé' })
   @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
@@ -173,7 +189,7 @@ export class AuthController {
     const result = await this.authService.requestPasswordReset(email);
     return {
       message: result.message,
-      success: result.success
+      success: result.success,
     };
   }
 
@@ -185,14 +201,17 @@ export class AuthController {
       type: 'object',
       properties: {
         email: { type: 'string', example: 'user@example.com' },
-        code: { type: 'string', example: '123456' }
-      }
-    }
+        code: { type: 'string', example: '123456' },
+      },
+    },
   })
   @ApiResponse({ status: 200, description: 'Code valide' })
   @ApiResponse({ status: 400, description: 'Code invalide ou expiré' })
   async validateResetCode(@Body() body: { email: string; code: string }) {
-    const isValid = await this.authService.validateResetCode(body.email, body.code);
+    const isValid = await this.authService.validateResetCode(
+      body.email,
+      body.code,
+    );
     if (!isValid) {
       throw new BadRequestException('Code invalide ou expiré');
     }
@@ -208,14 +227,23 @@ export class AuthController {
       properties: {
         email: { type: 'string', example: 'user@example.com' },
         code: { type: 'string', example: '123456' },
-        newPassword: { type: 'string', example: 'newPassword123' }
-      }
-    }
+        newPassword: { type: 'string', example: 'newPassword123' },
+      },
+    },
   })
-  @ApiResponse({ status: 200, description: 'Mot de passe réinitialisé avec succès' })
+  @ApiResponse({
+    status: 200,
+    description: 'Mot de passe réinitialisé avec succès',
+  })
   @ApiResponse({ status: 400, description: 'Code invalide ou expiré' })
-  async resetPassword(@Body() body: { email: string; code: string; newPassword: string }) {
-    const result = await this.authService.resetPassword(body.email, body.code, body.newPassword);
+  async resetPassword(
+    @Body() body: { email: string; code: string; newPassword: string },
+  ) {
+    const result = await this.authService.resetPassword(
+      body.email,
+      body.code,
+      body.newPassword,
+    );
     if (!result.success) {
       throw new BadRequestException(result.message);
     }

@@ -32,7 +32,6 @@ export class DocumentsService {
     private notificationsService: NotificationsService,
     private notificationsGateway: NotificationsGateway,
   ) {
-    
     this.s3 = new S3Client({
       region: process.env.AWS_REGION,
       credentials: {
@@ -53,13 +52,12 @@ export class DocumentsService {
     data: Partial<Document> & { categoryId?: string },
     user: JwtUser,
   ): Promise<Document> {
-    
     // Gestion du tenant_id avec validation stricte
     if (user.tenant_id === null) {
       // admin global : doit préciser
       if (!data.tenant_id) {
         throw new ForbiddenException(
-          'L\'admin global doit préciser tenant_id dans le body',
+          "L'admin global doit préciser tenant_id dans le body",
         );
       }
       // Valider que tenant_id est un nombre valide
@@ -71,14 +69,18 @@ export class DocumentsService {
     } else {
       // manager ou admin de franchise - validation du tenant_id de l'utilisateur
       if (user.tenant_id === null || isNaN(user.tenant_id)) {
-        throw new ForbiddenException('Token JWT invalide: tenant_id manquant ou invalide');
+        throw new ForbiddenException(
+          'Token JWT invalide: tenant_id manquant ou invalide',
+        );
       }
       data.tenant_id = user.tenant_id.toString();
     }
 
     // Vérification que user.userId est valide
     if (!user.userId || isNaN(user.userId)) {
-      throw new ForbiddenException(`userId invalide: ${user.userId}. Token JWT corrompu.`);
+      throw new ForbiddenException(
+        `userId invalide: ${user.userId}. Token JWT corrompu.`,
+      );
     }
 
     // Création initiale
@@ -86,7 +88,7 @@ export class DocumentsService {
       ...data,
       created_by: user.userId,
     });
-    
+
     // Log supprimé pour éviter fuite données en production
 
     // Liaison de la catégorie si fournie
@@ -107,28 +109,33 @@ export class DocumentsService {
     try {
       const tenantId = parseInt(savedDoc.tenant_id);
       if (isNaN(tenantId)) {
-        console.error(`tenant_id invalide pour les notifications: ${savedDoc.tenant_id}`);
+        console.error(
+          `tenant_id invalide pour les notifications: ${savedDoc.tenant_id}`,
+        );
         return savedDoc; // Retourner le document même si les notifications échouent
       }
       const message = `Nouveau document: ${savedDoc.name}`;
-      
+
       await this.notificationsService.createNotificationsForTenant(
         tenantId,
         NotificationType.DOCUMENT_UPLOADED,
         parseInt(savedDoc.id),
         message,
-        user.userId
+        user.userId,
       );
 
       // Envoyer notification temps réel
       this.notificationsGateway.notifyDocumentUploaded(tenantId, {
         id: savedDoc.id,
         name: savedDoc.name,
-        message
+        message,
       });
     } catch (notificationError) {
       // Ne pas faire échouer l'upload si les notifications échouent
-      console.error('Erreur lors des notifications document:', notificationError);
+      console.error(
+        'Erreur lors des notifications document:',
+        notificationError,
+      );
     }
 
     return savedDoc;
@@ -185,7 +192,7 @@ export class DocumentsService {
           }
         }
         return doc;
-      })
+      }),
     );
 
     return documentsWithPresignedUrls;
@@ -207,35 +214,34 @@ export class DocumentsService {
   ): Promise<string> {
     const maxRetries = 3;
     let lastError: Error;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        
         const cmd = new PutObjectCommand({
           Bucket: process.env.AWS_S3_BUCKET as string,
           Key: filename,
           ContentType: mimetype,
         });
-        
+
         const url = await getSignedUrl(this.s3, cmd, { expiresIn: 300 });
-        
-        
+
         return url;
       } catch (error) {
         lastError = error;
-        
-        
+
         // Si ce n'est pas la dernière tentative, attendre avec backoff exponentiel
         if (attempt < maxRetries) {
           const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
       }
     }
-    
+
     // Après tous les tentatives échouées, throw HttpException avec message générique
-    throw new Error('Service d\'upload temporairement indisponible. Veuillez réessayer dans quelques instants.');
+    throw new Error(
+      "Service d'upload temporairement indisponible. Veuillez réessayer dans quelques instants.",
+    );
   }
 
   /**
@@ -248,19 +254,24 @@ export class DocumentsService {
   /**
    * Génère l'URL presignée pour un document (méthode interne)
    */
-  private async getPresignedUrlForDocument(currentUrl: string): Promise<string> {
+  private async getPresignedUrlForDocument(
+    currentUrl: string,
+  ): Promise<string> {
     // Si c'est déjà une URL présignée, la retourner telle quelle
     if (currentUrl.includes('X-Amz-Algorithm')) {
       return currentUrl;
     }
 
     // Si c'est une URL locale (développement), la retourner telle quelle
-    if (currentUrl.includes('localhost') || currentUrl.startsWith('/uploads/')) {
+    if (
+      currentUrl.includes('localhost') ||
+      currentUrl.startsWith('/uploads/')
+    ) {
       return currentUrl;
     }
 
     let filename = currentUrl;
-    
+
     // Si c'est une URL complète S3, extraire le nom du fichier correctement
     if (currentUrl.includes('amazonaws.com/')) {
       try {
@@ -278,8 +289,7 @@ export class DocumentsService {
       // Pour les noms de fichiers simples, décoder les caractères URL
       filename = decodeURIComponent(filename);
     }
-    
-    
+
     try {
       const awsBucket = process.env.AWS_S3_BUCKET as string;
       const cmd = new GetObjectCommand({

@@ -11,7 +11,10 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { AuditArchivesService } from './audit-archives.service';
-import { CreateAuditArchiveDto, ArchiveFiltersDto } from './dto/create-audit-archive.dto';
+import {
+  CreateAuditArchiveDto,
+  ArchiveFiltersDto,
+} from './dto/create-audit-archive.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles/roles.guard';
 import { Roles } from '../auth/roles/roles.decorator';
@@ -46,7 +49,7 @@ export class AuditArchivesController {
   @Roles(Role.Manager, Role.Admin)
   async autoArchiveCompleted(@Req() req: Request & { user: JwtUser }) {
     if (!req.user.tenant_id) {
-      throw new Error('Tenant ID requis pour l\'archivage automatique');
+      throw new Error("Tenant ID requis pour l'archivage automatique");
     }
     const count = await this.archivesService.autoArchiveCompletedAudits(
       req.user.tenant_id,

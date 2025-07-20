@@ -22,9 +22,7 @@ import { ResponseFormat } from '../interfaces/response.interface';
 @Controller('admin/tenants/:tenantId/documents')
 @UseGuards(AdminGuard, TenantScopeGuard)
 export class AdminDocumentsController {
-  constructor(
-    private readonly documentsService: AdminDocumentsService,
-  ) {}
+  constructor(private readonly documentsService: AdminDocumentsService) {}
 
   @Get()
   async findAll(
@@ -42,7 +40,7 @@ export class AdminDocumentsController {
       category,
       fileType,
     };
-    
+
     const result = await this.documentsService.findByTenant(tenantId, options);
     return {
       success: true,
@@ -66,7 +64,10 @@ export class AdminDocumentsController {
     @Param('tenantId', ParseIntPipe) tenantId: number,
     @Param('documentId') documentId: string,
   ): Promise<ResponseFormat> {
-    const document = await this.documentsService.findByIdAndTenant(documentId, tenantId);
+    const document = await this.documentsService.findByIdAndTenant(
+      documentId,
+      tenantId,
+    );
     return {
       success: true,
       data: document,
@@ -79,7 +80,11 @@ export class AdminDocumentsController {
     @Param('documentId') documentId: string,
     @Body() updateDocumentDto: UpdateDocumentDto,
   ): Promise<ResponseFormat> {
-    const document = await this.documentsService.update(documentId, tenantId, updateDocumentDto);
+    const document = await this.documentsService.update(
+      documentId,
+      tenantId,
+      updateDocumentDto,
+    );
     return {
       success: true,
       data: document,
@@ -101,7 +106,11 @@ export class AdminDocumentsController {
     @Param('documentId') documentId: string,
     @Body() addTagDto: AddTagDto,
   ): Promise<ResponseFormat> {
-    const document = await this.documentsService.addTag(documentId, tenantId, addTagDto.tagName);
+    const document = await this.documentsService.addTag(
+      documentId,
+      tenantId,
+      addTagDto.tagName,
+    );
     return {
       success: true,
       data: document,

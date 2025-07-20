@@ -36,11 +36,13 @@ export class AuditResponse {
   created_at: Date;
 
   // Relations
-  @ManyToOne(() => AuditExecution, execution => execution.responses, { onDelete: 'CASCADE' })
+  @ManyToOne(() => AuditExecution, (execution) => execution.responses, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'execution_id' })
   execution: AuditExecution;
 
-  @ManyToOne(() => AuditItem, item => item.responses)
+  @ManyToOne(() => AuditItem, (item) => item.responses)
   @JoinColumn({ name: 'item_id' })
   item: AuditItem;
 }

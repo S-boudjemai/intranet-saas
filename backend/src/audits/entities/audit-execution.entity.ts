@@ -12,9 +12,13 @@ import { AuditTemplate } from './audit-template.entity';
 import { Restaurant } from '../../restaurant/entites/restaurant.entity';
 import { User } from '../../users/entities/user.entity';
 import { AuditResponse } from './audit-response.entity';
-import { NonConformity } from './non-conformity.entity';
 
-export type AuditExecutionStatus = 'draft' | 'in_progress' | 'completed' | 'reviewed';
+export type AuditExecutionStatus =
+  | 'todo'
+  | 'scheduled'
+  | 'in_progress'
+  | 'completed'
+  | 'reviewed';
 
 @Entity('audit_executions')
 export class AuditExecution {
@@ -32,8 +36,8 @@ export class AuditExecution {
 
   @Column({
     type: 'enum',
-    enum: ['draft', 'in_progress', 'completed', 'reviewed'],
-    default: 'draft',
+    enum: ['todo', 'scheduled', 'in_progress', 'completed', 'reviewed'],
+    default: 'todo',
   })
   status: AuditExecutionStatus;
 
@@ -59,7 +63,7 @@ export class AuditExecution {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => AuditTemplate, template => template.executions)
+  @ManyToOne(() => AuditTemplate, (template) => template.executions)
   @JoinColumn({ name: 'template_id' })
   template: AuditTemplate;
 
@@ -71,9 +75,8 @@ export class AuditExecution {
   @JoinColumn({ name: 'inspector_id' })
   inspector: User;
 
-  @OneToMany(() => AuditResponse, response => response.execution, { cascade: true })
+  @OneToMany(() => AuditResponse, (response) => response.execution, {
+    cascade: true,
+  })
   responses: AuditResponse[];
-
-  @OneToMany(() => NonConformity, nc => nc.execution, { cascade: true })
-  non_conformities: NonConformity[];
 }

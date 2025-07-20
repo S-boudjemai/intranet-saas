@@ -4,13 +4,13 @@ import { UsersService } from '../users/users.service';
 
 @Controller('setup')
 export class SetupController {
-  constructor(
-    private usersService: UsersService,
-  ) {}
+  constructor(private usersService: UsersService) {}
 
   @Public()
   @Post('admin')
-  async createInitialAdmin(@Body() body: { email?: string; password?: string }) {
+  async createInitialAdmin(
+    @Body() body: { email?: string; password?: string },
+  ) {
     try {
       const email = body.email || 'admin@admin.com';
       const password = body.password || 'admin123';
@@ -20,8 +20,8 @@ export class SetupController {
         email,
         password,
         'admin',
-        null,  // tenant_id null pour admin
-        null   // restaurant_id null pour admin
+        null, // tenant_id null pour admin
+        null, // restaurant_id null pour admin
       );
 
       return {
@@ -31,15 +31,14 @@ export class SetupController {
           email: admin.email,
           role: admin.role,
           tenant_id: admin.tenant_id,
-          restaurant_id: admin.restaurant_id
-        }
+          restaurant_id: admin.restaurant_id,
+        },
       };
-
     } catch (error) {
       return {
         success: false,
         message: 'Erreur lors de la création',
-        error: error.message
+        error: error.message,
       };
     }
   }

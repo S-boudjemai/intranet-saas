@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles/roles.guard';
 import { Roles } from '../auth/roles/roles.decorator';
@@ -28,7 +36,7 @@ export class NotificationsController {
   @Post('views')
   async recordView(
     @Req() req,
-    @Body() body: { targetType: ViewTargetType; targetId: number }
+    @Body() body: { targetType: ViewTargetType; targetId: number },
   ) {
     const view = await this.notificationsService.recordView(
       req.user.userId,
@@ -78,7 +86,7 @@ export class NotificationsController {
   @Post('mark-all-read')
   async markAllAsRead(
     @Req() req,
-    @Body() body: { notificationType: NotificationType }
+    @Body() body: { notificationType: NotificationType },
   ) {
     await this.notificationsService.markAllAsReadByType(
       req.user.userId,
@@ -90,17 +98,24 @@ export class NotificationsController {
   @Post('mark-category-read')
   async markCategoryAsRead(
     @Req() req,
-    @Body() body: { category: 'documents' | 'announcements' | 'tickets' }
+    @Body() body: { category: 'documents' | 'announcements' | 'tickets' },
   ) {
     const typeMapping = {
       documents: [NotificationType.DOCUMENT_UPLOADED],
-      announcements: [NotificationType.ANNOUNCEMENT_POSTED, NotificationType.RESTAURANT_JOINED],
-      tickets: [NotificationType.TICKET_CREATED, NotificationType.TICKET_COMMENTED, NotificationType.TICKET_STATUS_UPDATED]
+      announcements: [
+        NotificationType.ANNOUNCEMENT_POSTED,
+        NotificationType.RESTAURANT_JOINED,
+      ],
+      tickets: [
+        NotificationType.TICKET_CREATED,
+        NotificationType.TICKET_COMMENTED,
+        NotificationType.TICKET_STATUS_UPDATED,
+      ],
     };
-    
+
     await this.notificationsService.markMultipleTypesAsRead(
-      req.user.userId, 
-      typeMapping[body.category]
+      req.user.userId,
+      typeMapping[body.category],
     );
     return { success: true };
   }
@@ -120,6 +135,9 @@ export class NotificationsController {
   @Roles(Role.Admin)
   async cleanupManagerAnnouncements() {
     await this.notificationsService.cleanupAnnouncementNotificationsForManagers();
-    return { success: true, message: 'Notifications d\'annonces nettoyées pour les managers' };
+    return {
+      success: true,
+      message: "Notifications d'annonces nettoyées pour les managers",
+    };
   }
 }

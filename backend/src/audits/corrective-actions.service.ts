@@ -64,11 +64,16 @@ export class CorrectiveActionsService {
   }
 
   async create(createCorrectiveActionDto: CreateCorrectiveActionDto) {
-    const action = this.correctiveActionRepository.create(createCorrectiveActionDto);
+    const action = this.correctiveActionRepository.create(
+      createCorrectiveActionDto,
+    );
     return this.correctiveActionRepository.save(action);
   }
 
-  async update(id: number, updateCorrectiveActionDto: UpdateCorrectiveActionDto) {
+  async update(
+    id: number,
+    updateCorrectiveActionDto: UpdateCorrectiveActionDto,
+  ) {
     const action = await this.findOne(id);
     Object.assign(action, updateCorrectiveActionDto);
     return this.correctiveActionRepository.save(action);
@@ -102,13 +107,24 @@ export class CorrectiveActionsService {
 
     const [total, pending, inProgress, completed, overdue] = await Promise.all([
       query.getCount(),
-      query.clone().andWhere('ca.status = :status', { status: 'pending' }).getCount(),
-      query.clone().andWhere('ca.status = :status', { status: 'in_progress' }).getCount(),
-      query.clone().andWhere('ca.status = :status', { status: 'completed' }).getCount(),
+      query
+        .clone()
+        .andWhere('ca.status = :status', { status: 'pending' })
+        .getCount(),
+      query
+        .clone()
+        .andWhere('ca.status = :status', { status: 'in_progress' })
+        .getCount(),
+      query
+        .clone()
+        .andWhere('ca.status = :status', { status: 'completed' })
+        .getCount(),
       query
         .clone()
         .andWhere('ca.due_date < :now', { now: new Date() })
-        .andWhere('ca.status != :completedStatus', { completedStatus: 'completed' })
+        .andWhere('ca.status != :completedStatus', {
+          completedStatus: 'completed',
+        })
         .getCount(),
     ]);
 

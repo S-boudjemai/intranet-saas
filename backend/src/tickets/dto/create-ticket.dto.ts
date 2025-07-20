@@ -1,11 +1,11 @@
-import { 
-  IsString, 
-  IsNotEmpty, 
-  IsOptional, 
-  MaxLength, 
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  MaxLength,
   MinLength,
   IsNumber,
-  IsPositive
+  IsPositive,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -17,14 +17,20 @@ export class CreateTicketDto {
   title: string;
 
   @IsOptional()
-  @Transform(({ value }) => value === '' ? undefined : value)
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsString({ message: 'La description doit être une chaîne de caractères' })
-  @MaxLength(2000, { message: 'La description ne peut pas dépasser 2000 caractères' })
+  @MaxLength(2000, {
+    message: 'La description ne peut pas dépasser 2000 caractères',
+  })
   description?: string;
 
   @IsOptional()
-  @Transform(({ value }) => value === undefined || value === null || value === '' ? undefined : Number(value))
-  @IsNumber({}, { message: 'L\'ID du restaurant doit être un nombre' })
-  @IsPositive({ message: 'L\'ID du restaurant doit être positif' })
+  @Transform(({ value }) =>
+    value === undefined || value === null || value === ''
+      ? undefined
+      : Number(value),
+  )
+  @IsNumber({}, { message: "L'ID du restaurant doit être un nombre" })
+  @IsPositive({ message: "L'ID du restaurant doit être positif" })
   restaurantId?: number;
 }

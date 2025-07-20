@@ -1,5 +1,11 @@
 // src/admin/dto/create-category.dto.ts
-import { IsString, IsOptional, IsUUID, MinLength, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsUUID,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCategoryDto {
@@ -9,10 +15,10 @@ export class CreateCategoryDto {
   @MaxLength(100)
   name: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: '550e8400-e29b-41d4-a716-446655440000',
     description: 'UUID de la catégorie parente (optionnel)',
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsUUID()

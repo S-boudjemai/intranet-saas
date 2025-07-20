@@ -7,10 +7,13 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { NonConformity } from './non-conformity.entity';
 import { User } from '../../users/entities/user.entity';
 
-export type CorrectiveActionStatus = 'assigned' | 'in_progress' | 'completed' | 'verified';
+export type CorrectiveActionStatus =
+  | 'assigned'
+  | 'in_progress'
+  | 'completed'
+  | 'verified';
 
 @Entity('corrective_actions')
 export class CorrectiveAction {
@@ -61,10 +64,6 @@ export class CorrectiveAction {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => NonConformity, nc => nc.actions, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'non_conformity_id' })
-  non_conformity: NonConformity;
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'assigned_to' })
   assigned_user: User;

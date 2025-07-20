@@ -23,10 +23,10 @@ export class InvitesService {
   ) {}
 
   async create(
-    tenant_id: number, 
-    invite_email: string, 
-    restaurant_name?: string, 
-    restaurant_city?: string
+    tenant_id: number,
+    invite_email: string,
+    restaurant_name?: string,
+    restaurant_city?: string,
   ) {
     const token = randomBytes(16).toString('hex');
     const expires_at = new Date(Date.now() + 7 * 24 * 3600 * 1000);
@@ -39,14 +39,15 @@ export class InvitesService {
       restaurant_city,
     });
     const savedInvite = await this.repo.save(invite);
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5174';
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5174';
     const invitationLink = `${frontendUrl}/signup?invite=${token}`;
-    
+
     // Email personnalisé selon si un restaurant est spécifié
-    const restaurantInfo = restaurant_name 
+    const restaurantInfo = restaurant_name
       ? `<p><strong>Restaurant:</strong> ${restaurant_name}${restaurant_city ? ` - ${restaurant_city}` : ''}</p>`
       : '';
-    
+
     await this.mailerService.sendMail({
       to: invite_email,
       subject: 'Vous êtes invité(e) à rejoindre FranchiseHUB !',

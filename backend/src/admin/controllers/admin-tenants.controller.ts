@@ -1,22 +1,30 @@
 // src/admin/controllers/admin-tenants.controller.ts
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Param, 
-  Body, 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
   Query,
   UseGuards,
   ParseIntPipe,
   HttpStatus,
-  HttpCode
+  HttpCode,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AdminGuard } from '../guards/admin.guard';
 import { AdminTenantsService } from '../services/admin-tenants.service';
-import { AdminCreateTenantDto, AdminUpdateTenantDto } from '../dto/create-tenant.dto';
+import {
+  AdminCreateTenantDto,
+  AdminUpdateTenantDto,
+} from '../dto/create-tenant.dto';
 
 @ApiTags('Super Admin - Tenants')
 @ApiBearerAuth()
@@ -69,13 +77,16 @@ export class AdminTenantsController {
   @ApiOperation({ summary: 'Supprimer un tenant' })
   @ApiResponse({ status: 204, description: 'Tenant supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Tenant introuvable' })
-  @ApiResponse({ status: 409, description: 'Impossible de supprimer (données liées)' })
+  @ApiResponse({
+    status: 409,
+    description: 'Impossible de supprimer (données liées)',
+  })
   async deleteTenant(@Param('id', ParseIntPipe) id: number) {
     await this.tenantsService.delete(id);
   }
 
   @Get(':id/stats')
-  @ApiOperation({ summary: 'Statistiques d\'un tenant' })
+  @ApiOperation({ summary: "Statistiques d'un tenant" })
   @ApiResponse({ status: 200, description: 'Statistiques récupérées' })
   async getTenantStats(@Param('id', ParseIntPipe) id: number) {
     return this.tenantsService.getStats(id);

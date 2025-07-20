@@ -1,10 +1,17 @@
 // src/admin/dto/create-user-bypass.dto.ts
-import { IsString, IsEmail, IsOptional, IsEnum, IsInt, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsEnum,
+  IsInt,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum UserRole {
   ADMIN = 'admin',
-  MANAGER = 'manager', 
+  MANAGER = 'manager',
   VIEWER = 'viewer',
 }
 
@@ -18,18 +25,18 @@ export class CreateUserBypassDto {
   @MinLength(8)
   password: string;
 
-  @ApiProperty({ 
-    enum: UserRole, 
+  @ApiProperty({
+    enum: UserRole,
     example: UserRole.MANAGER,
-    description: 'Rôle de l\'utilisateur dans le tenant'
+    description: "Rôle de l'utilisateur dans le tenant",
   })
   @IsEnum(UserRole)
   role: UserRole;
 
-  @ApiProperty({ 
-    example: 1, 
+  @ApiProperty({
+    example: 1,
     description: 'ID du restaurant (optionnel, pour les managers/viewers)',
-    required: false 
+    required: false,
   })
   @IsOptional()
   @IsInt()

@@ -33,7 +33,7 @@ export class SearchController {
     // Validation et sanitization de la requête
     const queryDto = plainToClass(SearchQueryDto, { q: query });
     const errors = await validate(queryDto);
-    
+
     if (errors.length > 0) {
       throw new Error('Requête de recherche invalide');
     }

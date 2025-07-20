@@ -11,8 +11,14 @@ import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Ticket, Comment, TicketAttachment, User, Restaurant]),
-    NotificationsModule
+    TypeOrmModule.forFeature([
+      Ticket,
+      Comment,
+      TicketAttachment,
+      User,
+      Restaurant,
+    ]),
+    NotificationsModule,
   ],
   providers: [TicketsService],
   controllers: [TicketsController],

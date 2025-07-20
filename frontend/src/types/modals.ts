@@ -25,15 +25,6 @@ export interface Inspector {
   available: boolean;
 }
 
-export interface NonConformityModal {
-  id: number;
-  title: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  audit_name: string;
-  restaurant_name: string;
-  created_date: string;
-}
-
 export interface UserModal {
   id: number;
   name: string;

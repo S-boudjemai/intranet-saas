@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Query, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { CorrectiveActionsService } from './corrective-actions.service';
 import { CreateCorrectiveActionDto } from './dto/create-corrective-action.dto';
 import { UpdateCorrectiveActionDto } from './dto/update-corrective-action.dto';
@@ -7,7 +17,9 @@ import { Role } from '../auth/roles/roles.enum';
 
 @Controller('corrective-actions')
 export class CorrectiveActionsController {
-  constructor(private readonly correctiveActionsService: CorrectiveActionsService) {}
+  constructor(
+    private readonly correctiveActionsService: CorrectiveActionsService,
+  ) {}
 
   @Get()
   findAll(
@@ -59,6 +71,9 @@ export class CorrectiveActionsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() completionData: { completion_notes?: string },
   ) {
-    return this.correctiveActionsService.markAsCompleted(id, completionData.completion_notes);
+    return this.correctiveActionsService.markAsCompleted(
+      id,
+      completionData.completion_notes,
+    );
   }
 }

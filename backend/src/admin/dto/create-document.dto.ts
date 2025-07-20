@@ -1,10 +1,10 @@
 // src/admin/dto/create-document.dto.ts
-import { 
-  IsString, 
-  IsOptional, 
+import {
+  IsString,
+  IsOptional,
   IsUUID,
   MaxLength,
-  IsNotEmpty 
+  IsNotEmpty,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

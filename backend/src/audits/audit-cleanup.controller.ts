@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Get, Req, UseGuards } from '@nestjs/common';
 import { AuditCleanupService, CleanupResult } from './audit-cleanup.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles/roles.guard';
@@ -24,7 +18,9 @@ export class AuditCleanupController {
    */
   @Get('preview')
   @Roles(Role.Admin)
-  async previewCleanup(@Req() req: Request & { user: JwtUser }): Promise<CleanupResult> {
+  async previewCleanup(
+    @Req() req: Request & { user: JwtUser },
+  ): Promise<CleanupResult> {
     return this.cleanupService.previewCleanup(req.user);
   }
 
@@ -35,7 +31,9 @@ export class AuditCleanupController {
    */
   @Post('delete-non-archived')
   @Roles(Role.Admin)
-  async deleteNonArchivedAudits(@Req() req: Request & { user: JwtUser }): Promise<CleanupResult> {
+  async deleteNonArchivedAudits(
+    @Req() req: Request & { user: JwtUser },
+  ): Promise<CleanupResult> {
     return this.cleanupService.deleteNonArchivedAudits(req.user);
   }
 }

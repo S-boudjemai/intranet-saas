@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Tenant } from '../../tenants/entities/tenant.entity';
 
@@ -8,7 +15,7 @@ export enum NotificationType {
   TICKET_CREATED = 'ticket_created',
   TICKET_COMMENTED = 'ticket_commented',
   TICKET_STATUS_UPDATED = 'ticket_status_updated',
-  RESTAURANT_JOINED = 'restaurant_joined'
+  RESTAURANT_JOINED = 'restaurant_joined',
 }
 
 @Entity('notifications')
@@ -24,7 +31,7 @@ export class Notification {
 
   @Column({
     type: 'enum',
-    enum: NotificationType
+    enum: NotificationType,
   })
   type: NotificationType;
 

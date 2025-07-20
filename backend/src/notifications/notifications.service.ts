@@ -48,14 +48,16 @@ export class NotificationsService {
     });
 
     const notifications = users
-      .filter(user => user.id !== excludeUserId)
-      .map(user => this.notificationRepository.create({
-        user_id: user.id,
-        tenant_id: tenantId,
-        type,
-        target_id: targetId,
-        message,
-      }));
+      .filter((user) => user.id !== excludeUserId)
+      .map((user) =>
+        this.notificationRepository.create({
+          user_id: user.id,
+          tenant_id: tenantId,
+          type,
+          target_id: targetId,
+          message,
+        }),
+      );
 
     return this.notificationRepository.save(notifications);
   }
@@ -68,19 +70,21 @@ export class NotificationsService {
     message: string,
   ): Promise<Notification[]> {
     const managers = await this.userRepository.find({
-      where: { 
+      where: {
         tenant_id: tenantId,
-        role: 'manager' 
+        role: 'manager',
       },
     });
 
-    const notifications = managers.map(user => this.notificationRepository.create({
-      user_id: user.id,
-      tenant_id: tenantId,
-      type,
-      target_id: targetId,
-      message,
-    }));
+    const notifications = managers.map((user) =>
+      this.notificationRepository.create({
+        user_id: user.id,
+        tenant_id: tenantId,
+        type,
+        target_id: targetId,
+        message,
+      }),
+    );
 
     return this.notificationRepository.save(notifications);
   }
@@ -93,35 +97,42 @@ export class NotificationsService {
     message: string,
   ): Promise<Notification[]> {
     const viewers = await this.userRepository.find({
-      where: { 
+      where: {
         tenant_id: tenantId,
-        role: 'viewer' 
+        role: 'viewer',
       },
     });
 
-    const notifications = viewers.map(user => this.notificationRepository.create({
-      user_id: user.id,
-      tenant_id: tenantId,
-      type,
-      target_id: targetId,
-      message,
-    }));
+    const notifications = viewers.map((user) =>
+      this.notificationRepository.create({
+        user_id: user.id,
+        tenant_id: tenantId,
+        type,
+        target_id: targetId,
+        message,
+      }),
+    );
 
     return this.notificationRepository.save(notifications);
   }
 
   // Récupérer les notifications d'un utilisateur avec pagination
   async getUserNotifications(
-    userId: number, 
-    page: number = 1, 
-    limit: number = 50
-  ): Promise<{ notifications: Notification[], total: number, totalPages: number }> {
-    const [notifications, total] = await this.notificationRepository.findAndCount({
-      where: { user_id: userId },
-      order: { created_at: 'DESC' },
-      take: limit,
-      skip: (page - 1) * limit,
-    });
+    userId: number,
+    page: number = 1,
+    limit: number = 50,
+  ): Promise<{
+    notifications: Notification[];
+    total: number;
+    totalPages: number;
+  }> {
+    const [notifications, total] =
+      await this.notificationRepository.findAndCount({
+        where: { user_id: userId },
+        order: { created_at: 'DESC' },
+        take: limit,
+        skip: (page - 1) * limit,
+      });
 
     return {
       notifications,
@@ -131,13 +142,15 @@ export class NotificationsService {
   }
 
   // Compter les notifications non lues par type (optimisé avec SQL)
-  async getUnreadCountsByType(userId: number): Promise<{ [key: string]: number }> {
+  async getUnreadCountsByType(
+    userId: number,
+  ): Promise<{ [key: string]: number }> {
     const result = await this.notificationRepository
       .createQueryBuilder('notification')
       .select([
         `SUM(CASE WHEN type = '${NotificationType.DOCUMENT_UPLOADED}' THEN 1 ELSE 0 END) as documents`,
         `SUM(CASE WHEN type IN ('${NotificationType.ANNOUNCEMENT_POSTED}', '${NotificationType.RESTAURANT_JOINED}') THEN 1 ELSE 0 END) as announcements`,
-        `SUM(CASE WHEN type IN ('${NotificationType.TICKET_CREATED}', '${NotificationType.TICKET_COMMENTED}', '${NotificationType.TICKET_STATUS_UPDATED}') THEN 1 ELSE 0 END) as tickets`
+        `SUM(CASE WHEN type IN ('${NotificationType.TICKET_CREATED}', '${NotificationType.TICKET_COMMENTED}', '${NotificationType.TICKET_STATUS_UPDATED}') THEN 1 ELSE 0 END) as tickets`,
       ])
       .where('notification.user_id = :userId', { userId })
       .andWhere('notification.is_read = :isRead', { isRead: false })
@@ -151,25 +164,35 @@ export class NotificationsService {
   }
 
   // Marquer des notifications comme lues
-  async markAsRead(userId: number, type: NotificationType, targetId: number): Promise<void> {
+  async markAsRead(
+    userId: number,
+    type: NotificationType,
+    targetId: number,
+  ): Promise<void> {
     await this.notificationRepository.update(
       { user_id: userId, type, target_id: targetId },
-      { is_read: true }
+      { is_read: true },
     );
   }
 
   // Marquer toutes les notifications d'un type comme lues pour un utilisateur
-  async markAllAsReadByType(userId: number, type: NotificationType): Promise<void> {
+  async markAllAsReadByType(
+    userId: number,
+    type: NotificationType,
+  ): Promise<void> {
     await this.notificationRepository.update(
       { user_id: userId, type },
-      { is_read: true }
+      { is_read: true },
     );
   }
 
-  async markMultipleTypesAsRead(userId: number, types: NotificationType[]): Promise<void> {
+  async markMultipleTypesAsRead(
+    userId: number,
+    types: NotificationType[],
+  ): Promise<void> {
     await this.notificationRepository.update(
       { user_id: userId, type: In(types) },
-      { is_read: true }
+      { is_read: true },
     );
   }
 
@@ -202,8 +225,8 @@ export class NotificationsService {
     targetType: ViewTargetType,
     targetId: number,
     page: number = 1,
-    limit: number = 100
-  ): Promise<{ views: View[], total: number, totalPages: number }> {
+    limit: number = 100,
+  ): Promise<{ views: View[]; total: number; totalPages: number }> {
     const [views, total] = await this.viewRepository.findAndCount({
       where: { target_type: targetType, target_id: targetId },
       relations: ['user'],
@@ -226,10 +249,15 @@ export class NotificationsService {
       .createQueryBuilder()
       .delete()
       .from(Notification)
-      .where('type IN (:...types)', { 
-        types: [NotificationType.ANNOUNCEMENT_POSTED, NotificationType.RESTAURANT_JOINED] 
+      .where('type IN (:...types)', {
+        types: [
+          NotificationType.ANNOUNCEMENT_POSTED,
+          NotificationType.RESTAURANT_JOINED,
+        ],
       })
-      .andWhere('user_id IN (SELECT id FROM users WHERE role = :role)', { role: 'manager' })
+      .andWhere('user_id IN (SELECT id FROM users WHERE role = :role)', {
+        role: 'manager',
+      })
       .execute();
   }
 }

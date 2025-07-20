@@ -4,9 +4,11 @@ import { Repository, Between } from 'typeorm';
 import { AuditArchive, ArchiveStatus } from './entities/audit-archive.entity';
 import { AuditExecution } from './entities/audit-execution.entity';
 import { AuditResponse } from './entities/audit-response.entity';
-import { NonConformity } from './entities/non-conformity.entity';
 import { CorrectiveAction } from './entities/corrective-action.entity';
-import { CreateAuditArchiveDto, ArchiveFiltersDto } from './dto/create-audit-archive.dto';
+import {
+  CreateAuditArchiveDto,
+  ArchiveFiltersDto,
+} from './dto/create-audit-archive.dto';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
 
 @Injectable()
@@ -20,8 +22,6 @@ export class AuditArchivesService {
     private executionRepo: Repository<AuditExecution>,
     @InjectRepository(AuditResponse)
     private responseRepo: Repository<AuditResponse>,
-    @InjectRepository(NonConformity)
-    private nonConformityRepo: Repository<NonConformity>,
     @InjectRepository(CorrectiveAction)
     private correctiveActionRepo: Repository<CorrectiveAction>,
   ) {}
@@ -29,7 +29,10 @@ export class AuditArchivesService {
   /**
    * Archiver automatiquement un audit terminé
    */
-  async archiveCompletedAudit(executionId: number, user: JwtUser): Promise<AuditArchive> {
+  async archiveCompletedAudit(
+    executionId: number,
+    user: JwtUser,
+  ): Promise<AuditArchive> {
     // Récupérer l'audit avec toutes ses relations
     const execution = await this.executionRepo.findOne({
       where: { id: executionId },
@@ -39,8 +42,6 @@ export class AuditArchivesService {
         'inspector',
         'responses',
         'responses.item',
-        'non_conformities',
-        'non_conformities.actions',
       ],
     });
 
@@ -62,39 +63,23 @@ export class AuditArchivesService {
     }
 
     // Préparer les données JSON
-    const responsesData = execution.responses?.map(response => ({
-      item_id: response.item_id,
-      question: response.item?.question,
-      type: response.item?.type,
-      value: response.value,
-      score: response.score,
-      photo_url: response.photo_url,
-      notes: response.notes,
-    })) || [];
+    const responsesData =
+      execution.responses?.map((response) => ({
+        item_id: response.item_id,
+        question: response.item?.question,
+        type: response.item?.type,
+        value: response.value,
+        score: response.score,
+        photo_url: response.photo_url,
+        notes: response.notes,
+      })) || [];
 
-    const nonConformitiesData = execution.non_conformities?.map(nc => ({
-      item_id: nc.item_id,
-      severity: nc.severity,
-      description: nc.description,
-      status: nc.status,
-      resolution_date: nc.resolution_date,
-      resolution_notes: nc.resolution_notes,
-      actions: nc.actions?.map(action => ({
-        action_description: action.action_description,
-        assigned_to: action.assigned_to,
-        status: action.status,
-        due_date: action.due_date,
-        completion_date: action.completion_date,
-      })) || [],
-    })) || [];
-
-    // Récupérer les actions correctives liées
+    // Récupérer toutes les actions correctives (pas forcément liées à des NC)
     const correctiveActions = await this.correctiveActionRepo.find({
-      where: { non_conformity: { execution_id: executionId } },
       relations: ['assigned_user', 'verifier'],
     });
 
-    const correctiveActionsData = correctiveActions.map(action => ({
+    const correctiveActionsData = correctiveActions.map((action) => ({
       action_description: action.action_description,
       assigned_to: action.assigned_to,
       assigned_user_name: action.assigned_user?.email,
@@ -118,16 +103,15 @@ export class AuditArchivesService {
       max_possible_score: execution.max_possible_score,
       notes: execution.notes,
       archived_by: user.userId,
-      
+
       // Données dénormalisées
       template_name: execution.template.name,
       template_category: execution.template.category,
       restaurant_name: execution.restaurant.name,
       inspector_name: execution.inspector.email,
-      
+
       // Données JSON
       responses_data: responsesData,
-      non_conformities_data: nonConformitiesData,
       corrective_actions_data: correctiveActionsData,
     });
 
@@ -136,8 +120,10 @@ export class AuditArchivesService {
     // Supprimer l'audit original (cascade supprimera les relations)
     await this.executionRepo.remove(execution);
 
-    this.logger.log(`Audit ${executionId} archivé avec succès (Archive ID: ${savedArchive.id})`);
-    
+    this.logger.log(
+      `Audit ${executionId} archivé avec succès (Archive ID: ${savedArchive.id})`,
+    );
+
     return savedArchive;
   }
 
@@ -157,22 +143,34 @@ export class AuditArchivesService {
     for (const execution of completedExecutions) {
       try {
         // Utiliser un user système pour l'archivage automatique
-        const systemUser = { userId: 1, tenant_id: tenantId, email: 'system@auto-archive.com', role: 'admin' } as JwtUser;
+        const systemUser = {
+          userId: 1,
+          tenant_id: tenantId,
+          email: 'system@auto-archive.com',
+          role: 'admin',
+        } as JwtUser;
         await this.archiveCompletedAudit(execution.id, systemUser);
         archivedCount++;
       } catch (error) {
-        this.logger.warn(`Erreur archivage audit ${execution.id}: ${error.message}`);
+        this.logger.warn(
+          `Erreur archivage audit ${execution.id}: ${error.message}`,
+        );
       }
     }
 
-    this.logger.log(`Archivage automatique: ${archivedCount} audits archivés pour le tenant ${tenantId}`);
+    this.logger.log(
+      `Archivage automatique: ${archivedCount} audits archivés pour le tenant ${tenantId}`,
+    );
     return archivedCount;
   }
 
   /**
    * Récupérer les archives avec filtres
    */
-  async findArchives(filters: ArchiveFiltersDto, user: JwtUser): Promise<AuditArchive[]> {
+  async findArchives(
+    filters: ArchiveFiltersDto,
+    user: JwtUser,
+  ): Promise<AuditArchive[]> {
     const qb = this.archiveRepo.createQueryBuilder('archive');
 
     // Filtrage par tenant
@@ -182,20 +180,20 @@ export class AuditArchivesService {
 
     // Filtres additionnels
     if (filters.category) {
-      qb.andWhere('archive.template_category ILIKE :category', { 
-        category: `%${filters.category}%` 
+      qb.andWhere('archive.template_category ILIKE :category', {
+        category: `%${filters.category}%`,
       });
     }
 
     if (filters.restaurant_name) {
-      qb.andWhere('archive.restaurant_name ILIKE :restaurant', { 
-        restaurant: `%${filters.restaurant_name}%` 
+      qb.andWhere('archive.restaurant_name ILIKE :restaurant', {
+        restaurant: `%${filters.restaurant_name}%`,
       });
     }
 
     if (filters.inspector_name) {
-      qb.andWhere('archive.inspector_name ILIKE :inspector', { 
-        inspector: `%${filters.inspector_name}%` 
+      qb.andWhere('archive.inspector_name ILIKE :inspector', {
+        inspector: `%${filters.inspector_name}%`,
       });
     }
 
@@ -205,17 +203,25 @@ export class AuditArchivesService {
         dateTo: filters.date_to,
       });
     } else if (filters.date_from) {
-      qb.andWhere('archive.completed_date >= :dateFrom', { dateFrom: filters.date_from });
+      qb.andWhere('archive.completed_date >= :dateFrom', {
+        dateFrom: filters.date_from,
+      });
     } else if (filters.date_to) {
-      qb.andWhere('archive.completed_date <= :dateTo', { dateTo: filters.date_to });
+      qb.andWhere('archive.completed_date <= :dateTo', {
+        dateTo: filters.date_to,
+      });
     }
 
     if (filters.min_score !== undefined) {
-      qb.andWhere('archive.total_score >= :minScore', { minScore: filters.min_score });
+      qb.andWhere('archive.total_score >= :minScore', {
+        minScore: filters.min_score,
+      });
     }
 
     if (filters.max_score !== undefined) {
-      qb.andWhere('archive.total_score <= :maxScore', { maxScore: filters.max_score });
+      qb.andWhere('archive.total_score <= :maxScore', {
+        maxScore: filters.max_score,
+      });
     }
 
     if (filters.status) {
@@ -254,11 +260,13 @@ export class AuditArchivesService {
    */
   async deleteArchive(id: number, user: JwtUser): Promise<void> {
     const archive = await this.findArchiveById(id, user);
-    
+
     archive.status = ArchiveStatus.DELETED;
     await this.archiveRepo.save(archive);
-    
-    this.logger.log(`Archive ${id} marquée comme supprimée par user ${user.userId}`);
+
+    this.logger.log(
+      `Archive ${id} marquée comme supprimée par user ${user.userId}`,
+    );
   }
 
   /**
@@ -266,7 +274,7 @@ export class AuditArchivesService {
    */
   async getArchiveStats(user: JwtUser): Promise<any> {
     const qb = this.archiveRepo.createQueryBuilder('archive');
-    
+
     if (user.tenant_id) {
       qb.where('archive.tenant_id = :tenantId', { tenantId: user.tenant_id });
     }
@@ -274,7 +282,8 @@ export class AuditArchivesService {
     const [totalArchives, avgScore, categories] = await Promise.all([
       qb.getCount(),
       qb.select('AVG(archive.total_score)', 'avg').getRawOne(),
-      qb.select('archive.template_category', 'category')
+      qb
+        .select('archive.template_category', 'category')
         .addSelect('COUNT(*)', 'count')
         .groupBy('archive.template_category')
         .getRawMany(),
@@ -283,7 +292,7 @@ export class AuditArchivesService {
     return {
       total_archives: totalArchives,
       average_score: parseFloat(avgScore?.avg || '0'),
-      categories: categories.map(c => ({
+      categories: categories.map((c) => ({
         category: c.category,
         count: parseInt(c.count),
       })),

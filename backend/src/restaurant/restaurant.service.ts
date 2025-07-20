@@ -13,7 +13,11 @@ export class RestaurantsService {
   ) {}
 
   // Créer un nouveau restaurant
-  async create(createData: { name: string; city: string; tenant_id: number }): Promise<Restaurant> {
+  async create(createData: {
+    name: string;
+    city: string;
+    tenant_id: number;
+  }): Promise<Restaurant> {
     const restaurant = this.repo.create(createData);
     return this.repo.save(restaurant);
   }

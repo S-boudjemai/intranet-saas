@@ -1,5 +1,10 @@
 // src/admin/guards/tenant-scope.guard.ts
-import { Injectable, CanActivate, ExecutionContext, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant } from '../../tenants/entities/tenant.entity';
@@ -14,10 +19,10 @@ export class TenantScopeGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    
+
     // Extraire tenant_id depuis les paramètres de route
     const tenantId = request.params.tenant_id;
-    
+
     if (!tenantId) {
       throw new BadRequestException('tenant_id requis dans la route');
     }
@@ -34,7 +39,7 @@ export class TenantScopeGuard implements CanActivate {
     // Ajouter le tenant à la requête pour les contrôleurs
     request['tenant'] = tenant;
     request['tenantId'] = tenant.id;
-    
+
     return true;
   }
 }

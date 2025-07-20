@@ -1,14 +1,17 @@
 // src/admin/services/admin-categories.service.ts
-import { 
-  Injectable, 
-  NotFoundException, 
+import {
+  Injectable,
+  NotFoundException,
   ConflictException,
-  BadRequestException 
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
-import { CreateCategoryDto, UpdateCategoryDto } from '../dto/create-category.dto';
+import {
+  CreateCategoryDto,
+  UpdateCategoryDto,
+} from '../dto/create-category.dto';
 
 @Injectable()
 export class AdminCategoriesService {
@@ -17,7 +20,10 @@ export class AdminCategoriesService {
     private categoriesRepository: Repository<Category>,
   ) {}
 
-  async create(tenantId: number, createCategoryDto: CreateCategoryDto): Promise<Category> {
+  async create(
+    tenantId: number,
+    createCategoryDto: CreateCategoryDto,
+  ): Promise<Category> {
     // Note: Category entity doesn't have tenant_id, it's global across tenants
     // Vérifier si la catégorie parent existe (si spécifiée)
     if (createCategoryDto.parentId) {
@@ -27,7 +33,7 @@ export class AdminCategoriesService {
 
       if (!parentCategory) {
         throw new BadRequestException(
-          `Catégorie parent ${createCategoryDto.parentId} introuvable`
+          `Catégorie parent ${createCategoryDto.parentId} introuvable`,
         );
       }
     }
@@ -38,7 +44,8 @@ export class AdminCategoriesService {
     try {
       return await this.categoriesRepository.save(category);
     } catch (error) {
-      if (error.code === '23505') { // Contrainte unique violée
+      if (error.code === '23505') {
+        // Contrainte unique violée
         throw new ConflictException('Une catégorie avec ce nom existe déjà');
       }
       throw error;
@@ -52,7 +59,10 @@ export class AdminCategoriesService {
     });
   }
 
-  async findByIdAndTenant(categoryId: string, tenantId: number): Promise<Category> {
+  async findByIdAndTenant(
+    categoryId: string,
+    tenantId: number,
+  ): Promise<Category> {
     const category = await this.categoriesRepository.findOne({
       where: { id: categoryId },
     });
@@ -64,14 +74,23 @@ export class AdminCategoriesService {
     return category;
   }
 
-  async update(categoryId: string, tenantId: number, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+  async update(
+    categoryId: string,
+    tenantId: number,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<Category> {
     const category = await this.findByIdAndTenant(categoryId, tenantId);
 
     // Vérifier la catégorie parent si modifiée
-    if (updateCategoryDto.parentId && updateCategoryDto.parentId !== category.parentId) {
+    if (
+      updateCategoryDto.parentId &&
+      updateCategoryDto.parentId !== category.parentId
+    ) {
       // Empêcher la création de cycles
       if (updateCategoryDto.parentId === categoryId) {
-        throw new BadRequestException('Une catégorie ne peut pas être sa propre parent');
+        throw new BadRequestException(
+          'Une catégorie ne peut pas être sa propre parent',
+        );
       }
 
       const parentCategory = await this.categoriesRepository.findOne({
@@ -80,13 +99,13 @@ export class AdminCategoriesService {
 
       if (!parentCategory) {
         throw new BadRequestException(
-          `Catégorie parent ${updateCategoryDto.parentId} introuvable`
+          `Catégorie parent ${updateCategoryDto.parentId} introuvable`,
         );
       }
     }
 
     Object.assign(category, updateCategoryDto);
-    
+
     try {
       return await this.categoriesRepository.save(category);
     } catch (error) {
@@ -107,7 +126,7 @@ export class AdminCategoriesService {
 
     if (childCount > 0) {
       throw new ConflictException(
-        `Impossible de supprimer la catégorie: ${childCount} sous-catégories liées`
+        `Impossible de supprimer la catégorie: ${childCount} sous-catégories liées`,
       );
     }
 
@@ -124,7 +143,7 @@ export class AdminCategoriesService {
     const rootCategories: any[] = [];
 
     // Créer la map et identifier les racines
-    categories.forEach(cat => {
+    categories.forEach((cat) => {
       categoryMap.set(cat.id, { ...cat, children: [] });
       if (!cat.parentId) {
         rootCategories.push(categoryMap.get(cat.id));
@@ -132,7 +151,7 @@ export class AdminCategoriesService {
     });
 
     // Construire les relations parent-enfant
-    categories.forEach(cat => {
+    categories.forEach((cat) => {
       if (cat.parentId && categoryMap.has(cat.parentId)) {
         const parent = categoryMap.get(cat.parentId);
         const child = categoryMap.get(cat.id);

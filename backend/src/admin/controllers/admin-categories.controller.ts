@@ -15,22 +15,26 @@ import {
 import { AdminGuard } from '../guards/admin.guard';
 import { TenantScopeGuard } from '../guards/tenant-scope.guard';
 import { AdminCategoriesService } from '../services/admin-categories.service';
-import { CreateCategoryDto, UpdateCategoryDto } from '../dto/create-category.dto';
+import {
+  CreateCategoryDto,
+  UpdateCategoryDto,
+} from '../dto/create-category.dto';
 import { ResponseFormat } from '../interfaces/response.interface';
 
 @Controller('admin/tenants/:tenantId/categories')
 @UseGuards(AdminGuard, TenantScopeGuard)
 export class AdminCategoriesController {
-  constructor(
-    private readonly categoriesService: AdminCategoriesService,
-  ) {}
+  constructor(private readonly categoriesService: AdminCategoriesService) {}
 
   @Post()
   async create(
     @Param('tenantId', ParseIntPipe) tenantId: number,
     @Body() createCategoryDto: CreateCategoryDto,
   ): Promise<ResponseFormat> {
-    const category = await this.categoriesService.create(tenantId, createCategoryDto);
+    const category = await this.categoriesService.create(
+      tenantId,
+      createCategoryDto,
+    );
     return {
       success: true,
       data: category,
@@ -64,7 +68,10 @@ export class AdminCategoriesController {
     @Param('tenantId', ParseIntPipe) tenantId: number,
     @Param('categoryId') categoryId: string,
   ): Promise<ResponseFormat> {
-    const category = await this.categoriesService.findByIdAndTenant(categoryId, tenantId);
+    const category = await this.categoriesService.findByIdAndTenant(
+      categoryId,
+      tenantId,
+    );
     return {
       success: true,
       data: category,
@@ -77,7 +84,11 @@ export class AdminCategoriesController {
     @Param('categoryId') categoryId: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ): Promise<ResponseFormat> {
-    const category = await this.categoriesService.update(categoryId, tenantId, updateCategoryDto);
+    const category = await this.categoriesService.update(
+      categoryId,
+      tenantId,
+      updateCategoryDto,
+    );
     return {
       success: true,
       data: category,

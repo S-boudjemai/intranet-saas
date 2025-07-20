@@ -40,7 +40,7 @@ export class CategoriesService {
   async findRoots(): Promise<Category[]> {
     return this.repo.find({
       where: { parentId: IsNull() },
-      order: { name: 'ASC' }
+      order: { name: 'ASC' },
     });
   }
 
@@ -51,23 +51,26 @@ export class CategoriesService {
   async findChildren(parentId: string): Promise<Category[]> {
     return this.repo.find({
       where: { parentId },
-      order: { name: 'ASC' }
+      order: { name: 'ASC' },
     });
   }
 
   /**
    * Seed les catégories par défaut pour un restaurant
    */
-  async seedRestaurantCategories(): Promise<{ message: string; count: number }> {
+  async seedRestaurantCategories(): Promise<{
+    message: string;
+    count: number;
+  }> {
     const existingCount = await this.repo.count();
     if (existingCount > 0) {
       return { message: 'Catégories déjà existantes', count: existingCount };
     }
 
     // Créer d'abord les catégories principales
-    const mainCategories = categoryData.filter(c => c.parentName === null);
+    const mainCategories = categoryData.filter((c) => c.parentName === null);
     const createdMain: Category[] = [];
-    
+
     for (const catData of mainCategories) {
       const category = this.repo.create({ name: catData.name });
       const saved = await this.repo.save(category);
@@ -75,15 +78,15 @@ export class CategoriesService {
     }
 
     // Créer ensuite les sous-catégories
-    const subCategories = categoryData.filter(c => c.parentName !== null);
+    const subCategories = categoryData.filter((c) => c.parentName !== null);
     let subCount = 0;
 
     for (const catData of subCategories) {
-      const parent = createdMain.find(p => p.name === catData.parentName);
+      const parent = createdMain.find((p) => p.name === catData.parentName);
       if (parent) {
-        const category = this.repo.create({ 
+        const category = this.repo.create({
           name: catData.name,
-          parentId: parent.id
+          parentId: parent.id,
         });
         await this.repo.save(category);
         subCount++;
@@ -91,9 +94,9 @@ export class CategoriesService {
     }
 
     const totalCount = mainCategories.length + subCount;
-    return { 
-      message: `${totalCount} catégories créées avec succès`, 
-      count: totalCount 
+    return {
+      message: `${totalCount} catégories créées avec succès`,
+      count: totalCount,
     };
   }
 
@@ -126,7 +129,7 @@ export class CategoriesService {
       if (!category) {
         throw new Error(`Catégorie avec ID ${id} introuvable`);
       }
-      
+
       // Avec Tree entities, TypeORM gère automatiquement la suppression en cascade
       // des enfants quand on supprime le parent
       await this.repo.remove(category);

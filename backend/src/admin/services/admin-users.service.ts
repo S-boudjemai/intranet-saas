@@ -1,16 +1,19 @@
 // src/admin/services/admin-users.service.ts
-import { 
-  Injectable, 
-  NotFoundException, 
+import {
+  Injectable,
+  NotFoundException,
   ConflictException,
-  BadRequestException 
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../users/entities/user.entity';
 import { Restaurant } from '../../restaurant/entites/restaurant.entity';
-import { CreateUserBypassDto, UpdateUserDto } from '../dto/create-user-bypass.dto';
+import {
+  CreateUserBypassDto,
+  UpdateUserDto,
+} from '../dto/create-user-bypass.dto';
 
 interface UserFilterOptions {
   page: number;
@@ -28,7 +31,10 @@ export class AdminUsersService {
     private restaurantsRepository: Repository<Restaurant>,
   ) {}
 
-  async createBypass(tenantId: number, createUserDto: CreateUserBypassDto): Promise<User> {
+  async createBypass(
+    tenantId: number,
+    createUserDto: CreateUserBypassDto,
+  ): Promise<User> {
     // Vérifier si l'email existe déjà
     const existingUser = await this.usersRepository.findOne({
       where: { email: createUserDto.email },
@@ -41,7 +47,7 @@ export class AdminUsersService {
     // Vérifier que le restaurant existe (si spécifié)
     if (createUserDto.restaurant_id) {
       const restaurant = await this.restaurantsRepository.findOne({
-        where: { 
+        where: {
           id: createUserDto.restaurant_id,
           tenant_id: tenantId,
         },
@@ -49,14 +55,17 @@ export class AdminUsersService {
 
       if (!restaurant) {
         throw new BadRequestException(
-          `Restaurant ${createUserDto.restaurant_id} introuvable pour ce tenant`
+          `Restaurant ${createUserDto.restaurant_id} introuvable pour ce tenant`,
         );
       }
     }
 
     // Hasher le mot de passe
     const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      saltRounds,
+    );
 
     // Créer l'utilisateur
     const user = this.usersRepository.create({
@@ -84,7 +93,7 @@ export class AdminUsersService {
       .where('user.tenant_id = :tenantId', { tenantId })
       .select([
         'user.id',
-        'user.email', 
+        'user.email',
         'user.role',
         'user.is_active',
         'user.created_at',
@@ -121,7 +130,7 @@ export class AdminUsersService {
       where: { id: userId, tenant_id: tenantId },
       select: [
         'id',
-        'email', 
+        'email',
         'role',
         'is_active',
         'created_at',
@@ -131,14 +140,18 @@ export class AdminUsersService {
 
     if (!user) {
       throw new NotFoundException(
-        `Utilisateur ${userId} introuvable pour le tenant ${tenantId}`
+        `Utilisateur ${userId} introuvable pour le tenant ${tenantId}`,
       );
     }
 
     return user;
   }
 
-  async update(userId: number, tenantId: number, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(
+    userId: number,
+    tenantId: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
     const user = await this.findByIdAndTenant(userId, tenantId);
 
     // Vérifier l'email unique si modifié
@@ -148,14 +161,16 @@ export class AdminUsersService {
       });
 
       if (existingUser) {
-        throw new ConflictException('Un utilisateur avec cet email existe déjà');
+        throw new ConflictException(
+          'Un utilisateur avec cet email existe déjà',
+        );
       }
     }
 
     // Vérifier le restaurant si modifié
     if (updateUserDto.restaurant_id) {
       const restaurant = await this.restaurantsRepository.findOne({
-        where: { 
+        where: {
           id: updateUserDto.restaurant_id,
           tenant_id: tenantId,
         },
@@ -163,7 +178,7 @@ export class AdminUsersService {
 
       if (!restaurant) {
         throw new BadRequestException(
-          `Restaurant ${updateUserDto.restaurant_id} introuvable pour ce tenant`
+          `Restaurant ${updateUserDto.restaurant_id} introuvable pour ce tenant`,
         );
       }
     }
@@ -171,7 +186,10 @@ export class AdminUsersService {
     // Hasher le nouveau mot de passe si fourni
     if (updateUserDto.password) {
       const saltRounds = 12;
-      updateUserDto['password_hash'] = await bcrypt.hash(updateUserDto.password, saltRounds);
+      updateUserDto['password_hash'] = await bcrypt.hash(
+        updateUserDto.password,
+        saltRounds,
+      );
       delete updateUserDto.password;
     }
 
@@ -191,10 +209,10 @@ export class AdminUsersService {
   async toggleStatus(userId: number, tenantId: number): Promise<User> {
     const user = await this.findByIdAndTenant(userId, tenantId);
     user.is_active = !user.is_active;
-    
+
     const savedUser = await this.usersRepository.save(user);
     const { password_hash, ...userWithoutPassword } = savedUser;
-    
+
     return userWithoutPassword as User;
   }
 
@@ -209,8 +227,8 @@ export class AdminUsersService {
    * Compte utilisateurs actifs (pour stats globales)
    */
   async countActive(): Promise<number> {
-    return await this.usersRepository.count({ 
-      where: { is_active: true } 
+    return await this.usersRepository.count({
+      where: { is_active: true },
     });
   }
 
@@ -226,7 +244,7 @@ export class AdminUsersService {
       .leftJoinAndSelect('user.tenant', 'tenant')
       .select([
         'user.id',
-        'user.email', 
+        'user.email',
         'user.role',
         'user.is_active',
         'user.created_at',

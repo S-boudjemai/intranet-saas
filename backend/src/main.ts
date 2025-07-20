@@ -14,29 +14,31 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const logger = createWinstonLogger(process.env.NODE_ENV || 'development');
-  
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: logger,
   });
 
   // Security headers with helmet
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:", "http://localhost:*"],
-        connectSrc: ["'self'", "ws://localhost:*", "wss://localhost:*"],
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:', 'https:', 'http://localhost:*'],
+          connectSrc: ["'self'", 'ws://localhost:*', 'wss://localhost:*'],
+        },
       },
-    },
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: false, // Autoriser l'accès cross-origin aux ressources
-  }));
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: false, // Autoriser l'accès cross-origin aux ressources
+    }),
+  );
 
   // Cookie parser middleware
   app.use(cookieParser());
-  
+
   // CORS pour accepter les connexions depuis mobile, localhost et Vercel
   app.enableCors({
     origin: [
@@ -50,7 +52,7 @@ async function bootstrap() {
       'https://intranet-saas.vercel.app', // Frontend Vercel
       'https://intranet-saas-git-main-sofianes-projects-c54f9e3b.vercel.app', // Frontend Vercel Git
       'http://172.21.205.127:5174',
-      'http://172.21.205.127:5175'
+      'http://172.21.205.127:5175',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -70,7 +72,7 @@ async function bootstrap() {
   // Global filters et interceptors
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TransformInterceptor());
-  
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // Supprime les propriétés non définies dans le DTO
@@ -79,13 +81,15 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true, // Conversion implicite des types
       },
-    })
+    }),
   );
 
   // Configuration Swagger
   const config = new DocumentBuilder()
     .setTitle('Internet SAAS API')
-    .setDescription('API REST pour la plateforme de gestion franchiseur-franchisé')
+    .setDescription(
+      'API REST pour la plateforme de gestion franchiseur-franchisé',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -98,15 +102,15 @@ async function bootstrap() {
       },
       'JWT-auth',
     )
-    .addTag('Auth', 'Endpoints d\'authentification')
+    .addTag('Auth', "Endpoints d'authentification")
     .addTag('Documents', 'Gestion des documents et upload S3')
     .addTag('Tickets', 'Système de tickets de support')
     .addTag('Announcements', 'Annonces franchiseur → franchisé')
     .addTag('Users', 'Gestion des utilisateurs et invitations')
-    .addTag('Audits', 'Module d\'audit et conformité')
+    .addTag('Audits', "Module d'audit et conformité")
     .addTag('Corrective Actions', 'Actions correctives')
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document, {
     customSiteTitle: 'Internet SAAS API',
@@ -124,6 +128,9 @@ async function bootstrap() {
 
   await app.listen(3000);
   logger.log('🚀 Backend sur http://localhost:3000', 'Bootstrap');
-  logger.log('📚 Documentation Swagger sur http://localhost:3000/api', 'Bootstrap');
+  logger.log(
+    '📚 Documentation Swagger sur http://localhost:3000/api',
+    'Bootstrap',
+  );
 }
 bootstrap();

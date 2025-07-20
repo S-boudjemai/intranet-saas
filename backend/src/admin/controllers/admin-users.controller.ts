@@ -1,24 +1,32 @@
 // src/admin/controllers/admin-users.controller.ts
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Param, 
-  Body, 
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
   Query,
   UseGuards,
   ParseIntPipe,
   HttpStatus,
   HttpCode,
-  Req
+  Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AdminGuard } from '../guards/admin.guard';
 import { TenantScopeGuard } from '../guards/tenant-scope.guard';
 import { AdminUsersService } from '../services/admin-users.service';
-import { CreateUserBypassDto, UpdateUserDto } from '../dto/create-user-bypass.dto';
+import {
+  CreateUserBypassDto,
+  UpdateUserDto,
+} from '../dto/create-user-bypass.dto';
 import { Request } from 'express';
 
 @ApiTags('Super Admin - Users')
@@ -31,7 +39,10 @@ export class AdminUsersController {
   @Post('bypass-invite')
   @ApiOperation({ summary: 'Créer un utilisateur sans invitation' })
   @ApiResponse({ status: 201, description: 'Utilisateur créé avec succès' })
-  @ApiResponse({ status: 400, description: 'Données invalides ou email déjà utilisé' })
+  @ApiResponse({
+    status: 400,
+    description: 'Données invalides ou email déjà utilisé',
+  })
   async createUserBypass(
     @Param('tenant_id', ParseIntPipe) tenantId: number,
     @Body() createUserDto: CreateUserBypassDto,
@@ -41,7 +52,7 @@ export class AdminUsersController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Lister les utilisateurs d\'un tenant' })
+  @ApiOperation({ summary: "Lister les utilisateurs d'un tenant" })
   @ApiResponse({ status: 200, description: 'Liste des utilisateurs récupérée' })
   async getUsersByTenant(
     @Param('tenant_id', ParseIntPipe) tenantId: number,
@@ -50,11 +61,11 @@ export class AdminUsersController {
     @Query('role') role?: string,
     @Query('active') active?: boolean,
   ) {
-    return this.usersService.findByTenant(tenantId, { 
-      page, 
-      limit, 
-      role, 
-      active 
+    return this.usersService.findByTenant(tenantId, {
+      page,
+      limit,
+      role,
+      active,
     });
   }
 
@@ -71,7 +82,10 @@ export class AdminUsersController {
 
   @Put(':user_id')
   @ApiOperation({ summary: 'Mettre à jour un utilisateur' })
-  @ApiResponse({ status: 200, description: 'Utilisateur mis à jour avec succès' })
+  @ApiResponse({
+    status: 200,
+    description: 'Utilisateur mis à jour avec succès',
+  })
   @ApiResponse({ status: 404, description: 'Utilisateur introuvable' })
   async updateUser(
     @Param('tenant_id', ParseIntPipe) tenantId: number,

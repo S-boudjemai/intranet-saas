@@ -1,5 +1,11 @@
 // src/admin/guards/admin.guard.ts
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
@@ -17,7 +23,7 @@ export class AdminGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    
+
     // Extraire le token
     const token = this.extractTokenFromHeader(request);
     if (!token) {
@@ -30,20 +36,21 @@ export class AdminGuard implements CanActivate {
         secret: process.env.JWT_SECRET,
       });
 
-      // Vérifier que l'utilisateur est admin 
+      // Vérifier que l'utilisateur est admin
       if (payload.role !== 'admin') {
         throw new ForbiddenException('Accès admin requis');
       }
 
       // Vérifier que c'est un admin global (admin sans tenant_id)
       if (payload.tenant_id !== null && payload.tenant_id !== undefined) {
-        throw new ForbiddenException('Accès admin global requis (admin sans tenant)');
+        throw new ForbiddenException(
+          'Accès admin global requis (admin sans tenant)',
+        );
       }
 
       // Ajouter les infos utilisateur à la requête
       request['user'] = payload;
       return true;
-
     } catch (error) {
       if (error instanceof ForbiddenException) {
         throw error;

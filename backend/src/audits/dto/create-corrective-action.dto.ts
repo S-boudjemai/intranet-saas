@@ -1,4 +1,10 @@
-import { IsString, IsEnum, IsOptional, IsNumber, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsNumber,
+  IsDateString,
+} from 'class-validator';
 import { CorrectiveActionStatus } from '../entities/corrective-action.entity';
 
 export class CreateCorrectiveActionDto {

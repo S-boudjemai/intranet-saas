@@ -74,10 +74,16 @@ describe('AdminTenantsService', () => {
     }).compile();
 
     service = module.get<AdminTenantsService>(AdminTenantsService);
-    tenantRepository = module.get<Repository<Tenant>>(getRepositoryToken(Tenant));
+    tenantRepository = module.get<Repository<Tenant>>(
+      getRepositoryToken(Tenant),
+    );
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
-    restaurantRepository = module.get<Repository<Restaurant>>(getRepositoryToken(Restaurant));
-    documentRepository = module.get<Repository<Document>>(getRepositoryToken(Document));
+    restaurantRepository = module.get<Repository<Restaurant>>(
+      getRepositoryToken(Restaurant),
+    );
+    documentRepository = module.get<Repository<Document>>(
+      getRepositoryToken(Document),
+    );
   });
 
   afterEach(() => {
@@ -110,7 +116,9 @@ describe('AdminTenantsService', () => {
       mockRepository.create.mockReturnValue(mockTenant);
       mockRepository.save.mockRejectedValue(duplicateError);
 
-      await expect(service.create(createTenantDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(createTenantDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -138,7 +146,7 @@ describe('AdminTenantsService', () => {
     it('should return paginated tenants', async () => {
       const options = { page: 1, limit: 10 };
       const mockQueryBuilder = tenantRepository.createQueryBuilder();
-      
+
       mockQueryBuilder.getRawAndEntities.mockResolvedValue({
         entities: [mockTenant],
         raw: [{ userCount: '5' }],
@@ -156,7 +164,7 @@ describe('AdminTenantsService', () => {
     it('should apply search filter when provided', async () => {
       const options = { page: 1, limit: 10, search: 'test' };
       const mockQueryBuilder = tenantRepository.createQueryBuilder();
-      
+
       mockQueryBuilder.getRawAndEntities.mockResolvedValue({
         entities: [],
         raw: [],
@@ -167,7 +175,7 @@ describe('AdminTenantsService', () => {
 
       expect(mockQueryBuilder.where).toHaveBeenCalledWith(
         'tenant.name ILIKE :search',
-        { search: '%test%' }
+        { search: '%test%' },
       );
     });
   });
@@ -183,7 +191,7 @@ describe('AdminTenantsService', () => {
       const result = await service.update(1, updateDto);
 
       expect(tenantRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining(updateDto)
+        expect.objectContaining(updateDto),
       );
       expect(result).toEqual(updatedTenant);
     });
@@ -197,9 +205,15 @@ describe('AdminTenantsService', () => {
 
       await service.delete(1);
 
-      expect(userRepository.count).toHaveBeenCalledWith({ where: { tenant_id: 1 } });
-      expect(restaurantRepository.count).toHaveBeenCalledWith({ where: { tenant_id: 1 } });
-      expect(documentRepository.count).toHaveBeenCalledWith({ where: { tenant_id: '1' } });
+      expect(userRepository.count).toHaveBeenCalledWith({
+        where: { tenant_id: 1 },
+      });
+      expect(restaurantRepository.count).toHaveBeenCalledWith({
+        where: { tenant_id: 1 },
+      });
+      expect(documentRepository.count).toHaveBeenCalledWith({
+        where: { tenant_id: '1' },
+      });
       expect(tenantRepository.remove).toHaveBeenCalledWith(mockTenant);
     });
 
@@ -217,12 +231,13 @@ describe('AdminTenantsService', () => {
   describe('getStats', () => {
     it('should return tenant statistics', async () => {
       mockRepository.findOne.mockResolvedValue(mockTenant);
-      userRepository.count = jest.fn()
+      userRepository.count = jest
+        .fn()
         .mockResolvedValueOnce(10) // total users
         .mockResolvedValueOnce(8); // active users
       restaurantRepository.count = jest.fn().mockResolvedValue(3);
       documentRepository.count = jest.fn().mockResolvedValue(25);
-      
+
       userRepository.createQueryBuilder = jest.fn(() => ({
         select: jest.fn().mockReturnThis(),
         addSelect: jest.fn().mockReturnThis(),

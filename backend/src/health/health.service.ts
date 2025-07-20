@@ -19,7 +19,8 @@ export class HealthService {
       memory: this.checkMemory(),
     };
 
-    const status = checks.database === 'ok' && checks.memory !== 'error' ? 'ok' : 'error';
+    const status =
+      checks.database === 'ok' && checks.memory !== 'error' ? 'ok' : 'error';
 
     return {
       status,
@@ -50,7 +51,9 @@ export class HealthService {
       this.logger.warn(`High memory usage: ${memoryUsagePercent.toFixed(2)}%`);
       return 'error';
     } else if (memoryUsagePercent > 70) {
-      this.logger.warn(`Memory usage warning: ${memoryUsagePercent.toFixed(2)}%`);
+      this.logger.warn(
+        `Memory usage warning: ${memoryUsagePercent.toFixed(2)}%`,
+      );
       return 'warning';
     }
 

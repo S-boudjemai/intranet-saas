@@ -124,7 +124,7 @@ export default function LandingPage() {
               <span className="text-muted-foreground">c'est perdre le contrôle de votre marque</span>
             </h3>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Entre la communication dispersée, les contrôles qualité manuels et l'absence de visibilité temps réel, 
+              Entre la communication dispersée, les contrôles qualité manuels et l'absence de visibilité en temps réel, 
               vous passez plus de temps à "éteindre les feux" qu'à développer votre réseau.
             </p>
           </motion.div>

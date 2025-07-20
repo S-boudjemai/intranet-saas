@@ -76,31 +76,40 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       });
 
       newSocket.on('connect', () => {
-        // Connected to notifications server
+        console.log('🔌 WebSocket connected to notifications server');
       });
 
-      newSocket.on('disconnect', () => {
-        // Disconnected from notifications server
+      newSocket.on('disconnect', (reason) => {
+        console.log('❌ WebSocket disconnected:', reason);
+      });
+
+      newSocket.on('connect_error', (error) => {
+        console.error('🚨 WebSocket connection error:', error);
       });
 
       // Écouter les notifications en temps réel avec délai
-      newSocket.on('document_uploaded', () => {
+      newSocket.on('document_uploaded', (data) => {
+        console.log('📄 WebSocket event: document_uploaded', data);
         setTimeout(refreshCounts, 500); // 0.5 seconde de délai
       });
 
-      newSocket.on('announcement_posted', () => {
+      newSocket.on('announcement_posted', (data) => {
+        console.log('📢 WebSocket event: announcement_posted', data);
         setTimeout(refreshCounts, 500);
       });
 
-      newSocket.on('ticket_created', () => {
+      newSocket.on('ticket_created', (data) => {
+        console.log('🎫 WebSocket event: ticket_created', data);
         setTimeout(refreshCounts, 500);
       });
 
-      newSocket.on('ticket_updated', () => {
+      newSocket.on('ticket_updated', (data) => {
+        console.log('🔄 WebSocket event: ticket_updated', data);
         setTimeout(refreshCounts, 500);
       });
 
-      newSocket.on('restaurant_joined', () => {
+      newSocket.on('restaurant_joined', (data) => {
+        console.log('🏪 WebSocket event: restaurant_joined', data);
         setTimeout(refreshCounts, 500);
       });
 

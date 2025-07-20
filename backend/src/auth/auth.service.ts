@@ -1,5 +1,10 @@
 // src/auth/auth.service.ts
-import { Injectable, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
@@ -66,12 +71,12 @@ export class AuthService {
       role: user.role,
       restaurant_id: user.restaurant_id,
     };
-    
+
     const token = this.jwtService.sign(payload);
-    
-    return { 
+
+    return {
       access_token: token,
-      user: payload
+      user: payload,
     };
   }
 
@@ -90,19 +95,19 @@ export class AuthService {
   }
 
   async signupWithInvite(
-    token: string, 
+    token: string,
     password: string,
     restaurant_name?: string,
-    restaurant_city?: string
+    restaurant_city?: string,
   ) {
     const invite = await this.invitesService.useToken(token);
-    
+
     let restaurant_id: number | null = null;
-    
+
     // Créer le restaurant avec les données du formulaire (priorité) ou de l'invitation (fallback)
     const finalRestaurantName = restaurant_name || invite.restaurant_name;
     const finalRestaurantCity = restaurant_city || invite.restaurant_city;
-    
+
     if (finalRestaurantName) {
       const newRestaurant = this.restaurantRepo.create({
         tenant_id: invite.tenant_id,
@@ -110,12 +115,12 @@ export class AuthService {
         city: finalRestaurantCity || null,
       });
       const savedRestaurant = await this.restaurantRepo.save(newRestaurant);
-      restaurant_id = (savedRestaurant as Restaurant).id;
+      restaurant_id = savedRestaurant.id;
 
       // Créer une annonce automatique pour le nouveau restaurant
       await this.createRestaurantJoinedAnnouncement(savedRestaurant);
     }
-    
+
     const newUser = await this.usersService.create(
       invite.invite_email,
       password,
@@ -131,11 +136,13 @@ export class AuthService {
         role: newUser.role,
         tenant_id: newUser.tenant_id,
         restaurant_id: newUser.restaurant_id,
-      }
+      },
     };
   }
 
-  private async createRestaurantJoinedAnnouncement(restaurant: Restaurant): Promise<void> {
+  private async createRestaurantJoinedAnnouncement(
+    restaurant: Restaurant,
+  ): Promise<void> {
     // Créer l'annonce automatique
     const title = "🎉 Nouveau restaurant dans l'équipe !";
     const content = `${restaurant.name}${restaurant.city ? ` (${restaurant.city})` : ''} a rejoint l'équipe ! Souhaitons-leur la bienvenue ! 🍕`;
@@ -152,12 +159,12 @@ export class AuthService {
 
     // Créer des notifications pour les viewers uniquement
     const message = `${restaurant.name} a rejoint l'équipe !`;
-    
+
     await this.notificationsService.createNotificationsForViewers(
       restaurant.tenant_id,
       NotificationType.RESTAURANT_JOINED,
       savedAnnouncement.id,
-      message
+      message,
     );
 
     // Envoyer notification temps réel
@@ -166,37 +173,40 @@ export class AuthService {
       title: savedAnnouncement.title,
       restaurantName: restaurant.name,
       restaurantCity: restaurant.city,
-      message
+      message,
     });
   }
 
-  async requestPasswordReset(email: string): Promise<{ success: boolean; message: string }> {
+  async requestPasswordReset(
+    email: string,
+  ): Promise<{ success: boolean; message: string }> {
     const user = await this.usersService.findByEmail(email);
-    
+
     if (!user) {
       // Ne pas révéler si l'email existe ou non
-      return { 
-        success: true, 
-        message: 'Si cet email existe, un code de réinitialisation a été envoyé.' 
+      return {
+        success: true,
+        message:
+          'Si cet email existe, un code de réinitialisation a été envoyé.',
       };
     }
 
     // Invalider tous les codes précédents pour cet utilisateur
     await this.passwordResetRepo.update(
       { user_id: user.id, is_used: false },
-      { is_used: true }
+      { is_used: true },
     );
 
     // Générer un code à 6 chiffres
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     // Créer une nouvelle entrée avec expiration dans 15 minutes
     const passwordReset = this.passwordResetRepo.create({
       user_id: user.id,
       code,
       expires_at: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
     });
-    
+
     await this.passwordResetRepo.save(passwordReset);
 
     // Envoyer l'email avec le code
@@ -223,18 +233,18 @@ export class AuthService {
       });
     } catch (error) {
       console.error('Error sending password reset email:', error);
-      throw new BadRequestException('Erreur lors de l\'envoi de l\'email');
+      throw new BadRequestException("Erreur lors de l'envoi de l'email");
     }
 
-    return { 
-      success: true, 
-      message: 'Si cet email existe, un code de réinitialisation a été envoyé.' 
+    return {
+      success: true,
+      message: 'Si cet email existe, un code de réinitialisation a été envoyé.',
     };
   }
 
   async validateResetCode(email: string, code: string): Promise<boolean> {
     const user = await this.usersService.findByEmail(email);
-    
+
     if (!user) {
       return false;
     }
@@ -251,9 +261,13 @@ export class AuthService {
     return !!passwordReset;
   }
 
-  async resetPassword(email: string, code: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  async resetPassword(
+    email: string,
+    code: string,
+    newPassword: string,
+  ): Promise<{ success: boolean; message: string }> {
     const user = await this.usersService.findByEmail(email);
-    
+
     if (!user) {
       return { success: false, message: 'Code invalide ou expiré' };
     }

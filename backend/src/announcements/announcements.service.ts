@@ -31,7 +31,6 @@ export class AnnouncementsService {
     private notificationsGateway: NotificationsGateway,
   ) {}
 
-
   async findAll(user: JwtUser): Promise<Announcement[]> {
     let announcements: Announcement[] = [];
 
@@ -92,7 +91,6 @@ export class AnnouncementsService {
     },
     user: JwtUser,
   ): Promise<Announcement> {
-
     const newAnnouncement = this.repo.create({
       title: data.title,
       content: data.content,
@@ -118,31 +116,31 @@ export class AnnouncementsService {
 
     // Créer des notifications pour les viewers uniquement (les managers n'ont pas besoin de notifications d'annonces)
     const message = `Nouvelle annonce: ${savedAnnouncement.title}`;
-    
+
     await this.notificationsService.createNotificationsForViewers(
       data.tenant_id,
       NotificationType.ANNOUNCEMENT_POSTED,
       savedAnnouncement.id,
-      message
+      message,
     );
 
     // Envoyer notification temps réel
     this.notificationsGateway.notifyAnnouncementPosted(data.tenant_id, {
       id: savedAnnouncement.id,
       title: savedAnnouncement.title,
-      message
+      message,
     });
 
     // Recharger l'annonce avec les restaurants et documents pour la retourner complète
     const reloadedAnnouncement = await this.repo.findOne({
       where: { id: savedAnnouncement.id },
-      relations: ['restaurants', 'documents']
+      relations: ['restaurants', 'documents'],
     });
-    
+
     if (!reloadedAnnouncement) {
       throw new NotFoundException('Annonce introuvable après création');
     }
-    
+
     return reloadedAnnouncement;
   }
 

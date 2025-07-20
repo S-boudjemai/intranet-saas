@@ -135,14 +135,61 @@ export default function PlanningTab() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { label: 'Brouillon', variant: 'secondary' as const },
-      in_progress: { label: 'En cours', variant: 'info' as const },
+      todo: { label: 'À faire', variant: 'warning' as const },
+      scheduled: { label: 'Planifié', variant: 'info' as const },
+      in_progress: { label: 'En cours', variant: 'secondary' as const },
       completed: { label: 'Terminé', variant: 'success' as const },
       reviewed: { label: 'Validé', variant: 'success' as const },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.todo;
     return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  // Fonction pour générer le bon bouton selon le statut
+  const getActionButton = (execution: any) => {
+    const isToday = new Date().toDateString() === new Date(execution.scheduled_date).toDateString();
+    const isPast = new Date(execution.scheduled_date) < new Date();
+    
+    // Audit à faire ou en retard
+    if (execution.status === 'todo' || isPast) {
+      return (
+        <Button 
+          variant="default" 
+          size="sm" 
+          className="w-full bg-green-600 hover:bg-green-700 text-white"
+          onClick={() => navigate(`/audit/${execution.id}`)}
+        >
+          🚀 Commencer l'audit
+        </Button>
+      );
+    }
+    
+    // Audit planifié dans le futur
+    if (execution.status === 'scheduled') {
+      return (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full"
+          onClick={() => navigate(`/audit/${execution.id}`)}
+        >
+          👁️ Voir l'audit
+        </Button>
+      );
+    }
+    
+    // Audit en cours, terminé, validé
+    return (
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="w-full"
+        onClick={() => navigate(`/audit/${execution.id}`)}
+      >
+        📋 Voir détails
+      </Button>
+    );
   };
 
   const StatusBadgeWithArchive = ({ status, execution, canArchive }: { 
@@ -182,22 +229,27 @@ export default function PlanningTab() {
     return new Date(scheduledDate) < new Date();
   };
 
+  // Filtrer les audits terminés/validés qui ne doivent plus apparaître dans le planning
+  const activeExecutions = executions.filter(e => 
+    e.status !== 'completed' && e.status !== 'reviewed'
+  );
+
   const groupedExecutions = {
-    today: executions.filter(e => {
+    today: activeExecutions.filter(e => {
       const today = new Date().toDateString();
       return new Date(e.scheduled_date).toDateString() === today;
     }),
-    upcoming: executions.filter(e => {
+    upcoming: activeExecutions.filter(e => {
       const today = new Date();
       const scheduledDate = new Date(e.scheduled_date);
       return scheduledDate > today && scheduledDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
     }),
-    future: executions.filter(e => {
+    future: activeExecutions.filter(e => {
       const today = new Date();
       const scheduledDate = new Date(e.scheduled_date);
       return scheduledDate > new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
     }),
-    overdue: executions.filter(e => isOverdue(e.scheduled_date, e.status)),
+    overdue: activeExecutions.filter(e => isOverdue(e.scheduled_date, e.status)),
   };
 
   if (loading) {
@@ -269,8 +321,8 @@ export default function PlanningTab() {
               <HiOfficeBuilding className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">Total audits</p>
-              <p className="text-2xl font-bold text-foreground">{executions.length}</p>
+              <p className="text-sm font-medium text-muted-foreground">Audits actifs</p>
+              <p className="text-2xl font-bold text-foreground">{activeExecutions.length}</p>
             </div>
           </div>
         </Card>
@@ -388,14 +440,7 @@ export default function PlanningTab() {
                   {execution.inspector.email}
                 </div>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => navigate(`/audit/${execution.id}`)}
-                >
-                  Voir détails
-                </Button>
+                {getActionButton(execution)}
               </Card>
             ))}
           </div>
@@ -434,14 +479,7 @@ export default function PlanningTab() {
                   {execution.inspector.email}
                 </div>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => navigate(`/audit/${execution.id}`)}
-                >
-                  Voir détails
-                </Button>
+                {getActionButton(execution)}
               </Card>
             ))}
           </div>
@@ -449,7 +487,7 @@ export default function PlanningTab() {
       )}
 
       {/* État vide */}
-      {executions.length === 0 && (
+      {activeExecutions.length === 0 && (
         <Card className="text-center py-12">
           <HiCalendar className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">

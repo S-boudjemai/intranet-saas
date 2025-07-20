@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiX, FiUser, FiCalendar, FiDollarSign, FiFileText, FiAlertTriangle } from 'react-icons/fi';
 
-interface NonConformity {
-  id: number;
-  title: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  audit_name: string;
-  restaurant_name: string;
-  created_date: string;
-}
-
 interface User {
   id: number;
   name: string;
@@ -22,9 +13,9 @@ interface CreateCorrectiveActionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (action: any) => void;
-  nonConformities?: NonConformity[];
+  nonConformities?: any[]; // Kept for compatibility but will be empty
   users: User[];
-  preselectedNonConformity?: NonConformity;
+  preselectedNonConformity?: any; // Legacy prop, unused now
 }
 
 const ACTION_ORIGINS = [
@@ -142,8 +133,7 @@ export default function CreateCorrectiveActionModal({
   const [action, setAction] = useState({
     title: '',
     description: '',
-    origin: 'audit',
-    non_conformity_id: preselectedNonConformity?.id || '',
+    origin: 'general',
     category: '',
     priority: 'normal',
     assigned_to: '',
@@ -154,7 +144,6 @@ export default function CreateCorrectiveActionModal({
   });
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedNonConformity, setSelectedNonConformity] = useState<NonConformity | null>(preselectedNonConformity || null);
   const [showPredefined, setShowPredefined] = useState(false);
 
   useEffect(() => {
@@ -163,13 +152,6 @@ export default function CreateCorrectiveActionModal({
       setSelectedUser(user || null);
     }
   }, [action.assigned_to, users]);
-
-  useEffect(() => {
-    if (action.non_conformity_id) {
-      const nc = nonConformities.find(nc => nc.id === parseInt(action.non_conformity_id.toString()));
-      setSelectedNonConformity(nc || null);
-    }
-  }, [action.non_conformity_id, nonConformities]);
 
   // Calculer la date d'échéance suggérée selon la priorité
   useEffect(() => {
@@ -198,11 +180,6 @@ export default function CreateCorrectiveActionModal({
       due_date: action.due_date,
       notes: action.title // Using title as notes since backend expects notes field
     };
-
-    // Only include non_conformity_id if it's actually selected
-    if (action.non_conformity_id && action.non_conformity_id !== '') {
-      finalAction.non_conformity_id = parseInt(action.non_conformity_id.toString());
-    }
 
     onSubmit(finalAction);
     onClose();
@@ -243,15 +220,6 @@ export default function CreateCorrectiveActionModal({
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-muted text-foreground';
-    }
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -327,56 +295,6 @@ export default function CreateCorrectiveActionModal({
                 </div>
               </div>
 
-              {/* Sélection non-conformité si applicable */}
-              {action.origin === 'audit' && nonConformities.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium text-foreground mb-4">Non-conformité associée (optionnel)</h3>
-                  <div className="space-y-3">
-                    <div
-                      onClick={() => setAction({ ...action, non_conformity_id: '' })}
-                      className={`p-3 border-2 rounded-lg cursor-pointer transition-colors ${
-                        !action.non_conformity_id
-                          ? 'border-primary bg-primary/10'
-                          : 'border hover:border-muted-foreground'
-                      }`}
-                    >
-                      <span className="font-medium text-foreground">Aucune non-conformité spécifique</span>
-                    </div>
-                    
-                    {nonConformities.map((nc) => (
-                      <div
-                        key={nc.id}
-                        onClick={() => setAction({ ...action, non_conformity_id: nc.id.toString() })}
-                        className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                          action.non_conformity_id === nc.id.toString()
-                            ? 'border-primary bg-primary/10'
-                            : 'border hover:border-muted-foreground'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-foreground">{nc.title}</h4>
-                            <div className="flex items-center space-x-4 mt-2 text-sm text-muted-foreground">
-                              <span>{nc.audit_name}</span>
-                              <span>{nc.restaurant_name}</span>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(nc.severity)}`}>
-                                {nc.severity.toUpperCase()}
-                              </span>
-                            </div>
-                          </div>
-                          {action.non_conformity_id === nc.id.toString() && (
-                            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center ml-3">
-                              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -639,9 +557,6 @@ export default function CreateCorrectiveActionModal({
                   )}
                   {action.resources_needed.length > 0 && (
                     <p><strong>Ressources:</strong> {action.resources_needed.length} éléments sélectionnés</p>
-                  )}
-                  {selectedNonConformity && (
-                    <p><strong>Non-conformité:</strong> {selectedNonConformity.title}</p>
                   )}
                 </div>
               </div>

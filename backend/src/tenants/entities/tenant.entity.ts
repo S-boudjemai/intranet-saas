@@ -17,10 +17,10 @@ export class Tenant {
   @Column({ type: 'text' })
   name: string;
 
-  @Column({ 
-    type: 'enum', 
+  @Column({
+    type: 'enum',
     enum: RestaurantType,
-    default: RestaurantType.TRADITIONNEL
+    default: RestaurantType.TRADITIONNEL,
   })
   restaurant_type: RestaurantType;
 

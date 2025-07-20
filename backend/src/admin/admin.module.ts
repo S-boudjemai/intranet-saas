@@ -32,7 +32,7 @@ import { TenantScopeGuard } from './guards/tenant-scope.guard';
   imports: [
     TypeOrmModule.forFeature([
       User,
-      Tenant, 
+      Tenant,
       Restaurant,
       Category,
       Document,
@@ -46,14 +46,14 @@ import { TenantScopeGuard } from './guards/tenant-scope.guard';
   controllers: [
     AdminGlobalController,
     AdminTenantsController,
-    AdminUsersController, 
+    AdminUsersController,
     AdminCategoriesController,
     AdminDocumentsController,
   ],
   providers: [
     AdminTenantsService,
     AdminUsersService,
-    AdminCategoriesService, 
+    AdminCategoriesService,
     AdminDocumentsService,
     AdminGuard,
     TenantScopeGuard,

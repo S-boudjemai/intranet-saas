@@ -10,7 +10,7 @@ export enum RestaurantType {
   FOOD_TRUCK = 'food_truck',
   TRADITIONNEL = 'traditionnel',
   BAR = 'bar',
-  TRAITEUR = 'traiteur'
+  TRAITEUR = 'traiteur',
 }
 
 export const RESTAURANT_TYPE_LABELS: Record<RestaurantType, string> = {
@@ -25,5 +25,5 @@ export const RESTAURANT_TYPE_LABELS: Record<RestaurantType, string> = {
   [RestaurantType.FOOD_TRUCK]: '🚚 Food Truck / Nomade',
   [RestaurantType.TRADITIONNEL]: '🍽️ Restaurant Traditionnel',
   [RestaurantType.BAR]: '🍷 Bar / Brasserie',
-  [RestaurantType.TRAITEUR]: '🎂 Traiteur / Événementiel'
+  [RestaurantType.TRAITEUR]: '🎂 Traiteur / Événementiel',
 };

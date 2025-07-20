@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuditTemplate } from './entities/audit-template.entity';
@@ -18,13 +22,15 @@ export class AuditTemplatesService {
     private userRepository: Repository<User>,
   ) {}
 
-  async create(createDto: CreateAuditTemplateDto, user: JwtUser): Promise<AuditTemplate> {
-    console.log('🔍 Service - createDto:', JSON.stringify(createDto, null, 2));
-    console.log('🔍 Service - user:', user);
-    
+  async create(
+    createDto: CreateAuditTemplateDto,
+    user: JwtUser,
+  ): Promise<AuditTemplate> {
     // Vérifier les permissions (admin/manager uniquement)
     if (!['admin', 'manager'].includes(user.role)) {
-      throw new ForbiddenException('Seuls les administrateurs et managers peuvent créer des templates d\'audit');
+      throw new ForbiddenException(
+        "Seuls les administrateurs et managers peuvent créer des templates d'audit",
+      );
     }
 
     // Vérifier que tenant_id n'est pas null
@@ -47,7 +53,7 @@ export class AuditTemplatesService {
     const savedTemplate = await this.auditTemplateRepository.save(template);
 
     // Créer les items associés
-    const items = createDto.items.map(itemDto => {
+    const items = createDto.items.map((itemDto) => {
       const { id, ...itemWithoutId } = itemDto; // Exclure l'ID temporaire
       return this.auditItemRepository.create({
         ...itemWithoutId,
@@ -68,7 +74,7 @@ export class AuditTemplatesService {
     }
 
     return this.auditTemplateRepository.find({
-      where: { 
+      where: {
         tenant_id: user.tenant_id,
         is_active: true,
       },
@@ -84,7 +90,7 @@ export class AuditTemplatesService {
     }
 
     const template = await this.auditTemplateRepository.findOne({
-      where: { 
+      where: {
         id,
         tenant_id: user.tenant_id,
       },
@@ -92,13 +98,17 @@ export class AuditTemplatesService {
     });
 
     if (!template) {
-      throw new NotFoundException('Template d\'audit non trouvé');
+      throw new NotFoundException("Template d'audit non trouvé");
     }
 
     return template;
   }
 
-  async update(id: number, updateDto: Partial<CreateAuditTemplateDto>, user: JwtUser): Promise<AuditTemplate> {
+  async update(
+    id: number,
+    updateDto: Partial<CreateAuditTemplateDto>,
+    user: JwtUser,
+  ): Promise<AuditTemplate> {
     const template = await this.findOne(id, user);
 
     // Vérifier les permissions
@@ -119,7 +129,7 @@ export class AuditTemplatesService {
       await this.auditItemRepository.delete({ template_id: id });
 
       // Créer les nouveaux items
-      const items = updateDto.items.map(itemDto => {
+      const items = updateDto.items.map((itemDto) => {
         const { id: tempId, ...itemWithoutId } = itemDto; // Exclure l'ID temporaire
         return this.auditItemRepository.create({
           ...itemWithoutId,

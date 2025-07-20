@@ -1,10 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum ViewTargetType {
   DOCUMENT = 'document',
   ANNOUNCEMENT = 'announcement',
-  TICKET = 'ticket'
+  TICKET = 'ticket',
 }
 
 @Entity('views')
@@ -17,7 +24,7 @@ export class View {
 
   @Column({
     type: 'enum',
-    enum: ViewTargetType
+    enum: ViewTargetType,
   })
   target_type: ViewTargetType;
 

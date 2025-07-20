@@ -65,7 +65,10 @@ describe('AuthService', () => {
         restaurant_id: mockUser.restaurant_id,
       });
       expect(usersService.findByEmail).toHaveBeenCalledWith('test@example.com');
-      expect(mockedBcrypt.compare).toHaveBeenCalledWith('password', mockUser.password_hash);
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+        'password',
+        mockUser.password_hash,
+      );
     });
 
     it('should return null when user does not exist', async () => {
@@ -73,11 +76,16 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(null);
 
       // Act
-      const result = await service.validateUser('nonexistent@example.com', 'password');
+      const result = await service.validateUser(
+        'nonexistent@example.com',
+        'password',
+      );
 
       // Assert
       expect(result).toBeNull();
-      expect(usersService.findByEmail).toHaveBeenCalledWith('nonexistent@example.com');
+      expect(usersService.findByEmail).toHaveBeenCalledWith(
+        'nonexistent@example.com',
+      );
       expect(mockedBcrypt.compare).not.toHaveBeenCalled();
     });
 
@@ -87,11 +95,17 @@ describe('AuthService', () => {
       mockedBcrypt.compare.mockResolvedValue(false as never);
 
       // Act
-      const result = await service.validateUser('test@example.com', 'wrongpassword');
+      const result = await service.validateUser(
+        'test@example.com',
+        'wrongpassword',
+      );
 
       // Assert
       expect(result).toBeNull();
-      expect(mockedBcrypt.compare).toHaveBeenCalledWith('wrongpassword', mockUser.password_hash);
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+        'wrongpassword',
+        mockUser.password_hash,
+      );
     });
   });
 
@@ -102,7 +116,7 @@ describe('AuthService', () => {
         accessToken: 'access_token',
         refreshToken: 'refresh_token',
       };
-      
+
       tokensService.generateTokenPair.mockReturnValue(mockTokens);
 
       // Act

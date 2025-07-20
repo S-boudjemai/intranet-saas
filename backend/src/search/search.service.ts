@@ -45,12 +45,11 @@ export class SearchService {
     const documentsQuery = this.documentRepository
       .createQueryBuilder('document')
       .leftJoinAndSelect('document.tags', 'tags')
-      .where('document.tenant_id = :tenantId', { tenantId: tenantId.toString() })
+      .where('document.tenant_id = :tenantId', {
+        tenantId: tenantId.toString(),
+      })
       .andWhere('document.is_deleted = false')
-      .andWhere(
-        'LOWER(document.name) LIKE :searchTerm',
-        { searchTerm },
-      )
+      .andWhere('LOWER(document.name) LIKE :searchTerm', { searchTerm })
       .orderBy('document.created_at', 'DESC')
       .limit(10);
 
@@ -68,9 +67,12 @@ export class SearchService {
 
     // Si l'utilisateur n'est pas manager/admin, filtrer par restaurant
     if (userRole === 'viewer' && restaurantId) {
-      ticketsQuery = ticketsQuery.andWhere('ticket.restaurant_id = :restaurantId', {
-        restaurantId,
-      });
+      ticketsQuery = ticketsQuery.andWhere(
+        'ticket.restaurant_id = :restaurantId',
+        {
+          restaurantId,
+        },
+      );
     }
 
     const tickets = await ticketsQuery
@@ -109,19 +111,24 @@ export class SearchService {
       restaurant_name: ticket.restaurant?.name,
     }));
 
-    const announcementResults: SearchResult[] = announcements.map((announcement) => ({
-      id: announcement.id.toString(),
-      title: announcement.title,
-      type: 'announcement' as const,
-      description: announcement.content?.substring(0, 100),
-      created_at: announcement.created_at.toISOString(),
-    }));
+    const announcementResults: SearchResult[] = announcements.map(
+      (announcement) => ({
+        id: announcement.id.toString(),
+        title: announcement.title,
+        type: 'announcement' as const,
+        description: announcement.content?.substring(0, 100),
+        created_at: announcement.created_at.toISOString(),
+      }),
+    );
 
     return {
       documents: documentResults,
       tickets: ticketResults,
       announcements: announcementResults,
-      total: documentResults.length + ticketResults.length + announcementResults.length,
+      total:
+        documentResults.length +
+        ticketResults.length +
+        announcementResults.length,
     };
   }
 }

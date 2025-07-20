@@ -21,7 +21,6 @@ export class UsersController {
   constructor(private readonly svc: UsersService) {}
 
   @Post()
- 
   create(
     @Body('tenant_id') tenant_id: number,
     @Body('email') email: string,

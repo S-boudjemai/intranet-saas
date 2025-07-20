@@ -1,9 +1,9 @@
 // src/admin/services/admin-tenants.service.ts
-import { 
-  Injectable, 
-  NotFoundException, 
+import {
+  Injectable,
+  NotFoundException,
   ConflictException,
-  BadRequestException 
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
@@ -11,7 +11,10 @@ import { Tenant } from '../../tenants/entities/tenant.entity';
 import { User } from '../../users/entities/user.entity';
 import { Restaurant } from '../../restaurant/entites/restaurant.entity';
 import { Document } from '../../documents/entities/document.entity';
-import { AdminCreateTenantDto, AdminUpdateTenantDto } from '../dto/create-tenant.dto';
+import {
+  AdminCreateTenantDto,
+  AdminUpdateTenantDto,
+} from '../dto/create-tenant.dto';
 
 interface PaginationOptions {
   page: number;
@@ -36,10 +39,11 @@ export class AdminTenantsService {
     try {
       const tenant = this.tenantsRepository.create(createTenantDto);
       const savedTenant = await this.tenantsRepository.save(tenant);
-      
+
       return savedTenant;
     } catch (error) {
-      if (error.code === '23505') { // Contrainte unique violée
+      if (error.code === '23505') {
+        // Contrainte unique violée
         throw new ConflictException('Un tenant avec ce nom existe déjà');
       }
       throw error;
@@ -59,8 +63,8 @@ export class AdminTenantsService {
       .addGroupBy('restaurant.id');
 
     if (search) {
-      queryBuilder.where('tenant.name ILIKE :search', { 
-        search: `%${search}%` 
+      queryBuilder.where('tenant.name ILIKE :search', {
+        search: `%${search}%`,
       });
     }
 
@@ -100,11 +104,14 @@ export class AdminTenantsService {
     return tenant;
   }
 
-  async update(id: number, updateTenantDto: AdminUpdateTenantDto): Promise<Tenant> {
+  async update(
+    id: number,
+    updateTenantDto: AdminUpdateTenantDto,
+  ): Promise<Tenant> {
     const tenant = await this.findById(id);
-    
+
     Object.assign(tenant, updateTenantDto);
-    
+
     try {
       return await this.tenantsRepository.save(tenant);
     } catch (error) {
@@ -128,7 +135,7 @@ export class AdminTenantsService {
     if (userCount > 0 || restaurantCount > 0 || documentCount > 0) {
       throw new ConflictException(
         `Impossible de supprimer le tenant: ${userCount} utilisateurs, ` +
-        `${restaurantCount} restaurants, ${documentCount} documents liés`
+          `${restaurantCount} restaurants, ${documentCount} documents liés`,
       );
     }
 
@@ -138,14 +145,15 @@ export class AdminTenantsService {
   async getStats(id: number) {
     const tenant = await this.findById(id);
 
-    const [userCount, restaurantCount, documentCount, activeUserCount] = await Promise.all([
-      this.usersRepository.count({ where: { tenant_id: id } }),
-      this.restaurantsRepository.count({ where: { tenant_id: id } }),
-      this.documentsRepository.count({ where: { tenant_id: id.toString() } }),
-      this.usersRepository.count({ 
-        where: { tenant_id: id, is_active: true } 
-      }),
-    ]);
+    const [userCount, restaurantCount, documentCount, activeUserCount] =
+      await Promise.all([
+        this.usersRepository.count({ where: { tenant_id: id } }),
+        this.restaurantsRepository.count({ where: { tenant_id: id } }),
+        this.documentsRepository.count({ where: { tenant_id: id.toString() } }),
+        this.usersRepository.count({
+          where: { tenant_id: id, is_active: true },
+        }),
+      ]);
 
     // Statistiques par rôle
     const roleStats = await this.usersRepository

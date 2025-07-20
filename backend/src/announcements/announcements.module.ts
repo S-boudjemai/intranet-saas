@@ -10,7 +10,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Announcement, Restaurant, Document]),
-    NotificationsModule
+    NotificationsModule,
   ],
   providers: [AnnouncementsService],
   controllers: [AnnouncementsController],

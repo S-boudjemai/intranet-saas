@@ -1,5 +1,12 @@
 // src/admin/dto/create-tenant.dto.ts
-import { IsString, IsOptional, IsEnum, IsHexColor, MinLength, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsHexColor,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { RestaurantType } from '../../common/enums/restaurant-type.enum';
 
@@ -10,30 +17,42 @@ export class AdminCreateTenantDto {
   @MaxLength(100)
   name: string;
 
-  @ApiProperty({ example: '#4F46E5', description: 'Couleur primaire en hexadécimal' })
+  @ApiProperty({
+    example: '#4F46E5',
+    description: 'Couleur primaire en hexadécimal',
+  })
   @IsOptional()
   @IsHexColor()
   primaryColor?: string = '#4F46E5';
 
-  @ApiProperty({ example: '#10B981', description: 'Couleur secondaire en hexadécimal' })
+  @ApiProperty({
+    example: '#10B981',
+    description: 'Couleur secondaire en hexadécimal',
+  })
   @IsOptional()
   @IsHexColor()
   secondaryColor?: string = '#10B981';
 
-  @ApiProperty({ example: '#FFFFFF', description: 'Couleur de fond en hexadécimal' })
+  @ApiProperty({
+    example: '#FFFFFF',
+    description: 'Couleur de fond en hexadécimal',
+  })
   @IsOptional()
   @IsHexColor()
   backgroundColor?: string = '#FFFFFF';
 
-  @ApiProperty({ example: '#1F2937', description: 'Couleur du texte en hexadécimal' })
+  @ApiProperty({
+    example: '#1F2937',
+    description: 'Couleur du texte en hexadécimal',
+  })
   @IsOptional()
   @IsHexColor()
   textColor?: string = '#1F2937';
 
-  @ApiProperty({ 
-    enum: RestaurantType, 
+  @ApiProperty({
+    enum: RestaurantType,
     example: RestaurantType.PIZZERIA,
-    description: 'Type de restaurant'
+    description: 'Type de restaurant',
   })
   @IsOptional()
   @IsEnum(RestaurantType)

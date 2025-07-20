@@ -80,7 +80,7 @@ export interface InviteType {
 // --- AUDIT TYPES ---
 
 export type AuditItemType = 'yes_no' | 'score' | 'text' | 'photo';
-export type AuditExecutionStatus = 'draft' | 'in_progress' | 'completed' | 'reviewed';
+export type AuditExecutionStatus = 'todo' | 'scheduled' | 'in_progress' | 'completed' | 'reviewed';
 
 export interface AuditItem {
   id: number;
@@ -139,59 +139,28 @@ export interface AuditResponse {
   item: AuditItem;
 }
 
-// --- NON-CONFORMITY & CORRECTIVE ACTIONS TYPES ---
+// --- CORRECTIVE ACTIONS TYPES ---
 
-export type NonConformitySeverity = 'low' | 'medium' | 'high' | 'critical';
-export type NonConformityStatus = 'open' | 'in_progress' | 'resolved' | 'verified';
 export type CorrectiveActionStatus = 'assigned' | 'in_progress' | 'completed' | 'verified';
-
-export interface NonConformity {
-  id: number;
-  execution_id: number;
-  audit_item_id: number;
-  description: string;
-  severity: NonConformitySeverity;
-  status: NonConformityStatus;
-  evidence?: string;
-  identified_date: string;
-  resolved_date?: string;
-  created_at: string;
-  updated_at: string;
-  audit_execution: AuditExecution;
-  audit_item: AuditItem;
-  corrective_actions?: CorrectiveAction[];
-  corrective_action?: string;
-  due_date?: string;
-  responsible_user_id?: number;
-  title: string;
-  audit_name: string;
-  restaurant_name: string;
-  created_date: string;
-}
 
 export interface CorrectiveAction {
   id: number;
-  non_conformity_id: number;
-  description: string;
+  non_conformity_id?: number; // Nullable now since NC are removed
+  description?: string;
   action_description: string;
   assigned_to_id: number;
   due_date: string;
   status: CorrectiveActionStatus;
   completion_date?: string;
   verification_notes?: string;
-  created_by: number;
+  created_by?: number;
   created_at: string;
   updated_at: string;
-  non_conformity?: NonConformity;
-  assigned_to?: {
-    id: number;
-    email: string;
-  };
   assigned_user?: {
     id: number;
     email: string;
   };
-  creator?: {
+  verifier?: {
     id: number;
     email: string;
   };

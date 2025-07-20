@@ -23,7 +23,7 @@ export class TransformInterceptor<T>
     next: CallHandler,
   ): Observable<ApiResponse<T>> {
     const request = context.switchToHttp().getRequest();
-    
+
     return next.handle().pipe(
       map((data) => ({
         success: true,

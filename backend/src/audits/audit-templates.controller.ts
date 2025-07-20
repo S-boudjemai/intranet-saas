@@ -18,7 +18,10 @@ export class AuditTemplatesController {
   constructor(private readonly auditTemplatesService: AuditTemplatesService) {}
 
   @Post()
-  async create(@Body() createDto: CreateAuditTemplateDto, @Request() req: { user: JwtUser }) {
+  async create(
+    @Body() createDto: CreateAuditTemplateDto,
+    @Request() req: { user: JwtUser },
+  ) {
     return this.auditTemplatesService.create(createDto, req.user);
   }
 
@@ -28,7 +31,10 @@ export class AuditTemplatesController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number, @Request() req: { user: JwtUser }) {
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: { user: JwtUser },
+  ) {
     return this.auditTemplatesService.findOne(id, req.user);
   }
 
@@ -36,13 +42,16 @@ export class AuditTemplatesController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: Partial<CreateAuditTemplateDto>,
-    @Request() req: { user: JwtUser }
+    @Request() req: { user: JwtUser },
   ) {
     return this.auditTemplatesService.update(id, updateDto, req.user);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number, @Request() req: { user: JwtUser }) {
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: { user: JwtUser },
+  ) {
     return this.auditTemplatesService.remove(id, req.user);
   }
 }

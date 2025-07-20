@@ -30,24 +30,25 @@ export class AdminGlobalController {
         totalCategories,
         totalDocuments,
         activeUsers,
-        tenantsList
+        tenantsList,
       ] = await Promise.all([
         this.tenantsService.countTotal(),
         this.usersService.countTotal(),
         this.categoriesService.countTotal(),
         this.documentsService.countTotal(),
         this.usersService.countActive(),
-        this.tenantsService.findAll({ page: 1, limit: 100 }) // Top 100 tenants pour stats
+        this.tenantsService.findAll({ page: 1, limit: 100 }), // Top 100 tenants pour stats
       ]);
 
       // Calculs dérivés
-      const activityRate = totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0;
-      
+      const activityRate =
+        totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0;
+
       // Répartition utilisateurs par tenant (top 5)
-      const topTenants = tenantsList.data.slice(0, 5).map(tenant => ({
+      const topTenants = tenantsList.data.slice(0, 5).map((tenant) => ({
         name: tenant.name,
         userCount: (tenant as any).userCount || 0,
-        documentCount: (tenant as any).documentCount || 0
+        documentCount: (tenant as any).documentCount || 0,
       }));
 
       return {
@@ -58,13 +59,13 @@ export class AdminGlobalController {
         totalDocuments,
         activeUsers,
         activityRate,
-        
+
         // Insights business
         topTenants,
-        
+
         // Métriques temporelles (simple pour v0.1)
         timestamp: new Date().toISOString(),
-        period: 'all-time'
+        period: 'all-time',
       };
     } catch (error) {
       throw error;
@@ -79,11 +80,11 @@ export class AdminGlobalController {
   async getOverview() {
     try {
       const stats = await this.getGlobalStats();
-      
+
       // Ajout d'informations complémentaires
-      const recentTenants = await this.tenantsService.findAll({ 
-        page: 1, 
-        limit: 5
+      const recentTenants = await this.tenantsService.findAll({
+        page: 1,
+        limit: 5,
       });
 
       return {
@@ -93,8 +94,8 @@ export class AdminGlobalController {
           status: 'healthy',
           uptime: process.uptime(),
           memory: process.memoryUsage(),
-          nodeVersion: process.version
-        }
+          nodeVersion: process.version,
+        },
       };
     } catch (error) {
       throw error;

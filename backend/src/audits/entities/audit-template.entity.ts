@@ -46,9 +46,11 @@ export class AuditTemplate {
   @JoinColumn({ name: 'created_by' })
   creator: User;
 
-  @OneToMany(() => AuditItem, auditItem => auditItem.template, { cascade: true })
+  @OneToMany(() => AuditItem, (auditItem) => auditItem.template, {
+    cascade: true,
+  })
   items: AuditItem[];
 
-  @OneToMany(() => AuditExecution, execution => execution.template)
+  @OneToMany(() => AuditExecution, (execution) => execution.template)
   executions: AuditExecution[];
 }

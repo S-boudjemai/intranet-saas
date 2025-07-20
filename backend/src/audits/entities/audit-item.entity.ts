@@ -44,10 +44,12 @@ export class AuditItem {
   critical: boolean; // Question critique pour la conformité
 
   // Relations
-  @ManyToOne(() => AuditTemplate, template => template.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => AuditTemplate, (template) => template.items, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'template_id' })
   template: AuditTemplate;
 
-  @OneToMany(() => AuditResponse, response => response.item)
+  @OneToMany(() => AuditResponse, (response) => response.item)
   responses: AuditResponse[];
 }

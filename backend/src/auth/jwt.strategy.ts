@@ -33,12 +33,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Si userId manque, le récupérer via email
     let userId = payload.userId || payload.id;
     if (!userId && payload.email) {
-      const dbUser = await this.userRepository.findOne({ where: { email: payload.email } });
+      const dbUser = await this.userRepository.findOne({
+        where: { email: payload.email },
+      });
       if (dbUser) {
         userId = dbUser.id;
       }
     }
-    
+
     const user = {
       userId: userId,
       email: payload.email,
@@ -46,7 +48,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       role: payload.role,
       restaurant_id: payload.restaurant_id,
     };
-    
+
     return user;
   }
 }

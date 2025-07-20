@@ -13,7 +13,7 @@ export class DashboardController {
   @Get()
   @Roles(Role.Manager, Role.Admin)
   async getDashboard(@Req() req: any) {
-    const user = req.user as any;
+    const user = req.user;
     const tenantId: string = user.tenant_id;
 
     return this.dashboardService.getDashboard(tenantId);

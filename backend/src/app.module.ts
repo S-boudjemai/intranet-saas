@@ -28,7 +28,7 @@ import { SetupModule } from './setup/setup.module';
 @Module({
   imports: [
     // Charge .env et rend ConfigService disponible partout
-    ConfigModule.forRoot({ 
+    ConfigModule.forRoot({
       isGlobal: true,
       validationSchema,
       validationOptions: {
@@ -36,12 +36,14 @@ import { SetupModule } from './setup/setup.module';
         abortEarly: false,
       },
     }),
-    
+
     // Rate limiting - 100 requêtes par minute par IP
-    ThrottlerModule.forRoot([{
-      ttl: 60000, // 1 minute
-      limit: 100, // 100 requêtes max
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute
+        limit: 100, // 100 requêtes max
+      },
+    ]),
     // --- CONFIGURATION DU MAILER PLACÉE ICI ---
     // Il est important de configurer les modules fournisseurs avant les modules qui les consomment.
     MailerModule.forRootAsync({
@@ -69,14 +71,17 @@ import { SetupModule } from './setup/setup.module';
       useFactory: (cfg: ConfigService) => {
         // Support pour DATABASE_URL (Render, Heroku) ou variables séparées (local)
         const databaseUrl = cfg.get<string>('DATABASE_URL');
-        
+
         if (databaseUrl) {
           return {
             type: 'postgres',
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
             synchronize: cfg.get<string>('NODE_ENV') !== 'production',
-            ssl: cfg.get<string>('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
+            ssl:
+              cfg.get<string>('NODE_ENV') === 'production'
+                ? { rejectUnauthorized: false }
+                : false,
             connectTimeoutMS: 30000,
             acquireTimeoutMS: 30000,
             retryAttempts: 5,
@@ -85,7 +90,7 @@ import { SetupModule } from './setup/setup.module';
             logging: false,
           };
         }
-        
+
         // Fallback vers variables séparées pour développement local
         return {
           type: 'postgres',

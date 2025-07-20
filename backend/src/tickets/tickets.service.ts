@@ -17,7 +17,11 @@ import { User } from '../users/entities/user.entity';
 import { Restaurant } from '../restaurant/entites/restaurant.entity';
 import { UploadAttachmentDto } from './dto/upload-attachment.dto';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
@@ -49,7 +53,9 @@ export class TicketsService {
         region: this.configService.get('AWS_REGION'),
         credentials: {
           accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID') as string,
-          secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY') as string,
+          secretAccessKey: this.configService.get(
+            'AWS_SECRET_ACCESS_KEY',
+          ) as string,
         },
       });
     }
@@ -67,71 +73,85 @@ export class TicketsService {
     }
 
     if (!user.userId) {
-      throw new ForbiddenException('Token JWT invalide: userId manquant. Veuillez vous reconnecter.');
+      throw new ForbiddenException(
+        'Token JWT invalide: userId manquant. Veuillez vous reconnecter.',
+      );
     }
-    
+
     // Vérification que le restaurant existe et récupération des infos complètes
     const restaurant = await this.restaurantsRepo.findOne({
-      where: { id: user.restaurant_id }
+      where: { id: user.restaurant_id },
     });
     if (!restaurant) {
-      throw new ForbiddenException(`Restaurant avec l'ID ${user.restaurant_id} introuvable.`);
+      throw new ForbiddenException(
+        `Restaurant avec l'ID ${user.restaurant_id} introuvable.`,
+      );
     }
-    
+
     // Vérification que l'utilisateur existe
     const userExists = await this.usersRepo.findOne({
-      where: { id: user.userId }
+      where: { id: user.userId },
     });
     if (!userExists) {
-      throw new ForbiddenException(`Utilisateur avec l'ID ${user.userId} introuvable.`);
+      throw new ForbiddenException(
+        `Utilisateur avec l'ID ${user.userId} introuvable.`,
+      );
     }
-    
+
     // Vérification de compatibilité tenant_id (sauf pour les admins qui ont tenant_id null)
     if (user.tenant_id !== null && restaurant.tenant_id !== user.tenant_id) {
-      throw new ForbiddenException(`Le restaurant n'appartient pas au même tenant. Restaurant tenant: ${restaurant.tenant_id}, User tenant: ${user.tenant_id}`);
+      throw new ForbiddenException(
+        `Le restaurant n'appartient pas au même tenant. Restaurant tenant: ${restaurant.tenant_id}, User tenant: ${user.tenant_id}`,
+      );
     }
-    
+
     const ticket = this.ticketsRepo.create({
       ...data,
-      tenant_id: user.tenant_id ? user.tenant_id.toString() : restaurant.tenant_id.toString(),
+      tenant_id: user.tenant_id
+        ? user.tenant_id.toString()
+        : restaurant.tenant_id.toString(),
       created_by: user.userId,
       restaurant_id: data.restaurant_id || user.restaurant_id, // Utiliser restaurant_id du DTO ou de l'user
       status: TicketStatus.NonTraitee,
     });
 
     const savedTicket = await this.ticketsRepo.save(ticket);
-      
+
     // Notifier tous les managers du tenant
     const tenantId = user.tenant_id!;
     const message = `Nouveau ticket: ${savedTicket.title}`;
-    
+
     await this.notificationsService.createNotificationsForManagers(
       tenantId,
       NotificationType.TICKET_CREATED,
       parseInt(savedTicket.id),
-      message
+      message,
     );
 
     // Récupérer les IDs des managers pour WebSocket
     const managers = await this.usersRepo.find({
       where: { tenant_id: tenantId, role: Role.Manager },
-      select: ['id']
+      select: ['id'],
     });
-    const managerIds = managers.map(m => m.id);
+    const managerIds = managers.map((m) => m.id);
 
     // Envoyer notification temps réel
+    console.log(
+      '🎫 Émission événement WebSocket ticket_created pour managers:',
+      managerIds,
+    );
     this.notificationsGateway.notifyTicketCreated(managerIds, {
       id: savedTicket.id,
       title: savedTicket.title,
-      message
+      message,
     });
-    
+    console.log('✅ Événement WebSocket ticket_created émis');
+
     return savedTicket;
   }
 
   // ----- CORRECTION 2 : Liste des tickets -----
   async findAll(user: JwtUser): Promise<Ticket[]> {
-
     const qb = this.ticketsRepo
       .createQueryBuilder('ticket')
       .leftJoinAndSelect('ticket.comments', 'comment')
@@ -163,16 +183,20 @@ export class TicketsService {
     for (const ticket of tickets) {
       if (ticket.attachments && ticket.attachments.length > 0) {
         for (const attachment of ticket.attachments) {
-          attachment.url = await this.getPresignedUrlForAttachment(attachment.url);
+          attachment.url = await this.getPresignedUrlForAttachment(
+            attachment.url,
+          );
         }
       }
-      
+
       // Faire de même pour les commentaires avec attachments
       if (ticket.comments) {
         for (const comment of ticket.comments) {
           if (comment.attachments && comment.attachments.length > 0) {
             for (const attachment of comment.attachments) {
-              attachment.url = await this.getPresignedUrlForAttachment(attachment.url);
+              attachment.url = await this.getPresignedUrlForAttachment(
+                attachment.url,
+              );
             }
           }
         }
@@ -187,7 +211,12 @@ export class TicketsService {
   async findOneWithComments(id: string, user: JwtUser): Promise<Ticket> {
     const ticket = await this.ticketsRepo.findOne({
       where: { id, is_deleted: false },
-      relations: ['comments', 'comments.attachments', 'attachments', 'restaurant'],
+      relations: [
+        'comments',
+        'comments.attachments',
+        'attachments',
+        'restaurant',
+      ],
     });
     if (!ticket) throw new NotFoundException('Ticket introuvable');
     if (
@@ -206,15 +235,19 @@ export class TicketsService {
     // Générer des URLs présignées pour les attachments
     if (ticket.attachments && ticket.attachments.length > 0) {
       for (const attachment of ticket.attachments) {
-        attachment.url = await this.getPresignedUrlForAttachment(attachment.url);
+        attachment.url = await this.getPresignedUrlForAttachment(
+          attachment.url,
+        );
       }
     }
-    
+
     if (ticket.comments) {
       for (const comment of ticket.comments) {
         if (comment.attachments && comment.attachments.length > 0) {
           for (const attachment of comment.attachments) {
-            attachment.url = await this.getPresignedUrlForAttachment(attachment.url);
+            attachment.url = await this.getPresignedUrlForAttachment(
+              attachment.url,
+            );
           }
         }
       }
@@ -234,13 +267,13 @@ export class TicketsService {
 
     // Notifier le créateur du ticket du changement de statut
     const message = `Statut mis à jour: ${updatedTicket.title} - ${status}`;
-    
+
     await this.notificationsService.createNotification(
       updatedTicket.created_by,
       parseInt(updatedTicket.tenant_id),
       NotificationType.TICKET_STATUS_UPDATED,
       parseInt(updatedTicket.id),
-      message
+      message,
     );
 
     // Envoyer notification temps réel
@@ -248,7 +281,7 @@ export class TicketsService {
       id: updatedTicket.id,
       title: updatedTicket.title,
       status: status,
-      message
+      message,
     });
 
     return updatedTicket;
@@ -261,25 +294,27 @@ export class TicketsService {
   ): Promise<Comment> {
     // Vérifier que le ticket existe
     const ticket = await this.ticketsRepo.findOne({
-      where: { id: ticket_id }
+      where: { id: ticket_id },
     });
     if (!ticket) {
-      throw new ForbiddenException(`Ticket avec l'ID ${ticket_id} introuvable.`);
+      throw new ForbiddenException(
+        `Ticket avec l'ID ${ticket_id} introuvable.`,
+      );
     }
-    
+
     const comment = this.commentsRepo.create({ ticket_id, author_id, message });
     const savedComment = await this.commentsRepo.save(comment);
-    
+
     // Notifier le créateur du ticket du nouveau commentaire si différent de l'auteur
     if (ticket.created_by !== author_id) {
       const notificationMessage = `Nouveau commentaire sur: ${ticket.title}`;
-      
+
       await this.notificationsService.createNotification(
         ticket.created_by,
         parseInt(ticket.tenant_id),
         NotificationType.TICKET_COMMENTED,
         parseInt(ticket.id),
-        notificationMessage
+        notificationMessage,
       );
 
       // Envoyer notification temps réel
@@ -287,10 +322,10 @@ export class TicketsService {
         id: ticket.id,
         title: ticket.title,
         message: notificationMessage,
-        type: 'comment'
+        type: 'comment',
       });
     }
-    
+
     return savedComment;
   }
 
@@ -305,7 +340,10 @@ export class TicketsService {
     }
 
     // Vérifier que l'utilisateur a le droit de supprimer (manager/admin du même tenant)
-    if (user.role === Role.Manager && ticket.tenant_id !== user.tenant_id?.toString()) {
+    if (
+      user.role === Role.Manager &&
+      ticket.tenant_id !== user.tenant_id?.toString()
+    ) {
       throw new ForbiddenException('Accès refusé');
     }
 
@@ -328,7 +366,7 @@ export class TicketsService {
   ): Promise<TicketAttachment> {
     // Vérifier qu'au moins un ID est fourni
     if (!uploadDto.ticketId && !uploadDto.commentId) {
-      throw new Error('L\'ID du ticket ou du commentaire est requis');
+      throw new Error("L'ID du ticket ou du commentaire est requis");
     }
 
     // Vérifier les permissions d'accès au ticket
@@ -336,7 +374,7 @@ export class TicketsService {
     if (uploadDto.ticketId) {
       ticket = await this.ticketsRepo.findOne({
         where: { id: uploadDto.ticketId },
-        relations: ['restaurant']
+        relations: ['restaurant'],
       });
       if (!ticket) {
         throw new NotFoundException('Ticket non trouvé');
@@ -346,7 +384,7 @@ export class TicketsService {
     } else if (uploadDto.commentId) {
       const comment = await this.commentsRepo.findOne({
         where: { id: uploadDto.commentId },
-        relations: ['ticket', 'ticket.restaurant']
+        relations: ['ticket', 'ticket.restaurant'],
       });
       if (!comment) {
         throw new NotFoundException('Commentaire non trouvé');
@@ -376,8 +414,13 @@ export class TicketsService {
       fileUrl = `https://${awsBucket}.s3.${this.configService.get('AWS_REGION')}.amazonaws.com/${fileName}`;
     } else {
       // Fallback: stockage local pour le développement
-      const uploadsDir = path.join(process.cwd(), 'uploads', 'tickets', ticket!.id);
-      
+      const uploadsDir = path.join(
+        process.cwd(),
+        'uploads',
+        'tickets',
+        ticket!.id,
+      );
+
       // Créer le dossier si nécessaire
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
@@ -385,10 +428,10 @@ export class TicketsService {
 
       const localFileName = `${timestamp}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
       const filePath = path.join(uploadsDir, localFileName);
-      
+
       // Écrire le fichier
       fs.writeFileSync(filePath, file.buffer);
-      
+
       // URL locale pour le développement
       fileUrl = `http://localhost:3000/uploads/tickets/${ticket!.id}/${localFileName}`;
     }
@@ -414,7 +457,10 @@ export class TicketsService {
   /**
    * Méthode utilitaire pour vérifier l'accès à un ticket
    */
-  private async checkTicketAccess(ticket: Ticket, user: JwtUser): Promise<void> {
+  private async checkTicketAccess(
+    ticket: Ticket,
+    user: JwtUser,
+  ): Promise<void> {
     // Admin a accès à tout
     if (user.role === Role.Admin) return;
 
@@ -437,9 +483,11 @@ export class TicketsService {
   /**
    * Génère une URL présignée pour un attachment
    */
-  private async getPresignedUrlForAttachment(currentUrl: string): Promise<string> {
+  private async getPresignedUrlForAttachment(
+    currentUrl: string,
+  ): Promise<string> {
     const awsBucket = this.configService.get('AWS_S3_BUCKET');
-    
+
     // Si pas de S3 configuré ou URL locale, retourner l'URL telle quelle
     if (!awsBucket || !this.s3 || currentUrl.startsWith('http://localhost')) {
       return currentUrl;
@@ -449,13 +497,15 @@ export class TicketsService {
       // Extraire le nom du fichier depuis l'URL S3
       const urlParts = currentUrl.split('/');
       const fileName = urlParts.slice(-3).join('/'); // tickets/id/filename.ext
-      
+
       const command = new GetObjectCommand({
         Bucket: awsBucket,
         Key: fileName,
       });
 
-      const presignedUrl = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+      const presignedUrl = await getSignedUrl(this.s3, command, {
+        expiresIn: 3600,
+      });
       return presignedUrl;
     } catch (error) {
       return currentUrl; // Fallback sur l'URL originale

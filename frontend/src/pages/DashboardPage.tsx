@@ -2,7 +2,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 import {
   CartesianGrid,
   Line,
@@ -11,22 +10,44 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
-import KpiCard from "../components/KipCard"; // Le fichier s'appelle KipCard mais exporte KpiCard
-import { ChartPieIcon, DocumentReportIcon, ExclamationCircleIcon, SpinnerIcon, ClockIcon, TicketIcon, ArchiveIcon } from "../components/icons";
+import KpiCard from "../components/KipCard";
+import QuickActions from "../components/QuickActions";
+import { 
+  ChartPieIcon, 
+  DocumentReportIcon, 
+  ExclamationCircleIcon, 
+  SpinnerIcon, 
+  TicketIcon, 
+  RestaurantIcon,
+  CalendarIcon,
+  CogIcon,
+  TrendingUpIcon
+} from "../components/icons";
 
 interface DashboardData {
+  // KPIs existants
   totalDocuments: number;
   docsThisWeek: number;
   ticketsByStatus: Record<string, number>;
   ticketsPerDay: { date: string; count: number }[];
+  // Nouveaux KPIs
+  totalRestaurants: number;
+  auditsThisWeek: number;
+  activeCorrectiveActions: number;
+  auditsByStatus: Record<string, number>;
+  actionsByStatus: Record<string, number>;
 }
 
 const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const { token, user } = useAuth();
-  const navigate = useNavigate();
+  const { token } = useAuth();
 
   useEffect(() => {
     if (!token) return;
@@ -43,7 +64,7 @@ const DashboardPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, [token]);
 
-  // Couleurs Waitify pour le graphique
+  // Couleurs modernes pour les graphiques
   const chartColors = useMemo(() => {
     return {
       grid: "#e5e7eb",
@@ -52,8 +73,49 @@ const DashboardPage: React.FC = () => {
       tooltipBg: "#ffffff",
       tooltipBorder: "#e5e7eb",
       tooltipText: "#1f2937",
+      primary: "#2563eb",
+      secondary: "#10b981",
+      warning: "#f59e0b",
+      danger: "#ef4444",
     };
   }, []);
+
+  // Préparer les données pour les graphiques
+  const auditStatusData = useMemo(() => {
+    if (!data?.auditsByStatus) return [];
+    
+    const statusLabels = {
+      'todo': 'À faire',
+      'scheduled': 'Planifié',
+      'in_progress': 'En cours', 
+      'completed': 'Terminé',
+      'reviewed': 'Vérifié',
+    };
+
+    return Object.entries(data.auditsByStatus).map(([status, count]) => ({
+      name: statusLabels[status as keyof typeof statusLabels] || status,
+      value: count,
+      color: status === 'completed' ? chartColors.secondary : 
+             status === 'in_progress' ? chartColors.warning :
+             status === 'reviewed' ? chartColors.primary : '#94a3b8'
+    }));
+  }, [data?.auditsByStatus, chartColors]);
+
+  const actionsStatusData = useMemo(() => {
+    if (!data?.actionsByStatus) return [];
+    
+    const statusLabels = {
+      'assigned': 'Assignée',
+      'in_progress': 'En cours',
+      'completed': 'Terminée', 
+      'verified': 'Vérifiée',
+    };
+
+    return Object.entries(data.actionsByStatus).map(([status, count]) => ({
+      name: statusLabels[status as keyof typeof statusLabels] || status,
+      value: count,
+    }));
+  }, [data?.actionsByStatus]);
 
   if (loading) {
     return (
@@ -92,6 +154,7 @@ const DashboardPage: React.FC = () => {
       transition={{ duration: 0.5 }}
       className="p-6 space-y-8"
     >
+      {/* Header avec titre */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -108,58 +171,157 @@ const DashboardPage: React.FC = () => {
           >
             <ChartPieIcon className="h-7 w-7 text-primary" />
           </motion.div>
-          <span>Tableau de bord</span>
+          <span>Dashboard</span>
         </h1>
-        
       </motion.div>
 
+      {/* Actions rapides */}
+      <QuickActions />
+
+      {/* KPIs Grid - Améliorés */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6"
       >
+        <KpiCard
+          title="Restaurants"
+          value={data.totalRestaurants}
+          icon={<RestaurantIcon />}
+          index={0}
+        />
+        <KpiCard
+          title="Audits cette semaine"
+          value={data.auditsThisWeek}
+          icon={<CalendarIcon />}
+          index={1}
+        />
+        <KpiCard
+          title="Actions en cours"
+          value={data.activeCorrectiveActions}
+          icon={<CogIcon />}
+          index={2}
+        />
         <KpiCard
           title="Total documents"
           value={data.totalDocuments}
           icon={<DocumentReportIcon />}
-          index={0}
+          index={3}
         />
         <KpiCard
           title="Docs cette semaine"
           value={data.docsThisWeek}
-          icon={<ClockIcon />}
-          index={1}
+          icon={<TrendingUpIcon />}
+          index={4}
         />
-        {data.ticketsByStatus && Object.entries(data.ticketsByStatus).map(([status, count], index) => {
-          const statusLabels = {
-            'non_traitee': 'non traités',
-            'en_cours': 'en cours',
-            'traitee': 'traités',
-            'supprime': 'supprimés'
-          };
-          return (
-            <KpiCard
-              key={status}
-              title={`Tickets ${statusLabels[status as keyof typeof statusLabels] || status}`}
-              value={count}
-              icon={<TicketIcon />}
-              index={index + 2}
-            />
-          );
-        })}
+        <KpiCard
+          title="Tickets non traités"
+          value={data.ticketsByStatus?.non_traitee || 0}
+          icon={<TicketIcon />}
+          index={5}
+        />
       </motion.div>
 
+      {/* Graphiques - Section 1 : Audits et Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Graphique Audits par statut */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="bg-card rounded-2xl p-8 border border-border shadow-sm hover:shadow-md transition-all duration-300"
+        >
+          <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            Statut des audits
+          </h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={auditStatusData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {auditStatusData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: chartColors.tooltipBg,
+                  border: `1px solid ${chartColors.tooltipBorder}`,
+                  borderRadius: "8px",
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </motion.div>
+
+        {/* Graphique Actions correctives */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="bg-card rounded-2xl p-8 border border-border shadow-sm hover:shadow-md transition-all duration-300"
+        >
+          <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            Actions correctives
+          </h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={actionsStatusData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+              <XAxis 
+                dataKey="name"
+                stroke={chartColors.text}
+                tickLine={false}
+                axisLine={{ stroke: chartColors.grid }}
+                fontSize={12}
+              />
+              <YAxis
+                allowDecimals={false}
+                stroke={chartColors.text}
+                tickLine={false}
+                axisLine={{ stroke: chartColors.grid }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: chartColors.tooltipBg,
+                  border: `1px solid ${chartColors.tooltipBorder}`,
+                  borderRadius: "8px",
+                }}
+              />
+              <Bar 
+                dataKey="value" 
+                fill={chartColors.secondary}
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </motion.div>
+      </div>
+
+      {/* Graphique Tickets - Version améliorée */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
         className="bg-card rounded-2xl p-8 border border-border shadow-sm hover:shadow-md transition-all duration-300"
       >
-        <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
-          <div className="w-2 h-2 bg-primary rounded-full"></div>
-          Tickets créés (7 derniers jours)
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-3">
+            <div className="w-2 h-2 bg-primary rounded-full"></div>
+            Évolution des tickets (7 derniers jours)
+          </h2>
+          <div className="text-sm text-muted-foreground">
+            Total: {data.ticketsPerDay?.reduce((sum, day) => sum + day.count, 0) || 0} tickets
+          </div>
+        </div>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart
             data={data.ticketsPerDay}
@@ -188,20 +350,27 @@ const DashboardPage: React.FC = () => {
               contentStyle={{
                 backgroundColor: chartColors.tooltipBg,
                 border: `1px solid ${chartColors.tooltipBorder}`,
-                borderRadius: "var(--radius)",
+                borderRadius: "8px",
               }}
-              labelStyle={{ color: chartColors.tooltipText }}
+              labelFormatter={(value) => 
+                new Date(value).toLocaleDateString("fr-FR", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long"
+                })
+              }
             />
             <Line
               type="monotone"
               dataKey="count"
-              stroke={chartColors.line}
-              strokeWidth={2}
-              dot={{ r: 4, fill: chartColors.line }}
+              stroke={chartColors.primary}
+              strokeWidth={3}
+              dot={{ r: 5, fill: chartColors.primary, strokeWidth: 2, stroke: '#fff' }}
               activeDot={{
                 r: 8,
-                stroke: chartColors.tooltipBg,
+                stroke: chartColors.primary,
                 strokeWidth: 2,
+                fill: '#fff'
               }}
             />
           </LineChart>

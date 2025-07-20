@@ -19,7 +19,13 @@ import { RolesGuard } from 'src/auth/roles/roles.guard';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { Role } from 'src/auth/roles/roles.enum';
 import { Request } from 'express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 
 @ApiTags('Documents')
 @ApiBearerAuth('JWT-auth')
@@ -41,12 +47,12 @@ export class DocumentsController {
     if (!user || !user.userId || isNaN(user.userId)) {
       throw new Error('Token JWT invalide: userId manquant ou invalide');
     }
-    
+
     // Validation du tenant_id si l'utilisateur n'est pas admin global
     if (user.tenant_id !== null && isNaN(user.tenant_id)) {
       throw new Error('Token JWT invalide: tenant_id corrompu');
     }
-    
+
     return this.svc.create(body, user);
   }
 
@@ -77,18 +83,25 @@ export class DocumentsController {
   @ApiOperation({ summary: 'Obtenir une URL présignée pour upload S3' })
   @ApiQuery({ name: 'filename', description: 'Nom du fichier à uploader' })
   @ApiQuery({ name: 'mimetype', description: 'Type MIME du fichier' })
-  @ApiResponse({ status: 200, description: 'URL présignée générée', schema: {
-    type: 'object',
-    properties: {
-      success: { type: 'boolean' },
-      data: {
-        type: 'object',
-        properties: {
-          url: { type: 'string', example: 'https://bucket.s3.amazonaws.com/...' }
-        }
-      }
-    }
-  }})
+  @ApiResponse({
+    status: 200,
+    description: 'URL présignée générée',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        data: {
+          type: 'object',
+          properties: {
+            url: {
+              type: 'string',
+              example: 'https://bucket.s3.amazonaws.com/...',
+            },
+          },
+        },
+      },
+    },
+  })
   async getUploadUrl(
     @Query('filename') filename: string,
     @Query('mimetype') mimetype: string,

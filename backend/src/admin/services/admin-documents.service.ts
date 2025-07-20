@@ -1,9 +1,9 @@
 // src/admin/services/admin-documents.service.ts
-import { 
-  Injectable, 
-  NotFoundException, 
+import {
+  Injectable,
+  NotFoundException,
   ConflictException,
-  BadRequestException 
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -39,25 +39,27 @@ export class AdminDocumentsService {
       .createQueryBuilder('document')
       .leftJoinAndSelect('document.tags', 'tag')
       .leftJoinAndSelect('document.category', 'documentCategory')
-      .where('document.tenant_id = :tenantId', { tenantId: tenantId.toString() })
+      .where('document.tenant_id = :tenantId', {
+        tenantId: tenantId.toString(),
+      })
       .andWhere('document.is_deleted = :isDeleted', { isDeleted: false });
 
     if (search) {
       queryBuilder.andWhere(
         '(document.filename ILIKE :search OR document.original_name ILIKE :search)',
-        { search: `%${search}%` }
+        { search: `%${search}%` },
       );
     }
 
     if (category) {
-      queryBuilder.andWhere('document.category_id = :categoryId', { 
-        categoryId: category 
+      queryBuilder.andWhere('document.category_id = :categoryId', {
+        categoryId: category,
       });
     }
 
     if (fileType) {
-      queryBuilder.andWhere('document.file_type ILIKE :fileType', { 
-        fileType: `%${fileType}%` 
+      queryBuilder.andWhere('document.file_type ILIKE :fileType', {
+        fileType: `%${fileType}%`,
       });
     }
 
@@ -78,10 +80,13 @@ export class AdminDocumentsService {
     };
   }
 
-  async findByIdAndTenant(documentId: string, tenantId: number): Promise<Document> {
+  async findByIdAndTenant(
+    documentId: string,
+    tenantId: number,
+  ): Promise<Document> {
     const document = await this.documentsRepository.findOne({
-      where: { 
-        id: documentId, 
+      where: {
+        id: documentId,
         tenant_id: tenantId.toString(),
         is_deleted: false,
       },
@@ -90,14 +95,18 @@ export class AdminDocumentsService {
 
     if (!document) {
       throw new NotFoundException(
-        `Document ${documentId} introuvable pour le tenant ${tenantId}`
+        `Document ${documentId} introuvable pour le tenant ${tenantId}`,
       );
     }
 
     return document;
   }
 
-  async update(documentId: string, tenantId: number, updateDocumentDto: UpdateDocumentDto): Promise<Document> {
+  async update(
+    documentId: string,
+    tenantId: number,
+    updateDocumentDto: UpdateDocumentDto,
+  ): Promise<Document> {
     const document = await this.findByIdAndTenant(documentId, tenantId);
 
     // Vérifier la catégorie si modifiée
@@ -108,7 +117,7 @@ export class AdminDocumentsService {
 
       if (!category) {
         throw new BadRequestException(
-          `Catégorie ${updateDocumentDto.category_id} introuvable pour ce tenant`
+          `Catégorie ${updateDocumentDto.category_id} introuvable pour ce tenant`,
         );
       }
     }
@@ -119,38 +128,50 @@ export class AdminDocumentsService {
 
   async delete(documentId: string, tenantId: number): Promise<void> {
     const document = await this.findByIdAndTenant(documentId, tenantId);
-    
+
     // Soft delete
     document.is_deleted = true;
     await this.documentsRepository.save(document);
   }
 
-  async addTag(documentId: string, tenantId: number, tagName: string): Promise<Document> {
+  async addTag(
+    documentId: string,
+    tenantId: number,
+    tagName: string,
+  ): Promise<Document> {
     // TODO: Implement when Tag entity is properly configured
     throw new BadRequestException('Tag functionality not yet implemented');
   }
 
-  async removeTag(documentId: string, tenantId: number, tagId: string): Promise<Document> {
+  async removeTag(
+    documentId: string,
+    tenantId: number,
+    tagId: string,
+  ): Promise<Document> {
     // TODO: Implement when Tag entity is properly configured
     throw new BadRequestException('Tag functionality not yet implemented');
   }
 
   async getStats(tenantId: number) {
     const [totalDocuments, totalSize, documentsByType] = await Promise.all([
-      this.documentsRepository.count({ 
-        where: { tenant_id: tenantId.toString(), is_deleted: false } 
+      this.documentsRepository.count({
+        where: { tenant_id: tenantId.toString(), is_deleted: false },
       }),
       this.documentsRepository
         .createQueryBuilder('document')
         .select('SUM(document.file_size)', 'totalSize')
-        .where('document.tenant_id = :tenantId', { tenantId: tenantId.toString() })
+        .where('document.tenant_id = :tenantId', {
+          tenantId: tenantId.toString(),
+        })
         .andWhere('document.is_deleted = :isDeleted', { isDeleted: false })
         .getRawOne(),
       this.documentsRepository
         .createQueryBuilder('document')
         .select('document.file_type', 'fileType')
         .addSelect('COUNT(*)', 'count')
-        .where('document.tenant_id = :tenantId', { tenantId: tenantId.toString() })
+        .where('document.tenant_id = :tenantId', {
+          tenantId: tenantId.toString(),
+        })
         .andWhere('document.is_deleted = :isDeleted', { isDeleted: false })
         .groupBy('document.file_type')
         .getRawMany(),
@@ -170,8 +191,8 @@ export class AdminDocumentsService {
    * Compte total des documents (pour stats globales)
    */
   async countTotal(): Promise<number> {
-    return await this.documentsRepository.count({ 
-      where: { is_deleted: false } 
+    return await this.documentsRepository.count({
+      where: { is_deleted: false },
     });
   }
 }

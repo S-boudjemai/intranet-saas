@@ -48,17 +48,22 @@ export class TicketsController {
     if (!user || !user.userId || isNaN(user.userId)) {
       throw new Error('Token JWT invalide: userId manquant ou invalide');
     }
-    
+
     // Validation tenant_id
     if (user.tenant_id !== null && isNaN(user.tenant_id)) {
       throw new Error('Token JWT invalide: tenant_id corrompu');
     }
-    
+
     // Validation restaurant_id pour les viewers (mais pas pour les admins)
-    if (user.role === Role.Viewer && (!user.restaurant_id || isNaN(user.restaurant_id))) {
-      throw new Error('Token JWT invalide: restaurant_id manquant pour un viewer');
+    if (
+      user.role === Role.Viewer &&
+      (!user.restaurant_id || isNaN(user.restaurant_id))
+    ) {
+      throw new Error(
+        'Token JWT invalide: restaurant_id manquant pour un viewer',
+      );
     }
-    
+
     return this.svc.create(createTicketDto, user);
   }
 
@@ -114,7 +119,11 @@ export class TicketsController {
     @Body() createCommentDto: CreateCommentDto,
     @Req() req: Request & { user: JwtUser },
   ): Promise<Comment> {
-    return this.svc.addComment(ticket_id, req.user.userId, createCommentDto.message);
+    return this.svc.addComment(
+      ticket_id,
+      req.user.userId,
+      createCommentDto.message,
+    );
   }
 
   /**
@@ -146,10 +155,15 @@ export class TicketsController {
         if (file.mimetype.match(/^image\/(jpeg|jpg|png|gif|webp)$/)) {
           cb(null, true);
         } else {
-          cb(new Error('Seules les images sont autorisées (JPEG, PNG, GIF, WebP)'), false);
+          cb(
+            new Error(
+              'Seules les images sont autorisées (JPEG, PNG, GIF, WebP)',
+            ),
+            false,
+          );
         }
       },
-    })
+    }),
   )
   async uploadImage(
     @UploadedFile() file: Express.Multer.File,

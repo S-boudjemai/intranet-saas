@@ -23,16 +23,13 @@ export class InvitesController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(
-    @Req() req, 
-    @Body() inviteDto: CreateInviteWithRestaurantDto
-  ) {
+  create(@Req() req, @Body() inviteDto: CreateInviteWithRestaurantDto) {
     const { tenant_id } = req.user;
     return this.svc.create(
-      tenant_id, 
-      inviteDto.email, 
-      inviteDto.restaurant_name, 
-      inviteDto.restaurant_city
+      tenant_id,
+      inviteDto.email,
+      inviteDto.restaurant_name,
+      inviteDto.restaurant_city,
     );
   }
 

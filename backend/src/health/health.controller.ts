@@ -27,11 +27,11 @@ export class HealthController {
   @Get('ready')
   async readiness(): Promise<{ status: string }> {
     const health = await this.healthService.check();
-    
+
     if (health.status === 'ok' && health.checks.database === 'ok') {
       return { status: 'ready' };
     }
-    
+
     throw new Error('Service not ready');
   }
 
