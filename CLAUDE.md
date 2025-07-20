@@ -20,14 +20,15 @@
 
 ## Description du Projet
 
-**🎉 STATUT : VERSION 0.1 DÉPLOYÉE EN PRODUCTION (20 Juillet 2025)**
+**🎉 STATUT : VERSION 0.1+ REDESIGN COMPLET (20 Juillet 2025)**
 
-### ✅ **DÉPLOIEMENT RÉUSSI - SITE OPÉRATIONNEL**
-- 🌐 **Frontend :** https://intranet-saas.vercel.app
+### ✅ **SITE MODERNISÉ - PRÊT POUR PROSPECTS FRANCHISEURS**
+- 🌐 **Frontend :** https://intranet-saas.vercel.app (redesign terminé)
 - 🔧 **Backend :** https://intranet-saas-backend.onrender.com  
 - 🔐 **Admin :** admin@admin.com / admin123
-- 📱 **PWA :** Installation iPhone/Android validée
+- 📱 **PWA :** Installation iPhone/Android validée + dark mode parfait
 - 🚀 **Infrastructure :** Render + Vercel + S3 + PostgreSQL
+- ✨ **Nouveau :** Landing Page Franchiseurs + Contact Form + FranchiseDesk Branding
 
 SAAS destiné aux franchiseurs de la restauration pour faciliter la communication et la gestion avec leurs franchisés. La plateforme permet:
 - Partage de documents centralisé avec AWS S3
@@ -412,6 +413,81 @@ Transformer la plateforme en solution complète de gestion franchise avec module
 ---
 
 ## 🎉 **CORRECTIONS RÉCENTES APPLIQUÉES** (Juillet 2025)
+
+### ✅ **Redesign Complet Landing Page & Contact - FINALISÉ**
+**Date:** 20 Juillet 2025 (Aujourd'hui)
+
+#### 🎯 **Landing Page Moderne pour Franchiseurs**
+- **Ciblage spécifique** : Transformation complète vers les franchiseurs (vs generic features)
+- **Animations professionnelles** : Framer-motion avec stagger effects et fade-in
+- **Message clair** : "Pilotez votre réseau de franchises en toute simplicité"
+- **Problème/Solution** : Section dédiée aux défis franchiseurs
+- **Fonctionnalités métier** : Audits & Conformité, Pilotage Temps Réel, Communication Unifiée
+
+#### 📋 **Page Contact Professionnelle**
+- **Formulaire structuré** : Nom, email, entreprise, nombre de franchises, message
+- **Validation complète** : Client-side avec feedback en temps réel
+- **Design B2B** : Layout 2 colonnes avec bénéfices métier
+- **Success page** : Confirmation élégante avec retour accueil
+- **Flow optimisé** : Demande démo → Contact sous 24h → Login pour membres
+
+#### 🎨 **Améliorations UX/UI**
+- **Branding unifié** : FranchiseDesk partout (remplace Internet SAAS)
+- **CTA repensé** : "Demander une démo" principal + "Déjà membre ?" secondaire
+- **Navigation simplifiée** : Suppression liens login des headers
+- **Responsive complet** : Mobile-first avec animations préservées
+- **Cohérence visuelle** : Couleurs et styles harmonisés avec l'app
+
+#### 🔧 **Corrections Techniques Frontend**
+```typescript
+// App.tsx - Routes mises à jour
+<Route path="/contact" element={<ContactPage />} />
+const noNavPages = ["/login", "/signup", "/", "/contact", "/forgot-password"];
+
+// index.html - Titre mis à jour
+<title>FranchiseDesk - Plateforme de Gestion Franchise</title>
+```
+
+### ✅ **Corrections Dark Mode & UX Forms - FINALISÉ**
+**Date:** 20 Juillet 2025 (Aujourd'hui)
+
+#### 🌙 **Problèmes Dark Mode Résolus**
+- **TicketItem.tsx** : Suppression fond bleu disgracieux pour `bg-gray-50 dark:bg-gray-800`
+- **CreateTicketForm.tsx** : Remplacement `text-gray-900` par `text-foreground` adaptatif
+- **CityAutocomplete.tsx** : Correction même problème texte noir sur fond sombre
+- **AdminGlobalDashboard.tsx** : Fix complet texte blanc sur blanc en production
+
+#### 🔐 **Formulaire Mot de Passe Redesigné**
+- **ForgotPassword.tsx** : Refonte complète en une seule page (4 étapes)
+- **Suppression animations** : Problèmes de saccades résolus par suppression
+- **Barre de sécurité** : Remplace checklist par indicateur 3 niveaux (Rouge/Jaune/Vert)
+- **Flow unifié** : Email → Code → Nouveau mot de passe → Succès
+- **Suppression ResetPassword.tsx** : Plus besoin de multi-pages
+
+#### 🎯 **Corrections Validation Backend**
+- **CreateTicketDto** : Ajout Transform pour convertir strings vides en undefined
+- **Fix erreur 500** : Descriptions courtes tickets ne causent plus d'erreur
+```typescript
+@IsOptional()
+@Transform(({ value }) => value === '' ? undefined : value)
+@IsString({ message: 'La description doit être une chaîne de caractères' })
+description?: string;
+```
+
+#### ✨ **Icônes Centralisées Étendues**
+- **Ajout nouvelles icônes** : ArrowRightIcon, BuildingOfficeIcon, PhoneIcon
+- **Support landing/contact** : Toutes les icônes nécessaires aux nouvelles pages
+- **Correction exports** : Plus d'erreurs "module does not provide export"
+
+### 📊 **Impact Global Frontend**
+- ✅ **Landing modernisée** : Ciblage franchiseurs avec animations professionnelles
+- ✅ **Contact B2B** : Page de capture leads avec validation complète
+- ✅ **Dark mode parfait** : Plus de problèmes visibilité dans aucun formulaire
+- ✅ **Password UX** : Workflow simplifié et barre sécurité intuitive
+- ✅ **Branding cohérent** : FranchiseDesk partout avec flow optimisé
+- ✅ **Validation robuste** : Plus d'erreurs 500 sur champs optionnels
+
+## 🎉 **CORRECTIONS PRÉCÉDENTES** (Juillet 2025)
 
 ### ✅ **Correction Vulnérabilité XSS GlobalSearch - FINALISÉ**
 **Date:** 15 Juillet 2025 (Aujourd'hui)
