@@ -7,16 +7,18 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'pwa-192x192.svg', 'pwa-512x512.svg'],
       manifest: {
-        name: 'FranchiseHUB',
+        name: 'FranchiseHUB - Gestion Franchise',
         short_name: 'FranchiseHUB',
         description: 'Plateforme de gestion franchiseur-franchisé',
         theme_color: '#4F46E5',
         background_color: '#ffffff',
         display: 'standalone',
+        orientation: 'portrait-primary',
         scope: '/',
         start_url: '/',
+        categories: ['business', 'productivity'],
         icons: [
           {
             src: '/pwa-192x192.svg',
@@ -33,6 +35,24 @@ export default defineConfig({
             sizes: '192x192',
             type: 'image/svg+xml',
             purpose: 'maskable'
+          },
+          {
+            src: '/pwa-192x192.svg',
+            sizes: '180x180',
+            type: 'image/svg+xml',
+            purpose: 'any'
+          },
+          {
+            src: '/pwa-192x192.svg',
+            sizes: '152x152',
+            type: 'image/svg+xml',
+            purpose: 'any'
+          },
+          {
+            src: '/pwa-192x192.svg',
+            sizes: '120x120',
+            type: 'image/svg+xml',
+            purpose: 'any'
           }
         ]
       },
@@ -51,7 +71,7 @@ export default defineConfig({
             }
           },
           {
-            urlPattern: /^http:\/\/localhost:3000\/api\/.*/i,
+            urlPattern: /^https:\/\/intranet-saas-backend\.onrender\.com\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
