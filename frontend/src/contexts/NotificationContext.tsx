@@ -83,25 +83,25 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         // Disconnected from notifications server
       });
 
-      // Écouter les notifications en temps réel
+      // Écouter les notifications en temps réel avec délai
       newSocket.on('document_uploaded', () => {
-        refreshCounts();
+        setTimeout(refreshCounts, 500); // 0.5 seconde de délai
       });
 
       newSocket.on('announcement_posted', () => {
-        refreshCounts();
+        setTimeout(refreshCounts, 500);
       });
 
       newSocket.on('ticket_created', () => {
-        refreshCounts();
+        setTimeout(refreshCounts, 500);
       });
 
       newSocket.on('ticket_updated', () => {
-        refreshCounts();
+        setTimeout(refreshCounts, 500);
       });
 
       newSocket.on('restaurant_joined', () => {
-        refreshCounts();
+        setTimeout(refreshCounts, 500);
       });
 
       setSocket(newSocket);
