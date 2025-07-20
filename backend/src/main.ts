@@ -48,6 +48,7 @@ async function bootstrap() {
       'http://127.0.0.1:5175',
       'http://172.21.205.127:5173',
       'https://intranet-saas.vercel.app', // Frontend Vercel
+      'https://intranet-saas-git-main-sofianes-projects-c54f9e3b.vercel.app', // Frontend Vercel Git
       'http://172.21.205.127:5174',
       'http://172.21.205.127:5175'
     ],
