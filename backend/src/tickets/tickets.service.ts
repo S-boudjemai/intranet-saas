@@ -86,16 +86,16 @@ export class TicketsService {
       throw new ForbiddenException(`Utilisateur avec l'ID ${user.userId} introuvable.`);
     }
     
-    // Vérification de compatibilité tenant_id
-    if (restaurant.tenant_id !== user.tenant_id) {
+    // Vérification de compatibilité tenant_id (sauf pour les admins qui ont tenant_id null)
+    if (user.tenant_id !== null && restaurant.tenant_id !== user.tenant_id) {
       throw new ForbiddenException(`Le restaurant n'appartient pas au même tenant. Restaurant tenant: ${restaurant.tenant_id}, User tenant: ${user.tenant_id}`);
     }
     
     const ticket = this.ticketsRepo.create({
       ...data,
-      tenant_id: user.tenant_id!.toString(),
+      tenant_id: user.tenant_id ? user.tenant_id.toString() : restaurant.tenant_id.toString(),
       created_by: user.userId,
-      restaurant_id: user.restaurant_id,
+      restaurant_id: data.restaurant_id || user.restaurant_id, // Utiliser restaurant_id du DTO ou de l'user
       status: TicketStatus.NonTraitee,
     });
 

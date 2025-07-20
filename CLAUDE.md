@@ -20,7 +20,14 @@
 
 ## Description du Projet
 
-**🚀 STATUT : VERSION 0.1 PRÊTE POUR PRODUCTION (Juillet 2025)**
+**🎉 STATUT : VERSION 0.1 DÉPLOYÉE EN PRODUCTION (20 Juillet 2025)**
+
+### ✅ **DÉPLOIEMENT RÉUSSI - SITE OPÉRATIONNEL**
+- 🌐 **Frontend :** https://intranet-saas.vercel.app
+- 🔧 **Backend :** https://intranet-saas-backend.onrender.com  
+- 🔐 **Admin :** admin@admin.com / admin123
+- 📱 **PWA :** Installation iPhone/Android validée
+- 🚀 **Infrastructure :** Render + Vercel + S3 + PostgreSQL
 
 SAAS destiné aux franchiseurs de la restauration pour faciliter la communication et la gestion avec leurs franchisés. La plateforme permet:
 - Partage de documents centralisé avec AWS S3

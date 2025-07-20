@@ -54,7 +54,7 @@ export class TicketsController {
       throw new Error('Token JWT invalide: tenant_id corrompu');
     }
     
-    // Validation restaurant_id pour les viewers
+    // Validation restaurant_id pour les viewers (mais pas pour les admins)
     if (user.role === Role.Viewer && (!user.restaurant_id || isNaN(user.restaurant_id))) {
       throw new Error('Token JWT invalide: restaurant_id manquant pour un viewer');
     }
