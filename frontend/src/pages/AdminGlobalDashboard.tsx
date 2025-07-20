@@ -622,8 +622,8 @@ const AdminGlobalDashboard: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h3 className="text-xl font-bold mb-4 text-gray-900">Actions Rapides</h3>
+      <div className="bg-card rounded-xl shadow-sm border p-6">
+        <h3 className="text-xl font-bold mb-4 text-muted-foreground">Actions Rapides</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={() => setShowCreateTenantModal(true)}
@@ -651,8 +651,8 @@ const AdminGlobalDashboard: React.FC = () => {
 
       {/* Top Tenants */}
       {stats?.topTenants && stats.topTenants.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h3 className="text-xl font-bold mb-4 text-gray-900">Top Tenants</h3>
+        <div className="bg-card rounded-xl shadow-sm border p-6">
+          <h3 className="text-xl font-bold mb-4 text-muted-foreground">Top Tenants</h3>
           <div className="space-y-3">
             {stats.topTenants.map((tenant, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -660,9 +660,9 @@ const AdminGlobalDashboard: React.FC = () => {
                   <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
                     {index + 1}
                   </div>
-                  <span className="font-medium text-gray-900">{tenant.name}</span>
+                  <span className="font-medium text-muted-foreground">{tenant.name}</span>
                 </div>
-                <div className="text-sm text-gray-900">
+                <div className="text-sm text-muted-foreground">
                   {tenant.userCount} utilisateurs • {tenant.documentCount} documents
                 </div>
               </div>
@@ -676,7 +676,7 @@ const AdminGlobalDashboard: React.FC = () => {
   const renderTenants = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Gestion des Tenants</h2>
+        <h2 className="text-2xl font-bold text-muted-foreground">Gestion des Tenants</h2>
         <button
           onClick={() => setShowCreateTenantModal(true)}
           className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
@@ -688,10 +688,10 @@ const AdminGlobalDashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tenants.map((tenant) => (
-          <div key={tenant.id} className="bg-white rounded-xl shadow-sm border hover:shadow-lg transition-all duration-300">
+          <div key={tenant.id} className="bg-card rounded-xl shadow-sm border hover:shadow-lg transition-all duration-300">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">{tenant.name}</h3>
+                <h3 className="text-lg font-bold text-muted-foreground">{tenant.name}</h3>
                 <button
                   onClick={() => deleteTenant(tenant.id)}
                   className="text-red-500 hover:text-red-700 transition-colors"
@@ -702,16 +702,16 @@ const AdminGlobalDashboard: React.FC = () => {
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-900">Type:</span>
-                  <span className="font-medium text-gray-900">{tenant.restaurant_type}</span>
+                  <span className="text-muted-foreground">Type:</span>
+                  <span className="font-medium text-muted-foreground">{tenant.restaurant_type}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-900">Utilisateurs:</span>
-                  <span className="font-medium text-gray-900">{tenant.userCount || 0}</span>
+                  <span className="text-muted-foreground">Utilisateurs:</span>
+                  <span className="font-medium text-muted-foreground">{tenant.userCount || 0}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-900">Créé le:</span>
-                  <span className="font-medium text-gray-900">
+                  <span className="text-muted-foreground">Créé le:</span>
+                  <span className="font-medium text-muted-foreground">
                     {new Date(tenant.createdAt).toLocaleDateString()}
                   </span>
                 </div>
@@ -740,7 +740,7 @@ const AdminGlobalDashboard: React.FC = () => {
   const renderUsers = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Gestion des Utilisateurs</h2>
+        <h2 className="text-2xl font-bold text-muted-foreground">Gestion des Utilisateurs</h2>
         <button
           onClick={() => setShowCreateUserModal(true)}
           className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
@@ -750,35 +750,35 @@ const AdminGlobalDashboard: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+      <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Rôle
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Tenant
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Statut
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-card divide-y divide-gray-200">
               {users.map((user) => {
                 // Utiliser directement les informations du tenant depuis la requête
                 const tenantName = user.tenant?.name || 'N/A';
                 return (
                   <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-muted-foreground">
                       {user.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -790,7 +790,7 @@ const AdminGlobalDashboard: React.FC = () => {
                         {user.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {tenantName}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -853,7 +853,7 @@ const AdminGlobalDashboard: React.FC = () => {
               <FolderIcon className="w-5 h-5 text-purple-500" />
               
               <div className="flex flex-col">
-                <span className="font-medium text-gray-900">
+                <span className="font-medium text-muted-foreground">
                   {category.name}
                 </span>
                 {hasChildren && (
@@ -920,7 +920,7 @@ const AdminGlobalDashboard: React.FC = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <h2 className="text-2xl font-bold text-gray-900">Gestion des Catégories</h2>
+            <h2 className="text-2xl font-bold text-muted-foreground">Gestion des Catégories</h2>
             <button
               onClick={() => {
                 if (expandedCategories.size === categories.length) {
@@ -947,7 +947,7 @@ const AdminGlobalDashboard: React.FC = () => {
           </button>
         </div>
         
-        <div className="bg-white rounded-xl shadow-sm border">
+        <div className="bg-card rounded-xl shadow-sm border">
           {categories.length === 0 ? (
             <div className="p-16 text-center">
               <FolderIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -978,7 +978,7 @@ const AdminGlobalDashboard: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-          <p className="mt-4 text-gray-900">Chargement du dashboard admin...</p>
+          <p className="mt-4 text-muted-foreground">Chargement du dashboard admin...</p>
         </div>
       </div>
     );
@@ -987,16 +987,16 @@ const AdminGlobalDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-card shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">Administration Globale</h1>
+              <h1 className="text-2xl font-bold text-muted-foreground">Administration Globale</h1>
             </div>
             <div className="flex items-center space-x-4">
               <button
                 onClick={logout}
-                className="px-3 py-2 text-sm text-gray-900 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-3 py-2 text-sm text-muted-foreground hover:text-gray-800 border border-border rounded-md hover:bg-gray-50"
               >
                 Déconnexion
               </button>
@@ -1006,7 +1006,7 @@ const AdminGlobalDashboard: React.FC = () => {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="bg-white border-b">
+      <div className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8">
             {[
@@ -1023,7 +1023,7 @@ const AdminGlobalDashboard: React.FC = () => {
                   className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-900 hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-muted-foreground hover:text-gray-700 hover:border-border'
                   }`}
                 >
                   <Icon className="w-4 h-4 mr-2" />
@@ -1046,32 +1046,32 @@ const AdminGlobalDashboard: React.FC = () => {
       {/* Modal Create Tenant */}
       {showCreateTenantModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-card rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-lg font-bold mb-4">Créer un nouveau tenant</h3>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Nom du tenant
                   </label>
                   <input
                     type="text"
                     value={newTenant.name}
                     onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Ex: Restaurant ABC"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Type de restaurant
                   </label>
                   <select
                     value={newTenant.restaurant_type}
                     onChange={(e) => setNewTenant({ ...newTenant, restaurant_type: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="traditionnel">Traditionnel</option>
                     <option value="fast_food">Fast Food</option>
@@ -1082,25 +1082,25 @@ const AdminGlobalDashboard: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">
                       Couleur primaire
                     </label>
                     <input
                       type="color"
                       value={newTenant.primaryColor}
                       onChange={(e) => setNewTenant({ ...newTenant, primaryColor: e.target.value })}
-                      className="w-full h-10 rounded-md border border-gray-300"
+                      className="w-full h-10 rounded-md border border-border"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">
                       Couleur secondaire
                     </label>
                     <input
                       type="color"
                       value={newTenant.secondaryColor}
                       onChange={(e) => setNewTenant({ ...newTenant, secondaryColor: e.target.value })}
-                      className="w-full h-10 rounded-md border border-gray-300"
+                      className="w-full h-10 rounded-md border border-border"
                     />
                   </div>
                 </div>
@@ -1109,7 +1109,7 @@ const AdminGlobalDashboard: React.FC = () => {
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   onClick={() => setShowCreateTenantModal(false)}
-                  className="px-4 py-2 text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50"
                 >
                   Annuler
                 </button>
@@ -1128,46 +1128,46 @@ const AdminGlobalDashboard: React.FC = () => {
       {/* Modal Create User */}
       {showCreateUserModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+          <div className="bg-card rounded-xl shadow-xl max-w-md w-full">
             <div className="p-6">
               <h3 className="text-lg font-bold mb-4">Créer un nouvel utilisateur</h3>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Email
                   </label>
                   <input
                     type="email"
                     value={newUser.email}
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                     placeholder="utilisateur@exemple.com"
                     autoFocus
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Mot de passe
                   </label>
                   <input
                     type="password"
                     value={newUser.password}
                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                     placeholder="••••••••"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Rôle
                   </label>
                   <select
                     value={newUser.role}
                     onChange={(e) => setNewUser({ ...newUser, role: e.target.value as 'admin' | 'manager' | 'viewer' })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                   >
                     <option value="viewer">Viewer</option>
                     <option value="manager">Manager</option>
@@ -1176,13 +1176,13 @@ const AdminGlobalDashboard: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Tenant
                   </label>
                   <select
                     value={newUser.tenant_id}
                     onChange={(e) => setNewUser({ ...newUser, tenant_id: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                   >
                     <option value={0}>Sélectionner un tenant</option>
                     {tenants.map((tenant) => (
@@ -1200,7 +1200,7 @@ const AdminGlobalDashboard: React.FC = () => {
                     setShowCreateUserModal(false);
                     setNewUser({ email: '', password: '', role: 'viewer', tenant_id: 0 });
                   }}
-                  className="px-4 py-2 text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50"
                 >
                   Annuler
                 </button>
@@ -1220,33 +1220,33 @@ const AdminGlobalDashboard: React.FC = () => {
       {/* Modal Edit User */}
       {showEditUserModal && userToEdit && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+          <div className="bg-card rounded-xl shadow-xl max-w-md w-full">
             <div className="p-6">
               <h3 className="text-lg font-bold mb-4">Modifier l'utilisateur</h3>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Email
                   </label>
                   <input
                     type="email"
                     value={newUser.email}
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="utilisateur@exemple.com"
                     autoFocus
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Rôle
                   </label>
                   <select
                     value={newUser.role}
                     onChange={(e) => setNewUser({ ...newUser, role: e.target.value as 'admin' | 'manager' | 'viewer' })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="viewer">Viewer</option>
                     <option value="manager">Manager</option>
@@ -1270,7 +1270,7 @@ const AdminGlobalDashboard: React.FC = () => {
                     setShowEditUserModal(false);
                     setUserToEdit(null);
                   }}
-                  className="px-4 py-2 text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50"
                 >
                   Annuler
                 </button>
@@ -1289,7 +1289,7 @@ const AdminGlobalDashboard: React.FC = () => {
       {/* Modal Create/Edit Category */}
       {showCategoryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+          <div className="bg-card rounded-xl shadow-xl max-w-md w-full">
             <div className="p-6">
               <h3 className="text-lg font-bold mb-4">
                 {categoryToEdit ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
@@ -1297,14 +1297,14 @@ const AdminGlobalDashboard: React.FC = () => {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Nom de la catégorie
                   </label>
                   <input
                     type="text"
                     value={categoryForm.name}
                     onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="Ex: Plats Principaux"
                     autoFocus
                   />
@@ -1312,13 +1312,13 @@ const AdminGlobalDashboard: React.FC = () => {
 
                 {!categoryToEdit && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">
                       Catégorie parente (optionnel)
                     </label>
                     <select
                       value={categoryForm.parentId}
                       onChange={(e) => setCategoryForm({ ...categoryForm, parentId: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
                       <option value="">Aucune (catégorie racine)</option>
                       {categories.map((cat) => (
@@ -1338,7 +1338,7 @@ const AdminGlobalDashboard: React.FC = () => {
                     setCategoryForm({ name: '', parentId: '' });
                     setCategoryToEdit(null);
                   }}
-                  className="px-4 py-2 text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50"
                 >
                   Annuler
                 </button>

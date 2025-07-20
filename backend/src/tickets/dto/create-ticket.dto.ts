@@ -17,6 +17,7 @@ export class CreateTicketDto {
   title: string;
 
   @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : value)
   @IsString({ message: 'La description doit être une chaîne de caractères' })
   @MaxLength(2000, { message: 'La description ne peut pas dépasser 2000 caractères' })
   description?: string;

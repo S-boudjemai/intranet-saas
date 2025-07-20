@@ -123,7 +123,7 @@ export default function CreateTicketForm({ onSuccess }: CreateTicketFormProps) {
     setPreviewImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const inputClasses = `bg-input border border-border rounded-md w-full p-3 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all`;
+  const inputClasses = `bg-input border border-border rounded-md w-full p-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all`;
 
   return (
     <form

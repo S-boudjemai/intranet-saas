@@ -20,7 +20,7 @@ import ServiceWorkerUI from "./components/ServiceWorkerUI";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+import ContactPage from "./pages/ContactPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import TicketsPage from "./pages/TicketsPages";
 import NavBar from "./components/NavBar";
@@ -41,7 +41,7 @@ const AppContent = () => {
   const location = useLocation();
 
   // Pages où la NavBar ne doit PAS être affichée
-  const noNavPages = ["/login", "/signup", "/", "/forgot-password", "/reset-password"];
+  const noNavPages = ["/login", "/signup", "/", "/contact", "/forgot-password", "/reset-password"];
 
   // Admin global a son propre header, managers/viewers ont la navbar standard
   const isAdminGlobalView = user?.role === 'admin' && location.pathname === '/dashboard';
@@ -72,10 +72,10 @@ const AppContent = () => {
         <Routes>
           {/* Routes publiques */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Routes protégées avec rendu conditionnel */}
           <Route element={<ProtectedRoute />}>

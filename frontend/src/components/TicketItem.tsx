@@ -282,8 +282,8 @@ export default function TicketItem({
             )}
             <div className="space-y-3">
               {ticket.comments.map((c) => (
-                <div key={c.id} className="p-3 bg-secondary rounded-lg text-sm space-y-2">
-                  <p className="text-secondary-foreground">{c.message}</p>
+                <div key={c.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm space-y-2 border border-gray-200 dark:border-gray-700">
+                  <p className="text-gray-700 dark:text-gray-300">{c.message}</p>
                   
                   {/* Affichage des images du commentaire */}
                   {commentAttachments[c.id] && commentAttachments[c.id].length > 0 && (
