@@ -44,7 +44,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     if (!token) return;
 
     try {
-      const response = await fetch('http://localhost:3000/notifications/unread-counts', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications/unread-counts`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -142,7 +142,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         return;
       }
 
-      const response = await fetch('http://localhost:3000/notifications/mark-category-read', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications/mark-category-read`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
