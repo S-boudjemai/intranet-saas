@@ -68,7 +68,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Établir la connexion WebSocket
   useEffect(() => {
     if (token && user) {
-      const newSocket = io('http://localhost:3000', {
+      const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', {
         auth: {
           token: token
         },
