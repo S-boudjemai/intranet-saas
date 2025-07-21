@@ -3,6 +3,7 @@ import {
   Injectable,
   ForbiddenException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
@@ -62,7 +63,7 @@ export class TicketsService {
   }
 
   // ----- CORRECTION 1 : Création du ticket -----
-  async create(data: Partial<Ticket>, user: JwtUser): Promise<Ticket> {
+  async create(data: any, user: JwtUser): Promise<Ticket> {
     if (user.role !== Role.Viewer) {
       throw new ForbiddenException(
         'Seuls les franchisés (viewers) peuvent créer des tickets',
@@ -78,13 +79,21 @@ export class TicketsService {
       );
     }
 
+    // Validation du restaurant_id pour éviter NaN
+    const restaurantId = data.restaurantId || user.restaurant_id;
+    if (!restaurantId || isNaN(restaurantId)) {
+      throw new BadRequestException(
+        'Un identifiant de restaurant valide est requis pour créer un ticket.',
+      );
+    }
+
     // Vérification que le restaurant existe et récupération des infos complètes
     const restaurant = await this.restaurantsRepo.findOne({
-      where: { id: user.restaurant_id },
+      where: { id: restaurantId },
     });
     if (!restaurant) {
       throw new ForbiddenException(
-        `Restaurant avec l'ID ${user.restaurant_id} introuvable.`,
+        `Restaurant avec l'ID ${restaurantId} introuvable.`,
       );
     }
 
@@ -106,12 +115,13 @@ export class TicketsService {
     }
 
     const ticket = this.ticketsRepo.create({
-      ...data,
+      title: data.title,
+      description: data.description,
       tenant_id: user.tenant_id
         ? user.tenant_id.toString()
         : restaurant.tenant_id.toString(),
       created_by: user.userId,
-      restaurant_id: data.restaurant_id || user.restaurant_id, // Utiliser restaurant_id du DTO ou de l'user
+      restaurant_id: restaurantId, // Utiliser la valeur validée
       status: TicketStatus.NonTraitee,
     });
 

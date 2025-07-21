@@ -21,7 +21,7 @@ export class TokensService {
   generateTokenPair(payload: JwtUser): TokenPair {
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_SECRET'),
-      expiresIn: '15m',
+      expiresIn: '24h', // Durée normale sans refresh
     });
 
     const refreshPayload: RefreshTokenPayload = {
@@ -51,7 +51,7 @@ export class TokensService {
   generateAccessToken(payload: JwtUser): string {
     return this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_SECRET'),
-      expiresIn: '15m',
+      expiresIn: '24h', // Durée normale sans refresh
     });
   }
 }

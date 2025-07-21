@@ -22,17 +22,17 @@
 
 API REST construite avec NestJS pour la plateforme de gestion franchiseur-franchisé. Architecture modulaire avec TypeORM pour la persistance PostgreSQL et authentification JWT.
 
-**🏠 INFRASTRUCTURE RASPBERRY PI (Juillet 2025) :**
-- ✅ **Base de données PostgreSQL** déployée sur Raspberry Pi (192.168.1.77)
-- ✅ **Migration réussie** depuis base locale vers infrastructure dédiée
-- ✅ **Performance stable** pour 5-10 tenants simultanés
+**🏠 INFRASTRUCTURE DÉVELOPPEMENT (Juillet 2025) :**
+- ✅ **Base de données PostgreSQL** sur Raspberry Pi (192.168.1.77) - DEV UNIQUEMENT
+- ✅ **Production** sur infrastructure cloud (Render + PostgreSQL cloud)
+- ✅ **Performance** adaptée au développement local
 - ✅ **Isolation réseau** avec accès sécurisé depuis développement
 
 ## Stack Technique
 
 - **NestJS 11** - Framework Node.js avec TypeScript
 - **TypeORM 0.3** - ORM pour PostgreSQL
-- **PostgreSQL** - Base de données relationnelle (Raspberry Pi)
+- **PostgreSQL** - Base de données relationnelle (Raspberry Pi en dev, cloud en prod)
 - **JWT + Passport** - Authentification et autorisation
 - **AWS S3 SDK v3** - Stockage de fichiers avec URLs présignées
 - **Nodemailer** - Envoi d'emails

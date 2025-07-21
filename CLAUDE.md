@@ -41,12 +41,12 @@ SAAS destiné aux franchiseurs de la restauration pour faciliter la communicatio
 - PWA mobile avec installation native
 - Système de notifications temps réel
 
-**🏠 INFRASTRUCTURE RASPBERRY PI :**
-- ✅ **Base de données PostgreSQL** déployée sur Raspberry Pi (192.168.1.77)
-- ✅ **Migration réussie** depuis base locale vers infrastructure dédiée
-- ✅ **Isolation réseau** avec accès sécurisé depuis développement
-- ✅ **Tenant PizzaLif** restauré avec utilisateurs existants
-- ✅ **Performance stable** pour 5-10 tenants simultanés
+**🏠 INFRASTRUCTURE DÉVELOPPEMENT :**
+- ✅ **Base de données PostgreSQL** sur Raspberry Pi (192.168.1.77) - DEV UNIQUEMENT
+- ✅ **Production** déployée sur infrastructure cloud dédiée (Render + PostgreSQL)
+- ✅ **Isolation réseau** développement avec accès sécurisé local
+- ✅ **Tenant PizzaLif** restauré avec utilisateurs existants (dev)
+- ✅ **Performance** adaptée au développement local
 
 **Capacités v0.1 :**
 - ✅ 5-10 tenants simultanés supportés

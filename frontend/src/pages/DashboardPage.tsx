@@ -47,6 +47,7 @@ interface DashboardData {
 const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { token } = useAuth();
 
   useEffect(() => {
@@ -60,7 +61,7 @@ const DashboardPage: React.FC = () => {
         return res.json();
       })
       .then((json: any) => setData(json.data || json))
-      .catch(() => {})
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [token]);
 

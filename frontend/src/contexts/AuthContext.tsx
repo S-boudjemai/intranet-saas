@@ -40,65 +40,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.getItem("token")
   );
   const [user, setUser] = useState<JwtUser | null>(null);
-  const refreshTimeoutRef = useRef<number | null>(null);
 
-  // Fonction pour rafraîchir le token automatiquement
-  const refreshToken = async (): Promise<boolean> => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
-        method: 'POST',
-        credentials: 'include', // Pour envoyer les cookies
-      });
-
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Token refresh failed: ${res.status}`);
-      }
-
-      const responseData = await res.json();
-      
-      const access_token = responseData.access_token || responseData.data?.access_token;
-      if (!access_token) {
-        throw new Error('No access_token in refresh response');
-      }
-      
-      localStorage.setItem("token", access_token);
-      setToken(access_token);
-      return true;
-    } catch (error) {
-      logout();
-      return false;
-    }
-  };
-
-  // Programmer le refresh automatique
-  const scheduleTokenRefresh = (token: string) => {
-    try {
-      const validation = validateJWTStructure(token);
-      if (!validation.isValid) {
-        return;
-      }
-
-      const payload = jwtDecode<any>(token);
-      const currentTime = Date.now() / 1000;
-      const timeUntilExpiry = payload.exp - currentTime;
-      
-      // Rafraîchir 2 minutes avant expiration (120 secondes)
-      const refreshTime = Math.max(0, (timeUntilExpiry - 120) * 1000);
-      
-      
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-      
-      refreshTimeoutRef.current = setTimeout(() => {
-        refreshToken();
-      }, refreshTime);
-    } catch (error) {
-      debugToken(token);
-    }
-  };
+  // Plus de refresh automatique - tokens 24h suffisants
 
   // Dès que le token change, on décode le payload pour en extraire tenant_id et role
   useEffect(() => {
@@ -123,9 +66,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: payload.role,
           restaurant_id: payload.restaurant_id,
         });
-        
-        // Programmer le refresh automatique
-        scheduleTokenRefresh(token);
       } catch (e) {
         debugToken(token);
         clearInvalidToken();
@@ -134,10 +74,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } else {
       setUser(null);
-      // Clear timeout si pas de token
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
     }
   }, [token]);
 
@@ -146,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
-      credentials: 'include', // Pour recevoir les cookies de refresh
+      credentials: 'include',
     });
 
     if (!res.ok) {
@@ -158,18 +94,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Le token peut être soit directement dans responseData, soit dans responseData.data
     const access_token = responseData.access_token || responseData.data?.access_token;
     
+    if (!access_token) {
+      throw new Error("Aucun token reçu du serveur");
+    }
+    
     localStorage.setItem("token", access_token);
     setToken(access_token);
     // le useEffect se chargera de décoder et remplir `user`
   };
 
   const logout = async () => {
-    
-    // Clear timeout
-    if (refreshTimeoutRef.current) {
-      clearTimeout(refreshTimeoutRef.current);
-    }
-    
     // Clear localStorage
     localStorage.removeItem("token");
     setToken(null);
@@ -189,20 +123,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setAuthFromSignup = (accessToken: string) => {
-    
-    // Clear any existing refresh timeout
-    if (refreshTimeoutRef.current) {
-      clearTimeout(refreshTimeoutRef.current);
-    }
-    
     // Clear old token first
     localStorage.removeItem("token");
     
     // Set new token
     localStorage.setItem("token", accessToken);
     setToken(accessToken);
-    
-    // useEffect will handle decoding and scheduling refresh
   };
 
   return (
