@@ -7,6 +7,9 @@ export class FixNotificationsAndAddPushSubscriptions1753193784878 implements Mig
         // 1. D'abord supprimer les notifications avec target_id NULL
         await queryRunner.query(`DELETE FROM "notifications" WHERE "target_id" IS NULL`);
         
+        // 1.5. Changer le type de target_id de integer à varchar
+        await queryRunner.query(`ALTER TABLE "notifications" ALTER COLUMN "target_id" TYPE VARCHAR USING target_id::VARCHAR`);
+        
         // 2. Créer la table push_subscriptions si elle n'existe pas
         await queryRunner.query(`CREATE TABLE IF NOT EXISTS "push_subscriptions" (
             "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -25,8 +28,20 @@ export class FixNotificationsAndAddPushSubscriptions1753193784878 implements Mig
         // 3. Créer l'index unique
         await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS "IDX_9c8a42b552ea8125bee461a470" ON "push_subscriptions" ("userId", "endpoint")`);
         
-        // 4. Ajouter la clé étrangère
-        await queryRunner.query(`ALTER TABLE "push_subscriptions" ADD CONSTRAINT "FK_4cc061875e9eecc311a94b3e431" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        // 4. Ajouter la clé étrangère si elle n'existe pas
+        await queryRunner.query(`
+            DO $$ 
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                    WHERE constraint_name = 'FK_4cc061875e9eecc311a94b3e431') 
+                THEN
+                    ALTER TABLE "push_subscriptions" 
+                    ADD CONSTRAINT "FK_4cc061875e9eecc311a94b3e431" 
+                    FOREIGN KEY ("userId") REFERENCES "users"("id") 
+                    ON DELETE CASCADE ON UPDATE NO ACTION;
+                END IF;
+            END $$;
+        `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
