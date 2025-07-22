@@ -16,6 +16,7 @@ import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import ThemeSwitcher from "./components/ThemeSwitcher";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ServiceWorkerUI from "./components/ServiceWorkerUI";
+import { PushNotificationPrompt } from "./components/notifications/PushNotificationPrompt";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -69,6 +70,7 @@ const AppContent = () => {
       {/* Le conteneur principal pour le contenu de la page */}
       <div className={showNav ? "p-4" : ""}>
         <ServiceWorkerUI />
+        {user && <PushNotificationPrompt />}
         <Routes>
           {/* Routes publiques */}
           <Route path="/" element={<LandingPage />} />

@@ -1,20 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Notification, NotificationType } from './entities/notification.entity';
 import { View, ViewTargetType } from './entities/view.entity';
+import { PushSubscription } from './entities/push-subscription.entity';
 import { User } from '../users/entities/user.entity';
+import * as webpush from 'web-push';
+import { CreatePushSubscriptionDto, SendPushNotificationDto } from './dto/push-subscription.dto';
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+  private vapidKeys = {
+    publicKey: process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
+    privateKey: process.env.VAPID_PRIVATE_KEY || 'dFMWvhPMiA7CAoLoqCoNzYXrxEr_J1BPQahrJqBs6Qw',
+  };
+
   constructor(
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
     @InjectRepository(View)
     private viewRepository: Repository<View>,
+    @InjectRepository(PushSubscription)
+    private pushSubscriptionRepository: Repository<PushSubscription>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+  ) {
+    // Configurer web-push
+    webpush.setVapidDetails(
+      'mailto:' + (process.env.MAIL_FROM || 'noreply@franchisehub.com'),
+      this.vapidKeys.publicKey,
+      this.vapidKeys.privateKey,
+    );
+  }
 
   // Créer une notification pour un utilisateur spécifique
   async createNotification(
@@ -259,5 +277,173 @@ export class NotificationsService {
         role: 'manager',
       })
       .execute();
+  }
+
+  // === PUSH NOTIFICATIONS ===
+
+  // Obtenir la clé publique VAPID
+  getVapidPublicKey(): string {
+    return this.vapidKeys.publicKey;
+  }
+
+  // Enregistrer une subscription push
+  async subscribeToPush(userId: string, dto: CreatePushSubscriptionDto): Promise<PushSubscription> {
+    try {
+      // Vérifier si une subscription existe déjà pour cet endpoint
+      const existing = await this.pushSubscriptionRepository.findOne({
+        where: {
+          userId,
+          endpoint: dto.subscription.endpoint,
+        },
+      });
+
+      if (existing) {
+        // Mettre à jour la subscription existante
+        existing.p256dh = dto.subscription.keys.p256dh;
+        existing.auth = dto.subscription.keys.auth;
+        existing.expirationTime = dto.subscription.expirationTime || null;
+        existing.userAgent = dto.userAgent || null;
+        existing.platform = dto.platform || null;
+        return this.pushSubscriptionRepository.save(existing);
+      }
+
+      // Créer une nouvelle subscription
+      const subscription = this.pushSubscriptionRepository.create({
+        userId,
+        endpoint: dto.subscription.endpoint,
+        p256dh: dto.subscription.keys.p256dh,
+        auth: dto.subscription.keys.auth,
+        expirationTime: dto.subscription.expirationTime || null,
+        userAgent: dto.userAgent || null,
+        platform: dto.platform || null,
+      });
+
+      return this.pushSubscriptionRepository.save(subscription);
+    } catch (error) {
+      this.logger.error('Failed to save push subscription', error);
+      throw error;
+    }
+  }
+
+  // Supprimer une subscription push
+  async unsubscribeFromPush(userId: string): Promise<void> {
+    await this.pushSubscriptionRepository.delete({ userId });
+  }
+
+  // Envoyer une notification push à un utilisateur
+  async sendPushToUser(userId: string, notification: SendPushNotificationDto): Promise<void> {
+    const subscriptions = await this.pushSubscriptionRepository.find({
+      where: { userId },
+    });
+
+    if (subscriptions.length === 0) {
+      this.logger.warn(`No push subscriptions found for user ${userId}`);
+      return;
+    }
+
+    const payload = JSON.stringify({
+      title: notification.title,
+      body: notification.body,
+      icon: notification.icon || '/pwa-192x192.svg',
+      badge: notification.badge || '/pwa-192x192.svg',
+      tag: notification.tag || 'franchisehub-notification',
+      data: notification.data || {},
+      actions: notification.actions || [],
+      badge_count: await this.getUnreadCountForUser(parseInt(userId)),
+    });
+
+    const promises = subscriptions.map(async (subscription) => {
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: subscription.endpoint,
+            keys: {
+              p256dh: subscription.p256dh,
+              auth: subscription.auth,
+            },
+          },
+          payload,
+        );
+      } catch (error) {
+        this.logger.error(`Failed to send push notification to ${subscription.endpoint}`, error);
+        
+        // Si l'erreur indique que la subscription n'est plus valide, la supprimer
+        if (error.statusCode === 410) {
+          await this.pushSubscriptionRepository.delete(subscription.id);
+        }
+      }
+    });
+
+    await Promise.all(promises);
+  }
+
+  // Envoyer une notification push à tous les utilisateurs d'un tenant
+  async sendPushToTenant(
+    tenantId: number,
+    notification: SendPushNotificationDto,
+    excludeUserId?: string,
+  ): Promise<void> {
+    const users = await this.userRepository.find({
+      where: { tenant_id: tenantId },
+    });
+
+    const userIds = users
+      .filter(user => user.id.toString() !== excludeUserId)
+      .map(user => user.id.toString());
+
+    const promises = userIds.map(userId => this.sendPushToUser(userId, notification));
+    await Promise.all(promises);
+  }
+
+  // Obtenir le nombre de notifications non lues pour un utilisateur
+  private async getUnreadCountForUser(userId: number): Promise<number> {
+    const unreadCounts = await this.getUnreadCounts(userId);
+    return unreadCounts.documents + unreadCounts.announcements + unreadCounts.tickets;
+  }
+
+  // Envoyer une notification push lors de la création d'une notification
+  async createNotificationWithPush(
+    userId: number,
+    tenantId: number,
+    type: NotificationType,
+    targetId: number,
+    message: string,
+  ): Promise<Notification> {
+    // Créer la notification normale
+    const notification = await this.createNotification(userId, tenantId, type, targetId, message);
+
+    // Envoyer la notification push
+    const pushNotification: SendPushNotificationDto = {
+      title: 'FranchiseHUB',
+      body: message,
+      data: {
+        type,
+        targetId,
+        url: this.getNotificationUrl(type, targetId),
+      },
+      tag: `${type}-${targetId}`,
+    };
+
+    await this.sendPushToUser(userId.toString(), pushNotification);
+
+    return notification;
+  }
+
+  // Obtenir l'URL de redirection pour une notification
+  private getNotificationUrl(type: NotificationType, targetId: number): string {
+    switch (type) {
+      case NotificationType.DOCUMENT_UPLOADED:
+        return '/documents';
+      case NotificationType.ANNOUNCEMENT_POSTED:
+        return '/announcements';
+      case NotificationType.TICKET_CREATED:
+      case NotificationType.TICKET_COMMENTED:
+      case NotificationType.TICKET_STATUS_UPDATED:
+        return `/tickets/${targetId}`;
+      case NotificationType.RESTAURANT_JOINED:
+        return '/users';
+      default:
+        return '/dashboard';
+    }
   }
 }

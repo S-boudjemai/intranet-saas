@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   Req,
@@ -14,6 +15,7 @@ import { Role } from '../auth/roles/roles.enum';
 import { NotificationsService } from './notifications.service';
 import { ViewTargetType } from './entities/view.entity';
 import { NotificationType } from './entities/notification.entity';
+import { CreatePushSubscriptionDto } from './dto/push-subscription.dto';
 
 @Controller('notifications')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -139,5 +141,42 @@ export class NotificationsController {
       success: true,
       message: "Notifications d'annonces nettoyées pour les managers",
     };
+  }
+
+  // === PUSH NOTIFICATIONS ENDPOINTS ===
+
+  // Obtenir la clé publique VAPID
+  @Get('vapid-public-key')
+  getVapidPublicKey() {
+    return { publicKey: this.notificationsService.getVapidPublicKey() };
+  }
+
+  // S'abonner aux notifications push
+  @Post('subscribe')
+  async subscribeToPush(@Req() req, @Body() dto: CreatePushSubscriptionDto) {
+    const subscription = await this.notificationsService.subscribeToPush(
+      req.user.userId.toString(),
+      dto,
+    );
+    return { success: true, subscription };
+  }
+
+  // Se désabonner des notifications push
+  @Delete('unsubscribe')
+  async unsubscribeFromPush(@Req() req) {
+    await this.notificationsService.unsubscribeFromPush(req.user.userId.toString());
+    return { success: true };
+  }
+
+  // Tester l'envoi d'une notification push (admin seulement)
+  @Post('test-push')
+  @Roles(Role.Admin)
+  async testPushNotification(@Req() req) {
+    await this.notificationsService.sendPushToUser(req.user.userId.toString(), {
+      title: 'Test FranchiseHUB',
+      body: 'Ceci est une notification de test',
+      data: { test: true },
+    });
+    return { success: true, message: 'Notification de test envoyée' };
   }
 }

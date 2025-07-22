@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { pushNotifications } from '../services/pushNotifications';
 
 interface NotificationCounts {
   documents: number;
@@ -54,11 +55,16 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       if (response.ok) {
         const json = await response.json();
         const counts = json.data || json;
-        setNotificationCounts({
+        const newCounts = {
           documents: counts.documents || 0,
           announcements: counts.announcements || 0,
           tickets: counts.tickets || 0,
-        });
+        };
+        setNotificationCounts(newCounts);
+        
+        // Mettre à jour le badge de l'application PWA
+        const totalCount = newCounts.documents + newCounts.announcements + newCounts.tickets;
+        pushNotifications.updateAppBadge(totalCount);
       }
     } catch (error) {
       // Error fetching notification counts
@@ -166,6 +172,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
       // Rafraîchir les compteurs après avoir marqué comme lu
       await refreshCounts();
+      
+      // Réinitialiser le badge si toutes les notifications sont lues
+      const totalUnread = notificationCounts.documents + notificationCounts.announcements + notificationCounts.tickets;
+      if (totalUnread === 0) {
+        pushNotifications.updateAppBadge(0);
+      }
     } catch (error) {
       // Error marking notifications as read
       // TODO: Afficher une notification d'erreur à l'utilisateur
