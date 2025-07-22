@@ -332,12 +332,16 @@ export class NotificationsService {
 
   // Envoyer une notification push à un utilisateur
   async sendPushToUser(userId: string, notification: SendPushNotificationDto): Promise<void> {
+    console.log(`📱 PUSH SERVICE DEBUG - Looking for subscriptions for user ${userId}`);
+    
     const subscriptions = await this.pushSubscriptionRepository.find({
       where: { userId },
     });
 
+    console.log(`📱 PUSH SERVICE DEBUG - Found ${subscriptions.length} subscriptions for user ${userId}`);
+    
     if (subscriptions.length === 0) {
-      this.logger.warn(`No push subscriptions found for user ${userId}`);
+      this.logger.warn(`📱 PUSH SERVICE DEBUG - No push subscriptions found for user ${userId}`);
       return;
     }
 
@@ -353,6 +357,7 @@ export class NotificationsService {
     });
 
     const promises = subscriptions.map(async (subscription) => {
+      console.log(`📱 PUSH SERVICE DEBUG - Sending to endpoint: ${subscription.endpoint.substring(0, 50)}...`);
       try {
         await webpush.sendNotification(
           {
@@ -364,11 +369,14 @@ export class NotificationsService {
           },
           payload,
         );
+        console.log(`📱 PUSH SERVICE DEBUG - Successfully sent push notification to user ${userId}`);
       } catch (error) {
+        console.error(`📱 PUSH SERVICE DEBUG - Failed to send push notification to ${subscription.endpoint}:`, error);
         this.logger.error(`Failed to send push notification to ${subscription.endpoint}`, error);
         
         // Si l'erreur indique que la subscription n'est plus valide, la supprimer
         if (error.statusCode === 410) {
+          console.log(`📱 PUSH SERVICE DEBUG - Removing expired subscription for user ${userId}`);
           await this.pushSubscriptionRepository.delete(subscription.id);
         }
       }

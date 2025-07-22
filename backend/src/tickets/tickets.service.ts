@@ -158,8 +158,10 @@ export class TicketsService {
     }
 
     // Envoyer notifications push aux managers (ne pas faire échouer la création)
+    console.log(`📱 PUSH DEBUG - Sending push notifications to ${managers.length} managers:`, managers.map(m => m.id));
     try {
       for (const manager of managers) {
+        console.log(`📱 PUSH DEBUG - Attempting to send push to manager ${manager.id}`);
         try {
           await this.notificationsService.sendPushToUser(manager.id.toString(), {
             title: 'Nouveau ticket',
@@ -171,12 +173,13 @@ export class TicketsService {
             },
             tag: `ticket-${savedTicket.id}`,
           });
+          console.log(`📱 PUSH DEBUG - Successfully sent push to manager ${manager.id}`);
         } catch (pushError) {
-          console.warn(`Failed to send push to manager ${manager.id}:`, pushError.message);
+          console.warn(`📱 PUSH DEBUG - Failed to send push to manager ${manager.id}:`, pushError.message);
         }
       }
     } catch (error) {
-      console.error('Error sending push notifications for ticket creation:', error);
+      console.error('📱 PUSH DEBUG - Error sending push notifications for ticket creation:', error);
     }
 
     // Récupérer les IDs des managers pour WebSocket
