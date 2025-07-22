@@ -39,7 +39,7 @@ export class NotificationsGateway
   @WebSocketServer()
   server: Server;
 
-  private connectedUsers = new Map<number, string>(); // userId -> socketId
+  private connectedUsers = new Map<string | number, string>(); // userId -> socketId
 
   constructor(private jwtService: JwtService) {}
 
@@ -103,7 +103,21 @@ export class NotificationsGateway
 
   // Envoyer une notification à un utilisateur spécifique
   sendToUser(userId: number, event: string, data: any) {
-    const socketId = this.connectedUsers.get(userId);
+    // Chercher d'abord avec l'ID numérique, puis avec la conversion string
+    let socketId = this.connectedUsers.get(userId);
+    
+    // Si pas trouvé avec number, essayer de trouver par email (fallback)
+    if (!socketId) {
+      // Chercher dans toutes les clés si c'est un email/string
+      for (const [key, value] of this.connectedUsers.entries()) {
+        if (typeof key === 'string' && key.includes('@')) {
+          // Si on trouve une connexion par email, on l'utilise
+          socketId = value;
+          break;
+        }
+      }
+    }
+    
     console.log(
       `🔍 sendToUser - userId: ${userId}, event: ${event}, socketId: ${socketId}`,
     );
