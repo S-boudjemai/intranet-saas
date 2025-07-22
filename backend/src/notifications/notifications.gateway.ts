@@ -65,12 +65,12 @@ export class NotificationsGateway
       // Normaliser le userId comme dans jwt.strategy.ts
       const userId = payload.userId || payload.id;
       if (!userId) {
-        console.log('❌ Pas d\'userId dans le payload, déconnexion');
-        client.disconnect();
-        return;
+        console.log('⚠️ Pas d\'userId dans le payload, utilisation de fallback');
+        // Utiliser l'email comme fallback temporaire pour éviter la boucle infinie
+        client.userId = payload.email ? payload.email.split('@')[0] : 'anonymous';
+      } else {
+        client.userId = userId;
       }
-      
-      client.userId = userId;
       client.tenantId = payload.tenant_id || payload.tenantId;
 
       console.log(
