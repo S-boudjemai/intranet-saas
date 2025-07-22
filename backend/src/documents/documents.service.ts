@@ -119,7 +119,7 @@ export class DocumentsService {
       await this.notificationsService.createNotificationsForTenant(
         tenantId,
         NotificationType.DOCUMENT_UPLOADED,
-        parseInt(savedDoc.id),
+        savedDoc.id.toString(),
         message,
         user.userId,
       );
@@ -133,15 +133,18 @@ export class DocumentsService {
             body: message,
             data: {
               type: 'DOCUMENT_UPLOADED',
-              targetId: parseInt(savedDoc.id),
+              targetId: savedDoc.id,
               url: '/documents',
             },
             tag: `document-${savedDoc.id}`,
           },
-          user.userId.toString()
+          user.userId.toString(),
         );
       } catch (pushError) {
-        console.warn(`Failed to send push notifications for document upload:`, pushError.message);
+        console.warn(
+          `Failed to send push notifications for document upload:`,
+          pushError.message,
+        );
       }
 
       // Envoyer notification temps réel

@@ -52,31 +52,31 @@ export class NotificationsController {
         await this.notificationsService.markAsRead(
           req.user.userId,
           'document_uploaded' as any,
-          body.targetId,
+          body.targetId.toString(),
         );
         break;
       case ViewTargetType.ANNOUNCEMENT:
         await this.notificationsService.markAsRead(
           req.user.userId,
           'announcement_posted' as any,
-          body.targetId,
+          body.targetId.toString(),
         );
         break;
       case ViewTargetType.TICKET:
         await this.notificationsService.markAsRead(
           req.user.userId,
           'ticket_created' as any,
-          body.targetId,
+          body.targetId.toString(),
         );
         await this.notificationsService.markAsRead(
           req.user.userId,
           'ticket_commented' as any,
-          body.targetId,
+          body.targetId.toString(),
         );
         await this.notificationsService.markAsRead(
           req.user.userId,
           'ticket_status_updated' as any,
-          body.targetId,
+          body.targetId.toString(),
         );
         break;
     }
@@ -164,7 +164,9 @@ export class NotificationsController {
   // Se désabonner des notifications push
   @Delete('unsubscribe')
   async unsubscribeFromPush(@Req() req) {
-    await this.notificationsService.unsubscribeFromPush(req.user.userId.toString());
+    await this.notificationsService.unsubscribeFromPush(
+      req.user.userId.toString(),
+    );
     return { success: true };
   }
 

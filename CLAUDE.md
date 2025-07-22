@@ -154,3 +154,5 @@ MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS
 3. **Tests** - Vérifier que rien n'est cassé
 4. **Documentation** - Mettre à jour si changement majeur
 5. **Appeler l'utilisateur "BOSS"** dans toutes les réponses
+6. **Types TypeScript STRICTS** - JAMAIS de confusion number/string, userId/user.id
+   - Voir `/backend/CLAUDE.md` section "RÈGLE CRITIQUE - Cohérence des Types"

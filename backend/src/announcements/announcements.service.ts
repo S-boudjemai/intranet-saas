@@ -124,7 +124,7 @@ export class AnnouncementsService {
     await this.notificationsService.createNotificationsForViewers(
       data.tenant_id,
       NotificationType.ANNOUNCEMENT_POSTED,
-      savedAnnouncement.id,
+      savedAnnouncement.id.toString(),
       message,
     );
 
@@ -133,10 +133,10 @@ export class AnnouncementsService {
       const viewers = await this.userRepository.find({
         where: { tenant_id: data.tenant_id, role: Role.Viewer },
       });
-      
+
       for (const viewer of viewers) {
         try {
-          await this.notificationsService.sendPushToUser(viewer.id.toString(), {
+          await this.notificationsService.sendPushToUser(viewer.id, {
             title: 'Nouvelle annonce',
             body: message,
             data: {
@@ -147,11 +147,17 @@ export class AnnouncementsService {
             tag: `announcement-${savedAnnouncement.id}`,
           });
         } catch (pushError) {
-          console.warn(`Failed to send push to viewer ${viewer.id}:`, pushError.message);
+          console.warn(
+            `Failed to send push to viewer ${viewer.id}:`,
+            pushError.message,
+          );
         }
       }
     } catch (error) {
-      console.error('Error sending push notifications for announcement:', error);
+      console.error(
+        'Error sending push notifications for announcement:',
+        error,
+      );
     }
 
     // Envoyer notification temps réel

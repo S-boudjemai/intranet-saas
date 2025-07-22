@@ -10,14 +10,4 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
-
-  @Get('ping')
-  @Public()
-  ping(): { status: string; timestamp: string; uptime: number } {
-    return {
-      status: 'pong',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-    };
-  }
 }

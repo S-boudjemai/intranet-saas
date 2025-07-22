@@ -36,7 +36,7 @@ export class Notification {
   type: NotificationType;
 
   @Column()
-  target_id: number;
+  target_id: string;
 
   @Column()
   message: string;

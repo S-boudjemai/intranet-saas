@@ -60,8 +60,9 @@ export class NotificationsGateway
 
       // Vérifier le token JWT
       const payload = this.jwtService.verify(token);
-      client.userId = payload.sub;
-      client.tenantId = payload.tenantId;
+      console.log('🔍 JWT Payload reçu:', JSON.stringify(payload, null, 2));
+      client.userId = payload.userId;
+      client.tenantId = payload.tenant_id || payload.tenantId;
 
       console.log(
         `✅ User ${client.userId} connecté (tenant: ${client.tenantId})`,

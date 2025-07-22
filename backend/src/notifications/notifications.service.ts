@@ -6,14 +6,21 @@ import { View, ViewTargetType } from './entities/view.entity';
 import { PushSubscription } from './entities/push-subscription.entity';
 import { User } from '../users/entities/user.entity';
 import * as webpush from 'web-push';
-import { CreatePushSubscriptionDto, SendPushNotificationDto } from './dto/push-subscription.dto';
+import {
+  CreatePushSubscriptionDto,
+  SendPushNotificationDto,
+} from './dto/push-subscription.dto';
 
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
   private vapidKeys = {
-    publicKey: process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
-    privateKey: process.env.VAPID_PRIVATE_KEY || 'dFMWvhPMiA7CAoLoqCoNzYXrxEr_J1BPQahrJqBs6Qw',
+    publicKey:
+      process.env.VAPID_PUBLIC_KEY ||
+      'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
+    privateKey:
+      process.env.VAPID_PRIVATE_KEY ||
+      'dFMWvhPMiA7CAoLoqCoNzYXrxEr_J1BPQahrJqBs6Qw',
   };
 
   constructor(
@@ -39,7 +46,7 @@ export class NotificationsService {
     userId: number,
     tenantId: number,
     type: NotificationType,
-    targetId: number,
+    targetId: string,
     message: string,
   ): Promise<Notification> {
     const notification = this.notificationRepository.create({
@@ -57,7 +64,7 @@ export class NotificationsService {
   async createNotificationsForTenant(
     tenantId: number,
     type: NotificationType,
-    targetId: number,
+    targetId: string,
     message: string,
     excludeUserId?: number,
   ): Promise<Notification[]> {
@@ -84,7 +91,7 @@ export class NotificationsService {
   async createNotificationsForManagers(
     tenantId: number,
     type: NotificationType,
-    targetId: number,
+    targetId: string,
     message: string,
   ): Promise<Notification[]> {
     const managers = await this.userRepository.find({
@@ -111,7 +118,7 @@ export class NotificationsService {
   async createNotificationsForViewers(
     tenantId: number,
     type: NotificationType,
-    targetId: number,
+    targetId: string,
     message: string,
   ): Promise<Notification[]> {
     const viewers = await this.userRepository.find({
@@ -185,7 +192,7 @@ export class NotificationsService {
   async markAsRead(
     userId: number,
     type: NotificationType,
-    targetId: number,
+    targetId: string,
   ): Promise<void> {
     await this.notificationRepository.update(
       { user_id: userId, type, target_id: targetId },
@@ -287,7 +294,10 @@ export class NotificationsService {
   }
 
   // Enregistrer une subscription push
-  async subscribeToPush(userId: string, dto: CreatePushSubscriptionDto): Promise<PushSubscription> {
+  async subscribeToPush(
+    userId: number,
+    dto: CreatePushSubscriptionDto,
+  ): Promise<PushSubscription> {
     try {
       // Vérifier si une subscription existe déjà pour cet endpoint
       const existing = await this.pushSubscriptionRepository.findOne({
@@ -326,22 +336,31 @@ export class NotificationsService {
   }
 
   // Supprimer une subscription push
-  async unsubscribeFromPush(userId: string): Promise<void> {
+  async unsubscribeFromPush(userId: number): Promise<void> {
     await this.pushSubscriptionRepository.delete({ userId });
   }
 
   // Envoyer une notification push à un utilisateur
-  async sendPushToUser(userId: string, notification: SendPushNotificationDto): Promise<void> {
-    console.log(`📱 PUSH SERVICE DEBUG - Looking for subscriptions for user ${userId}`);
-    
+  async sendPushToUser(
+    userId: number,
+    notification: SendPushNotificationDto,
+  ): Promise<void> {
+    console.log(
+      `📱 PUSH SERVICE DEBUG - Looking for subscriptions for user ${userId}`,
+    );
+
     const subscriptions = await this.pushSubscriptionRepository.find({
       where: { userId },
     });
 
-    console.log(`📱 PUSH SERVICE DEBUG - Found ${subscriptions.length} subscriptions for user ${userId}`);
-    
+    console.log(
+      `📱 PUSH SERVICE DEBUG - Found ${subscriptions.length} subscriptions for user ${userId}`,
+    );
+
     if (subscriptions.length === 0) {
-      this.logger.warn(`📱 PUSH SERVICE DEBUG - No push subscriptions found for user ${userId}`);
+      this.logger.warn(
+        `📱 PUSH SERVICE DEBUG - No push subscriptions found for user ${userId}`,
+      );
       return;
     }
 
@@ -353,11 +372,13 @@ export class NotificationsService {
       tag: notification.tag || 'franchisehub-notification',
       data: notification.data || {},
       actions: notification.actions || [],
-      badge_count: await this.getUnreadCountForUser(parseInt(userId)),
+      badge_count: await this.getUnreadCountForUser(userId),
     });
 
     const promises = subscriptions.map(async (subscription) => {
-      console.log(`📱 PUSH SERVICE DEBUG - Sending to endpoint: ${subscription.endpoint.substring(0, 50)}...`);
+      console.log(
+        `📱 PUSH SERVICE DEBUG - Sending to endpoint: ${subscription.endpoint.substring(0, 50)}...`,
+      );
       try {
         await webpush.sendNotification(
           {
@@ -369,14 +390,24 @@ export class NotificationsService {
           },
           payload,
         );
-        console.log(`📱 PUSH SERVICE DEBUG - Successfully sent push notification to user ${userId}`);
+        console.log(
+          `📱 PUSH SERVICE DEBUG - Successfully sent push notification to user ${userId}`,
+        );
       } catch (error) {
-        console.error(`📱 PUSH SERVICE DEBUG - Failed to send push notification to ${subscription.endpoint}:`, error);
-        this.logger.error(`Failed to send push notification to ${subscription.endpoint}`, error);
-        
+        console.error(
+          `📱 PUSH SERVICE DEBUG - Failed to send push notification to ${subscription.endpoint}:`,
+          error,
+        );
+        this.logger.error(
+          `Failed to send push notification to ${subscription.endpoint}`,
+          error,
+        );
+
         // Si l'erreur indique que la subscription n'est plus valide, la supprimer
         if (error.statusCode === 410) {
-          console.log(`📱 PUSH SERVICE DEBUG - Removing expired subscription for user ${userId}`);
+          console.log(
+            `📱 PUSH SERVICE DEBUG - Removing expired subscription for user ${userId}`,
+          );
           await this.pushSubscriptionRepository.delete(subscription.id);
         }
       }
@@ -396,17 +427,21 @@ export class NotificationsService {
     });
 
     const userIds = users
-      .filter(user => user.id.toString() !== excludeUserId)
-      .map(user => user.id.toString());
+      .filter((user) => user.id.toString() !== excludeUserId)
+      .map((user) => user.id);
 
-    const promises = userIds.map(userId => this.sendPushToUser(userId, notification));
+    const promises = userIds.map((userId) =>
+      this.sendPushToUser(userId, notification),
+    );
     await Promise.all(promises);
   }
 
   // Obtenir le nombre de notifications non lues pour un utilisateur
   private async getUnreadCountForUser(userId: number): Promise<number> {
     const unreadCounts = await this.getUnreadCountsByType(userId);
-    return unreadCounts.documents + unreadCounts.announcements + unreadCounts.tickets;
+    return (
+      unreadCounts.documents + unreadCounts.announcements + unreadCounts.tickets
+    );
   }
 
   // Envoyer une notification push lors de la création d'une notification
@@ -414,11 +449,17 @@ export class NotificationsService {
     userId: number,
     tenantId: number,
     type: NotificationType,
-    targetId: number,
+    targetId: string,
     message: string,
   ): Promise<Notification> {
     // Créer la notification normale
-    const notification = await this.createNotification(userId, tenantId, type, targetId, message);
+    const notification = await this.createNotification(
+      userId,
+      tenantId,
+      type,
+      targetId,
+      message,
+    );
 
     // Envoyer la notification push
     const pushNotification: SendPushNotificationDto = {
@@ -432,13 +473,13 @@ export class NotificationsService {
       tag: `${type}-${targetId}`,
     };
 
-    await this.sendPushToUser(userId.toString(), pushNotification);
+    await this.sendPushToUser(userId, pushNotification);
 
     return notification;
   }
 
   // Obtenir l'URL de redirection pour une notification
-  private getNotificationUrl(type: NotificationType, targetId: number): string {
+  private getNotificationUrl(type: NotificationType, targetId: string): string {
     switch (type) {
       case NotificationType.DOCUMENT_UPLOADED:
         return '/documents';

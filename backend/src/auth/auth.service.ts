@@ -163,7 +163,7 @@ export class AuthService {
     await this.notificationsService.createNotificationsForViewers(
       restaurant.tenant_id,
       NotificationType.RESTAURANT_JOINED,
-      savedAnnouncement.id,
+      savedAnnouncement.id.toString(),
       message,
     );
 

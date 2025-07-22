@@ -130,17 +130,20 @@ export class TicketsService {
     // Notifier tous les managers du tenant (seulement si pas admin global)
     const finalTenantId = user.tenant_id || restaurant.tenant_id;
     const message = `Nouveau ticket: ${savedTicket.title}`;
-    
+
     if (finalTenantId) {
       try {
         await this.notificationsService.createNotificationsForManagers(
           finalTenantId,
           NotificationType.TICKET_CREATED,
-          parseInt(savedTicket.id),
+          savedTicket.id,
           message,
         );
       } catch (notificationError) {
-        console.error('Error creating ticket notifications:', notificationError);
+        console.error(
+          'Error creating ticket notifications:',
+          notificationError,
+        );
         // Ne pas faire échouer la création du ticket si les notifications échouent
       }
     }
@@ -158,28 +161,41 @@ export class TicketsService {
     }
 
     // Envoyer notifications push aux managers (ne pas faire échouer la création)
-    console.log(`📱 PUSH DEBUG - Sending push notifications to ${managers.length} managers:`, managers.map(m => m.id));
+    console.log(
+      `📱 PUSH DEBUG - Sending push notifications to ${managers.length} managers:`,
+      managers.map((m) => m.id),
+    );
     try {
       for (const manager of managers) {
-        console.log(`📱 PUSH DEBUG - Attempting to send push to manager ${manager.id}`);
+        console.log(
+          `📱 PUSH DEBUG - Attempting to send push to manager ${manager.id}`,
+        );
         try {
-          await this.notificationsService.sendPushToUser(manager.id.toString(), {
+          await this.notificationsService.sendPushToUser(manager.id, {
             title: 'Nouveau ticket',
             body: message,
             data: {
               type: 'TICKET_CREATED',
-              targetId: parseInt(savedTicket.id),
+              targetId: savedTicket.id,
               url: `/tickets/${savedTicket.id}`,
             },
             tag: `ticket-${savedTicket.id}`,
           });
-          console.log(`📱 PUSH DEBUG - Successfully sent push to manager ${manager.id}`);
+          console.log(
+            `📱 PUSH DEBUG - Successfully sent push to manager ${manager.id}`,
+          );
         } catch (pushError) {
-          console.warn(`📱 PUSH DEBUG - Failed to send push to manager ${manager.id}:`, pushError.message);
+          console.warn(
+            `📱 PUSH DEBUG - Failed to send push to manager ${manager.id}:`,
+            pushError.message,
+          );
         }
       }
     } catch (error) {
-      console.error('📱 PUSH DEBUG - Error sending push notifications for ticket creation:', error);
+      console.error(
+        '📱 PUSH DEBUG - Error sending push notifications for ticket creation:',
+        error,
+      );
     }
 
     // Récupérer les IDs des managers pour WebSocket
@@ -322,24 +338,27 @@ export class TicketsService {
       updatedTicket.created_by,
       parseInt(updatedTicket.tenant_id),
       NotificationType.TICKET_STATUS_UPDATED,
-      parseInt(updatedTicket.id),
+      updatedTicket.id,
       message,
     );
 
     // Envoyer notification push au créateur du ticket (ne pas faire échouer la mise à jour)
     try {
-      await this.notificationsService.sendPushToUser(updatedTicket.created_by.toString(), {
+      await this.notificationsService.sendPushToUser(updatedTicket.created_by, {
         title: 'Ticket mis à jour',
         body: message,
         data: {
           type: 'TICKET_STATUS_UPDATED',
-          targetId: parseInt(updatedTicket.id),
+          targetId: updatedTicket.id,
           url: `/tickets/${updatedTicket.id}`,
         },
         tag: `ticket-update-${updatedTicket.id}`,
       });
     } catch (pushError) {
-      console.warn(`Failed to send push notification for ticket status update:`, pushError.message);
+      console.warn(
+        `Failed to send push notification for ticket status update:`,
+        pushError.message,
+      );
     }
 
     // Envoyer notification temps réel
@@ -379,24 +398,27 @@ export class TicketsService {
         ticket.created_by,
         parseInt(ticket.tenant_id),
         NotificationType.TICKET_COMMENTED,
-        parseInt(ticket.id),
+        ticket.id,
         notificationMessage,
       );
 
       // Envoyer notification push au créateur du ticket (ne pas faire échouer le commentaire)
       try {
-        await this.notificationsService.sendPushToUser(ticket.created_by.toString(), {
+        await this.notificationsService.sendPushToUser(ticket.created_by, {
           title: 'Nouveau commentaire',
           body: notificationMessage,
           data: {
             type: 'TICKET_COMMENTED',
-            targetId: parseInt(ticket.id),
+            targetId: ticket.id,
             url: `/tickets/${ticket.id}`,
           },
           tag: `ticket-comment-${ticket.id}`,
         });
       } catch (pushError) {
-        console.warn(`Failed to send push notification for ticket comment:`, pushError.message);
+        console.warn(
+          `Failed to send push notification for ticket comment:`,
+          pushError.message,
+        );
       }
 
       // Envoyer notification temps réel

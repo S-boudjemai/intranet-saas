@@ -192,3 +192,34 @@ GET /health/live   # Application vivante
 3. **Guards security** - JWT + Roles sur tout
 4. **Entities relations** - TypeORM optimisé
 5. **Appeler "BOSS"** dans toutes les réponses
+
+## 🚨 RÈGLE CRITIQUE - Cohérence des Types TypeScript
+
+### Problèmes Récurrents INTERDITS
+1. **user.id vs userId** - TOUJOURS vérifier quelle propriété est attendue
+2. **Types number vs string** - JAMAIS de conversion implicite (parseInt sur UUID = NaN)
+3. **JWT payload** - Structure EXACTE : `{ userId, email, tenant_id, role, restaurant_id }`
+4. **Signatures de méthodes** - VÉRIFIER le type de CHAQUE paramètre avant appel
+
+### Checklist Obligatoire
+- [ ] Vérifier TOUS les appels de méthodes correspondent aux signatures
+- [ ] UUID (string) ≠ ID numérique (number) - NE JAMAIS CONFONDRE
+- [ ] DTOs et Entities doivent avoir des types IDENTIQUES pour les mêmes champs
+- [ ] Tests TypeScript : `npm run build` DOIT compiler sans erreur
+
+### Exemples de Bugs à Éviter
+```typescript
+// ❌ INTERDIT
+savedTicket.id // UUID string
+parseInt(savedTicket.id) // = NaN
+
+// ✅ CORRECT  
+savedTicket.id // UUID string
+savedTicket.id.toString() // Déjà string
+
+// ❌ INTERDIT
+client.userId = payload.sub || payload.id // JWT n'a pas ces champs
+
+// ✅ CORRECT
+client.userId = payload.userId // Structure exacte du JWT
+```
