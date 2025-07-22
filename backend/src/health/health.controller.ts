@@ -40,4 +40,14 @@ export class HealthController {
   async liveness(): Promise<{ status: string }> {
     return { status: 'alive' };
   }
+
+  @Public()
+  @Get('ping')
+  ping(): { status: string; timestamp: string; uptime: number } {
+    return {
+      status: 'pong',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    };
+  }
 }
