@@ -86,8 +86,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
-        reconnectionAttempts: 5,
-        timeout: 20000
+        reconnectionAttempts: 10,
+        timeout: 20000,
+        forceNew: true,
+        upgrade: true
       });
 
       newSocket.on('connect', () => {
@@ -96,6 +98,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
       newSocket.on('disconnect', (reason) => {
         console.log('❌ WebSocket disconnected:', reason);
+        if (reason === 'io server disconnect') {
+          // Server disconnected, reconnect
+          newSocket.connect();
+        }
       });
 
       newSocket.on('connect_error', (error) => {
