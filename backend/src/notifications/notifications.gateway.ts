@@ -106,13 +106,14 @@ export class NotificationsGateway
     // Chercher d'abord avec l'ID numérique, puis avec la conversion string
     let socketId = this.connectedUsers.get(userId);
     
-    // Si pas trouvé avec number, essayer de trouver par email (fallback)
+    // Si pas trouvé avec number, essayer de trouver par string fallback
     if (!socketId) {
-      // Chercher dans toutes les clés si c'est un email/string
+      // Chercher dans toutes les clés string (fallback pour userId manquant)
       for (const [key, value] of this.connectedUsers.entries()) {
-        if (typeof key === 'string' && key.includes('@')) {
-          // Si on trouve une connexion par email, on l'utilise
+        if (typeof key === 'string') {
+          // Prendre la première connexion string trouvée
           socketId = value;
+          console.log(`🔄 Fallback: utilisation de la clé string "${key}" pour userId ${userId}`);
           break;
         }
       }
