@@ -17,7 +17,7 @@ export class PushSubscription {
   endpoint: string;
 
   @Column('text', { nullable: true })
-  expirationTime: string;
+  expirationTime: string | null;
 
   @Column('text')
   p256dh: string;
@@ -26,10 +26,10 @@ export class PushSubscription {
   auth: string;
 
   @Column({ nullable: true })
-  userAgent: string;
+  userAgent: string | null;
 
   @Column({ nullable: true })
-  platform: string;
+  platform: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

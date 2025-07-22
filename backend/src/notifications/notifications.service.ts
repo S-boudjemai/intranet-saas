@@ -397,7 +397,7 @@ export class NotificationsService {
 
   // Obtenir le nombre de notifications non lues pour un utilisateur
   private async getUnreadCountForUser(userId: number): Promise<number> {
-    const unreadCounts = await this.getUnreadCounts(userId);
+    const unreadCounts = await this.getUnreadCountsByType(userId);
     return unreadCounts.documents + unreadCounts.announcements + unreadCounts.tickets;
   }
 
