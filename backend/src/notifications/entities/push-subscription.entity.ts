@@ -25,10 +25,10 @@ export class PushSubscription {
   @Column('text')
   auth: string;
 
-  @Column({ nullable: true })
+  @Column('text', { nullable: true })
   userAgent: string | null;
 
-  @Column({ nullable: true })
+  @Column('text', { nullable: true })
   platform: string | null;
 
   @CreateDateColumn()
