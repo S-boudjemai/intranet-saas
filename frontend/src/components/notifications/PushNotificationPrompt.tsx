@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, Smartphone, Check } from 'lucide-react';
+import { Bell, X, Smartphone } from 'lucide-react';
 import { pushNotifications, PushNotificationService } from '../../services/pushNotifications';
 import { motion, AnimatePresence } from 'framer-motion';
 
