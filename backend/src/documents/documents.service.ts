@@ -124,21 +124,25 @@ export class DocumentsService {
         user.userId,
       );
 
-      // Envoyer notifications push à tous les utilisateurs du tenant (sauf l'auteur)
-      await this.notificationsService.sendPushToTenant(
-        tenantId,
-        {
-          title: 'Nouveau document',
-          body: message,
-          data: {
-            type: 'DOCUMENT_UPLOADED',
-            targetId: parseInt(savedDoc.id),
-            url: '/documents',
+      // Envoyer notifications push à tous les utilisateurs du tenant (ne pas faire échouer l'upload)
+      try {
+        await this.notificationsService.sendPushToTenant(
+          tenantId,
+          {
+            title: 'Nouveau document',
+            body: message,
+            data: {
+              type: 'DOCUMENT_UPLOADED',
+              targetId: parseInt(savedDoc.id),
+              url: '/documents',
+            },
+            tag: `document-${savedDoc.id}`,
           },
-          tag: `document-${savedDoc.id}`,
-        },
-        user.userId.toString()
-      );
+          user.userId.toString()
+        );
+      } catch (pushError) {
+        console.warn(`Failed to send push notifications for document upload:`, pushError.message);
+      }
 
       // Envoyer notification temps réel
       this.notificationsGateway.notifyDocumentUploaded(tenantId, {

@@ -128,22 +128,30 @@ export class AnnouncementsService {
       message,
     );
 
-    // Envoyer notifications push aux viewers uniquement
-    const viewers = await this.userRepository.find({
-      where: { tenant_id: data.tenant_id, role: Role.Viewer },
-    });
-    
-    for (const viewer of viewers) {
-      await this.notificationsService.sendPushToUser(viewer.id.toString(), {
-        title: 'Nouvelle annonce',
-        body: message,
-        data: {
-          type: 'ANNOUNCEMENT_POSTED',
-          targetId: savedAnnouncement.id,
-          url: '/announcements',
-        },
-        tag: `announcement-${savedAnnouncement.id}`,
+    // Envoyer notifications push aux viewers uniquement (ne pas faire échouer la création)
+    try {
+      const viewers = await this.userRepository.find({
+        where: { tenant_id: data.tenant_id, role: Role.Viewer },
       });
+      
+      for (const viewer of viewers) {
+        try {
+          await this.notificationsService.sendPushToUser(viewer.id.toString(), {
+            title: 'Nouvelle annonce',
+            body: message,
+            data: {
+              type: 'ANNOUNCEMENT_POSTED',
+              targetId: savedAnnouncement.id,
+              url: '/announcements',
+            },
+            tag: `announcement-${savedAnnouncement.id}`,
+          });
+        } catch (pushError) {
+          console.warn(`Failed to send push to viewer ${viewer.id}:`, pushError.message);
+        }
+      }
+    } catch (error) {
+      console.error('Error sending push notifications for announcement:', error);
     }
 
     // Envoyer notification temps réel
