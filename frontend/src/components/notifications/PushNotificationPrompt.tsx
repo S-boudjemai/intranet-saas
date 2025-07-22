@@ -19,9 +19,11 @@ export const PushNotificationPrompt: React.FC = () => {
         setIsSubscribed(!!subscription);
       });
 
-      // Afficher le prompt si pas encore demandé et sur mobile
-      if (currentPermission === 'default' && isMobileDevice()) {
-        setTimeout(() => setShowPrompt(true), 5000); // Attendre 5s avant d'afficher
+      // Afficher le prompt si pas encore demandé
+      if (currentPermission === 'default') {
+        // Sur mobile, attendre 5s. Sur desktop, afficher immédiatement pour test
+        const delay = isMobileDevice() ? 5000 : 2000;
+        setTimeout(() => setShowPrompt(true), delay);
       }
     }
   }, []);
@@ -113,8 +115,23 @@ export const PushNotificationPrompt: React.FC = () => {
     );
   };
 
+  // Bouton de test pour forcer l'affichage (dev only)
+  const TestButton = () => {
+    if (process.env.NODE_ENV !== 'development') return null;
+    
+    return (
+      <button
+        onClick={() => setShowPrompt(true)}
+        className="fixed top-20 right-4 px-3 py-1 bg-purple-600 text-white text-xs rounded-lg z-50"
+      >
+        Test Notif Prompt
+      </button>
+    );
+  };
+
   return (
     <>
+      <TestButton />
       {/* Prompt mobile */}
       <AnimatePresence>
         {showPrompt && (
@@ -122,7 +139,7 @@ export const PushNotificationPrompt: React.FC = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-4 left-4 right-4 z-50 md:hidden"
+            className="fixed bottom-4 left-4 right-4 md:left-auto md:max-w-md z-50"
           >
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 border border-gray-200 dark:border-gray-700">
               <button

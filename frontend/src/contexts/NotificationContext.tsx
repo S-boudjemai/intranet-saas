@@ -74,11 +74,20 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Établir la connexion WebSocket
   useEffect(() => {
     if (token && user) {
-      const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', {
+      const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      console.log('🔗 Connecting to WebSocket:', socketUrl);
+      
+      const newSocket = io(socketUrl, {
         auth: {
           token: token
         },
-        autoConnect: true
+        autoConnect: true,
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
+        timeout: 20000
       });
 
       newSocket.on('connect', () => {

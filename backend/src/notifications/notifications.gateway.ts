@@ -25,9 +25,13 @@ interface AuthenticatedSocket extends Socket {
       'http://127.0.0.1:5174',
       'https://intranet-saas.vercel.app',
       'https://intranet-saas-git-main-sofianes-projects-c54f9e3b.vercel.app',
+      /\.vercel\.app$/,
     ],
     credentials: true,
   },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000,
 })
 export class NotificationsGateway
   implements OnGatewayConnection, OnGatewayDisconnect

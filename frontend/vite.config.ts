@@ -8,10 +8,15 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'pwa-192x192.svg', 'pwa-512x512.svg'],
-      srcDir: 'public',
-      filename: 'sw.js',
-      strategies: 'injectManifest',
+      strategies: 'generateSW',
       injectRegister: 'auto',
+      devOptions: {
+        enabled: true
+      },
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+      },
+      includeManifestIcons: true,
       manifest: {
         name: 'FranchiseHUB - Gestion Franchise',
         short_name: 'FranchiseHUB',
@@ -85,8 +90,10 @@ export default defineConfig({
               }
             }
           }
-        ]
-      }
+        ],
+        navigationPreload: true
+      },
+      selfDestroying: false
     })
   ],
   server: {

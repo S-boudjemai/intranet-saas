@@ -1,21 +1,6 @@
 /// <reference lib="webworker" />
 
-// Service Worker pour FranchiseHUB
-const CACHE_NAME = 'franchisehub-v1';
-
-// Installation du service worker
-self.addEventListener('install', (event) => {
-  console.log('Service Worker installing...');
-  self.skipWaiting();
-});
-
-// Activation du service worker
-self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating...');
-  event.waitUntil(clients.claim());
-});
-
-// Gestion des notifications push
+// Écouter les notifications push
 self.addEventListener('push', (event) => {
   console.log('Push notification received:', event);
   
@@ -56,8 +41,8 @@ self.addEventListener('push', (event) => {
   );
 
   // Mettre à jour le badge de l'application
-  if ('setAppBadge' in navigator && notificationData.badge_count !== undefined) {
-    navigator.setAppBadge(notificationData.badge_count).catch(console.error);
+  if ('setAppBadge' in self.navigator && notificationData.badge_count !== undefined) {
+    self.navigator.setAppBadge(notificationData.badge_count).catch(console.error);
   }
 });
 
@@ -69,7 +54,7 @@ self.addEventListener('notificationclick', (event) => {
   const urlToOpen = event.notification.data?.url || '/';
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((windowClients) => {
         // Chercher une fenêtre existante
         for (const client of windowClients) {
@@ -78,28 +63,12 @@ self.addEventListener('notificationclick', (event) => {
           }
         }
         // Ouvrir une nouvelle fenêtre si aucune n'existe
-        if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(urlToOpen);
         }
       })
   );
 });
-
-// Synchronisation en arrière-plan (pour futures améliorations)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-notifications') {
-    event.waitUntil(syncNotifications());
-  }
-});
-
-async function syncNotifications() {
-  try {
-    // Future: synchroniser les notifications non lues
-    console.log('Syncing notifications...');
-  } catch (error) {
-    console.error('Sync failed:', error);
-  }
-}
 
 // Message handler pour communication avec l'app
 self.addEventListener('message', (event) => {
@@ -108,8 +77,8 @@ self.addEventListener('message', (event) => {
   }
   
   if (event.data && event.data.type === 'UPDATE_BADGE') {
-    if ('setAppBadge' in navigator) {
-      navigator.setAppBadge(event.data.count).catch(console.error);
+    if ('setAppBadge' in self.navigator) {
+      self.navigator.setAppBadge(event.data.count).catch(console.error);
     }
   }
 });
