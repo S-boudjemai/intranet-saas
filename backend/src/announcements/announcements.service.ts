@@ -13,6 +13,7 @@ import { Document } from 'src/documents/entities/document.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { NotificationType } from '../notifications/entities/notification.entity';
+import { User } from '../users/entities/user.entity';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
 
 @Injectable()
@@ -26,6 +27,9 @@ export class AnnouncementsService {
 
     @InjectRepository(Document)
     private readonly documentRepo: Repository<Document>,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
 
     private notificationsService: NotificationsService,
     private notificationsGateway: NotificationsGateway,
@@ -123,6 +127,24 @@ export class AnnouncementsService {
       savedAnnouncement.id,
       message,
     );
+
+    // Envoyer notifications push aux viewers uniquement
+    const viewers = await this.userRepository.find({
+      where: { tenant_id: data.tenant_id, role: Role.Viewer },
+    });
+    
+    for (const viewer of viewers) {
+      await this.notificationsService.sendPushToUser(viewer.id.toString(), {
+        title: 'Nouvelle annonce',
+        body: message,
+        data: {
+          type: 'ANNOUNCEMENT_POSTED',
+          targetId: savedAnnouncement.id,
+          url: '/announcements',
+        },
+        tag: `announcement-${savedAnnouncement.id}`,
+      });
+    }
 
     // Envoyer notification temps réel
     this.notificationsGateway.notifyAnnouncementPosted(data.tenant_id, {

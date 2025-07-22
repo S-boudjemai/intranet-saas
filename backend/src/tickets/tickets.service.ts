@@ -138,11 +138,25 @@ export class TicketsService {
       message,
     );
 
-    // Récupérer les IDs des managers pour WebSocket
+    // Envoyer notifications push aux managers
     const managers = await this.usersRepo.find({
       where: { tenant_id: tenantId, role: Role.Manager },
-      select: ['id'],
     });
+    
+    for (const manager of managers) {
+      await this.notificationsService.sendPushToUser(manager.id.toString(), {
+        title: 'Nouveau ticket',
+        body: message,
+        data: {
+          type: 'TICKET_CREATED',
+          targetId: parseInt(savedTicket.id),
+          url: `/tickets/${savedTicket.id}`,
+        },
+        tag: `ticket-${savedTicket.id}`,
+      });
+    }
+
+    // Récupérer les IDs des managers pour WebSocket (déjà fait plus haut)
     const managerIds = managers.map((m) => m.id);
 
     // Envoyer notification temps réel
@@ -286,6 +300,18 @@ export class TicketsService {
       message,
     );
 
+    // Envoyer notification push au créateur du ticket
+    await this.notificationsService.sendPushToUser(updatedTicket.created_by.toString(), {
+      title: 'Ticket mis à jour',
+      body: message,
+      data: {
+        type: 'TICKET_STATUS_UPDATED',
+        targetId: parseInt(updatedTicket.id),
+        url: `/tickets/${updatedTicket.id}`,
+      },
+      tag: `ticket-update-${updatedTicket.id}`,
+    });
+
     // Envoyer notification temps réel
     this.notificationsGateway.notifyTicketUpdated(updatedTicket.created_by, {
       id: updatedTicket.id,
@@ -326,6 +352,18 @@ export class TicketsService {
         parseInt(ticket.id),
         notificationMessage,
       );
+
+      // Envoyer notification push au créateur du ticket
+      await this.notificationsService.sendPushToUser(ticket.created_by.toString(), {
+        title: 'Nouveau commentaire',
+        body: notificationMessage,
+        data: {
+          type: 'TICKET_COMMENTED',
+          targetId: parseInt(ticket.id),
+          url: `/tickets/${ticket.id}`,
+        },
+        tag: `ticket-comment-${ticket.id}`,
+      });
 
       // Envoyer notification temps réel
       this.notificationsGateway.notifyTicketUpdated(ticket.created_by, {

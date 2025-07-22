@@ -124,6 +124,22 @@ export class DocumentsService {
         user.userId,
       );
 
+      // Envoyer notifications push à tous les utilisateurs du tenant (sauf l'auteur)
+      await this.notificationsService.sendPushToTenant(
+        tenantId,
+        {
+          title: 'Nouveau document',
+          body: message,
+          data: {
+            type: 'DOCUMENT_UPLOADED',
+            targetId: parseInt(savedDoc.id),
+            url: '/documents',
+          },
+          tag: `document-${savedDoc.id}`,
+        },
+        user.userId.toString()
+      );
+
       // Envoyer notification temps réel
       this.notificationsGateway.notifyDocumentUploaded(tenantId, {
         id: savedDoc.id,
