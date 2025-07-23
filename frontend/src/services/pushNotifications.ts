@@ -1,5 +1,7 @@
 // Service pour gérer les notifications push
 import axios from 'axios';
+import { getToken, onMessage } from 'firebase/messaging';
+import { messaging } from '../config/firebase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -63,36 +65,59 @@ export class PushNotificationService {
     return permission;
   }
 
-  // S'abonner aux notifications push
-  async subscribeToNotifications(): Promise<PushSubscription | null> {
+  // S'abonner aux notifications push Firebase
+  async subscribeToNotifications(): Promise<any> {
     try {
-      // Obtenir l'enregistrement du service worker
-      this.registration = await navigator.serviceWorker.ready;
-
-      // Vérifier si déjà abonné
-      this.subscription = await this.registration.pushManager.getSubscription();
-      
-      if (this.subscription) {
-        console.log('Already subscribed to push notifications');
-        await this.sendSubscriptionToServer(this.subscription);
-        return this.subscription;
+      if (!messaging) {
+        console.warn('Firebase messaging not supported');
+        return null;
       }
 
-      // Créer un nouvel abonnement
-      // TODO: Récupérer la clé publique VAPID depuis le serveur
-      const vapidPublicKey = await this.getVapidPublicKey();
-      
-      this.subscription = await this.registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+      // Enregistrer et obtenir le service worker Firebase
+      if ('serviceWorker' in navigator) {
+        try {
+          this.registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          console.log('Firebase Service Worker registered');
+        } catch (error) {
+          console.error('Firebase Service Worker registration failed:', error);
+          this.registration = await navigator.serviceWorker.ready;
+        }
+      } else {
+        this.registration = await navigator.serviceWorker.ready;
+      }
+
+      // Obtenir le token FCM
+      const fcmToken = await getToken(messaging, {
+        vapidKey: await this.getVapidPublicKey(),
+        serviceWorkerRegistration: this.registration
       });
 
-      console.log('Subscribed to push notifications:', this.subscription);
-      
-      // Envoyer l'abonnement au serveur
-      await this.sendSubscriptionToServer(this.subscription);
-      
-      return this.subscription;
+      if (fcmToken) {
+        console.log('FCM token obtained:', fcmToken);
+        
+        // Envoyer le token FCM au serveur (dans le format attendu)
+        await this.sendFCMTokenToServer(fcmToken);
+        
+        // Écouter les messages en foreground
+        onMessage(messaging, (payload) => {
+          console.log('Message received in foreground:', payload);
+          // Afficher la notification manuellement si l'app est au premier plan
+          if (payload.notification) {
+            new Notification(payload.notification.title || 'FranchiseHUB', {
+              body: payload.notification.body,
+              icon: payload.data?.icon || '/pwa-192x192.svg',
+              badge: payload.data?.badge || '/pwa-192x192.svg',
+              tag: payload.data?.tag,
+              data: payload.data
+            });
+          }
+        });
+        
+        return fcmToken;
+      } else {
+        console.warn('No FCM token available');
+        return null;
+      }
     } catch (error) {
       console.error('Failed to subscribe to push notifications:', error);
       return null;
@@ -155,26 +180,41 @@ export class PushNotificationService {
     }
   }
 
-  // Envoyer l'abonnement au serveur
-  private async sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
+  // Envoyer le token FCM au serveur (formaté comme l'API existante l'attend)
+  private async sendFCMTokenToServer(fcmToken: string): Promise<void> {
     try {
+      // Formater le token FCM comme une subscription pour compatibilité avec l'API existante
+      const subscriptionData = {
+        subscription: {
+          endpoint: fcmToken, // On stocke le token FCM dans endpoint
+          keys: {
+            p256dh: 'fcm-token', // Valeurs placeholder pour compatibilité
+            auth: 'fcm-token'
+          }
+        },
+        userAgent: navigator.userAgent,
+        platform: this.detectPlatform()
+      };
+      
       await axios.post(
         `${API_URL}/api/notifications/subscribe`,
-        {
-          subscription: subscription.toJSON(),
-          userAgent: navigator.userAgent,
-          platform: this.detectPlatform()
-        },
+        subscriptionData,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         }
       );
-      console.log('Subscription sent to server successfully');
+      console.log('FCM token sent to server successfully');
     } catch (error) {
-      console.error('Failed to send subscription to server:', error);
+      console.error('Failed to send FCM token to server:', error);
     }
+  }
+
+  // Méthode legacy pour compatibilité
+  private async sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
+    // Rediriger vers la nouvelle méthode
+    await this.sendFCMTokenToServer(subscription.endpoint);
   }
 
   // Supprimer l'abonnement du serveur

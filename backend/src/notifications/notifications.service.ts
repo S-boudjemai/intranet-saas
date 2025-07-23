@@ -5,7 +5,7 @@ import { Notification, NotificationType } from './entities/notification.entity';
 import { View, ViewTargetType } from './entities/view.entity';
 import { PushSubscription } from './entities/push-subscription.entity';
 import { User } from '../users/entities/user.entity';
-import * as webpush from 'web-push';
+import * as admin from 'firebase-admin';
 import {
   CreatePushSubscriptionDto,
   SendPushNotificationDto,
@@ -14,14 +14,7 @@ import {
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
-  private vapidKeys = {
-    publicKey:
-      process.env.VAPID_PUBLIC_KEY ||
-      'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
-    privateKey:
-      process.env.VAPID_PRIVATE_KEY ||
-      'dFMWvhPMiA7CAoLoqCoNzYXrxEr_J1BPQahrJqBs6Qw',
-  };
+  private fcmVapidKey = 'BPg56EKTO-Y3Yv_FJwcqYVmVQAC7GM12HLinpWPRPj9n9p5oT7sASKdT3dY-IV4ipg_iHmgW7Ir4xPPGkXCYbhU';
 
   constructor(
     @InjectRepository(Notification)
@@ -33,12 +26,35 @@ export class NotificationsService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
   ) {
-    // Configurer web-push
-    webpush.setVapidDetails(
-      'mailto:' + (process.env.MAIL_FROM || 'noreply@franchisehub.com'),
-      this.vapidKeys.publicKey,
-      this.vapidKeys.privateKey,
-    );
+    // Initialiser Firebase Admin
+    if (!admin.apps.length) {
+      // Utiliser les variables d'environnement ou le fichier JSON en fallback
+      let credential;
+      
+      if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+        // Configuration via variables d'environnement (production)
+        credential = admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        });
+        console.log('🔥 Firebase initialized with environment variables');
+      } else {
+        // Fallback vers le fichier JSON (développement)
+        try {
+          const serviceAccount = require('../../../firebase-service-account.json');
+          credential = admin.credential.cert(serviceAccount);
+          console.log('🔥 Firebase initialized with service account file');
+        } catch (error) {
+          console.error('❌ Firebase initialization failed: no valid credentials found');
+          throw error;
+        }
+      }
+      
+      admin.initializeApp({
+        credential,
+      });
+    }
   }
 
   // Créer une notification pour un utilisateur spécifique
@@ -288,10 +304,6 @@ export class NotificationsService {
 
   // === PUSH NOTIFICATIONS ===
 
-  // Obtenir la clé publique VAPID
-  getVapidPublicKey(): string {
-    return this.vapidKeys.publicKey;
-  }
 
   // Enregistrer une subscription push
   async subscribeToPush(
@@ -364,34 +376,42 @@ export class NotificationsService {
       return;
     }
 
-    const payload = JSON.stringify({
-      title: notification.title,
-      body: notification.body,
-      icon: notification.icon || '/pwa-192x192.svg',
-      badge: notification.badge || '/pwa-192x192.svg',
-      tag: notification.tag || 'franchisehub-notification',
-      data: notification.data || {},
-      actions: notification.actions || [],
-      badge_count: await this.getUnreadCountForUser(userId),
-    });
+    // Créer le message Firebase
+    const message = {
+      notification: {
+        title: notification.title,
+        body: notification.body,
+      },
+      data: {
+        icon: notification.icon || '/pwa-192x192.svg',
+        badge: notification.badge || '/pwa-192x192.svg',
+        tag: notification.tag || 'franchisehub-notification',
+        badge_count: (await this.getUnreadCountForUser(userId)).toString(),
+        ...notification.data,
+      },
+      webpush: {
+        fcmOptions: {
+          link: notification.data?.url || '/',
+        },
+        notification: {
+          icon: notification.icon || '/pwa-192x192.svg',
+          badge: notification.badge || '/pwa-192x192.svg',
+        },
+      },
+    };
 
     const promises = subscriptions.map(async (subscription) => {
       console.log(
-        `📱 PUSH SERVICE DEBUG - Sending to endpoint: ${subscription.endpoint.substring(0, 50)}...`,
+        `📱 PUSH SERVICE DEBUG - Sending to FCM token: ${subscription.endpoint.substring(0, 50)}...`,
       );
       try {
-        await webpush.sendNotification(
-          {
-            endpoint: subscription.endpoint,
-            keys: {
-              p256dh: subscription.p256dh,
-              auth: subscription.auth,
-            },
-          },
-          payload,
-        );
+        // Pour FCM, on utilise l'endpoint comme token
+        const response = await admin.messaging().send({
+          ...message,
+          token: subscription.endpoint, // FCM token stocké dans endpoint
+        });
         console.log(
-          `📱 PUSH SERVICE DEBUG - Successfully sent push notification to user ${userId}`,
+          `📱 PUSH SERVICE DEBUG - Successfully sent push notification to user ${userId}. Response: ${response}`,
         );
       } catch (error) {
         console.error(
@@ -403,10 +423,11 @@ export class NotificationsService {
           error,
         );
 
-        // Si l'erreur indique que la subscription n'est plus valide, la supprimer
-        if (error.statusCode === 410) {
+        // Si le token n'est plus valide, le supprimer
+        if (error.code === 'messaging/invalid-registration-token' || 
+            error.code === 'messaging/registration-token-not-registered') {
           console.log(
-            `📱 PUSH SERVICE DEBUG - Removing expired subscription for user ${userId}`,
+            `📱 PUSH SERVICE DEBUG - Removing expired FCM token for user ${userId}`,
           );
           await this.pushSubscriptionRepository.delete(subscription.id);
         }
@@ -494,5 +515,10 @@ export class NotificationsService {
       default:
         return '/dashboard';
     }
+  }
+
+  // Récupérer la clé publique VAPID pour le frontend
+  getVapidPublicKey(): string {
+    return this.fcmVapidKey;
   }
 }

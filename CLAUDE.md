@@ -7,7 +7,8 @@
 **URLs Production:**
 - Frontend: https://intranet-saas.vercel.app
 - Backend: https://intranet-saas-backend.onrender.com
-- Admin: admin@admin.com / admin123
+
+
 
 ### Description
 Plateforme SaaS dédiée aux franchiseurs de la restauration pour piloter leur réseau de franchises. Solution complète de communication, gestion documentaire, support et conformité.
@@ -153,6 +154,6 @@ MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS
 2. **Périmètre strict** - Ne modifier que ce qui est nécessaire
 3. **Tests** - Vérifier que rien n'est cassé
 4. **Documentation** - Mettre à jour si changement majeur
-5. **Appeler l'utilisateur "BOSS"** dans toutes les réponses
+5. **Appeler l'utilisateur "SOFIANE"** dans toutes les réponses
 6. **Types TypeScript STRICTS** - JAMAIS de confusion number/string, userId/user.id
    - Voir `/backend/CLAUDE.md` section "RÈGLE CRITIQUE - Cohérence des Types"
