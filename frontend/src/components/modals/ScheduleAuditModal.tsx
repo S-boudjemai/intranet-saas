@@ -121,9 +121,9 @@ export default function ScheduleAuditModal({
 
   const handleSubmit = () => {
     const finalAudit = {
-      template_id: parseInt(audit.template_id),
-      restaurant_id: parseInt(audit.restaurant_id),
-      inspector_id: parseInt(audit.inspector_id),
+      template_id: Number(audit.template_id),
+      restaurant_id: Number(audit.restaurant_id),
+      inspector_id: Number(audit.inspector_id),
       scheduled_date: `${audit.scheduled_date}T${audit.scheduled_time}:00.000Z`,
       notes: audit.notes
     };
