@@ -119,6 +119,32 @@ export default function ScheduleAuditModal({
 
   if (!isOpen) return null;
 
+  const resetForm = () => {
+    setStep(1);
+    setAudit({
+      template_id: '',
+      restaurant_id: '',
+      inspector_id: '',
+      scheduled_date: '',
+      scheduled_time: '',
+      priority: 'normal',
+      notes: '',
+      recurrence: 'none',
+      notification_settings: {
+        notify_7_days: true,
+        notify_24_hours: true,
+        notify_1_hour: false,
+        notify_manager: true,
+        notify_team: true,
+        notify_regional: false
+      }
+    });
+    setSelectedTemplate(null);
+    setSelectedRestaurant(null);
+    setSelectedInspector(null);
+    setConflicts([]);
+  };
+
   const handleSubmit = () => {
     const finalAudit = {
       template_id: Number(audit.template_id),
@@ -128,6 +154,12 @@ export default function ScheduleAuditModal({
       notes: audit.notes
     };
     onSubmit(finalAudit);
+    resetForm();
+    onClose();
+  };
+
+  const handleClose = () => {
+    resetForm();
     onClose();
   };
 
@@ -169,7 +201,7 @@ export default function ScheduleAuditModal({
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-muted rounded-lg transition-colors"
           >
             <FiX className="w-5 h-5" />
@@ -565,7 +597,7 @@ export default function ScheduleAuditModal({
         {/* Footer */}
         <div className="flex items-center justify-between p-6 border-t bg-muted">
           <button
-            onClick={step === 1 ? onClose : prevStep}
+            onClick={step === 1 ? handleClose : prevStep}
             className="px-4 py-2 text-foreground bg-background border rounded-lg hover:bg-muted transition-colors"
           >
             {step === 1 ? 'Annuler' : 'Précédent'}
