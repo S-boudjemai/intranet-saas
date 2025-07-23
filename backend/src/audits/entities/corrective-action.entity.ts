@@ -13,7 +13,8 @@ export type CorrectiveActionStatus =
   | 'assigned'
   | 'in_progress'
   | 'completed'
-  | 'verified';
+  | 'verified'
+  | 'archived';
 
 @Entity('corrective_actions')
 export class CorrectiveAction {
@@ -34,7 +35,7 @@ export class CorrectiveAction {
 
   @Column({
     type: 'enum',
-    enum: ['assigned', 'in_progress', 'completed', 'verified'],
+    enum: ['assigned', 'in_progress', 'completed', 'verified', 'archived'],
     default: 'assigned',
   })
   status: CorrectiveActionStatus;

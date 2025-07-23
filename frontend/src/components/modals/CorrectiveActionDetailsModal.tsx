@@ -1,4 +1,4 @@
-import { FiX, FiUser, FiCalendar, FiClock, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
+import { FiX, FiUser, FiCalendar, FiClock, FiCheckCircle, FiAlertTriangle, FiArchive, FiPlay, FiEdit3 } from 'react-icons/fi';
 import { HiOfficeBuilding, HiClipboardCheck } from 'react-icons/hi';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
@@ -15,19 +15,7 @@ interface CorrectiveAction {
   notes?: string;
   created_at: string;
   updated_at: string;
-  non_conformity?: {
-    id: number;
-    description: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    audit_execution: {
-      restaurant: {
-        name: string;
-      };
-      template: {
-        name: string;
-      };
-    };
-  };
+  non_conformity?: null; // Supprimé mais gardé pour compatibilité
   assigned_user: {
     id: number;
     email: string;
@@ -45,6 +33,8 @@ interface CorrectiveActionDetailsModalProps {
   onClose: () => void;
   action: CorrectiveAction | null;
   onStatusChange?: (actionId: number, newStatus: string, notes?: string) => void;
+  onArchive?: (actionId: number) => void;
+  onEdit?: (action: CorrectiveAction) => void;
   userRole?: string;
 }
 
@@ -53,6 +43,8 @@ export default function CorrectiveActionDetailsModal({
   onClose,
   action,
   onStatusChange,
+  onArchive,
+  onEdit,
   userRole = 'viewer'
 }: CorrectiveActionDetailsModalProps) {
   if (!isOpen || !action) return null;
@@ -61,8 +53,9 @@ export default function CorrectiveActionDetailsModal({
     const statusConfig = {
       assigned: { label: 'Assignée', variant: 'secondary' as const, color: 'text-blue-600', icon: '📋' },
       in_progress: { label: 'En cours', variant: 'info' as const, color: 'text-orange-600', icon: '⏳' },
-      completed: { label: 'Terminée', variant: 'success' as const, color: 'text-green-600', icon: '✅' },
+      completed: { label: 'Réalisée', variant: 'success' as const, color: 'text-green-600', icon: '✅' },
       verified: { label: 'Vérifiée', variant: 'success' as const, color: 'text-green-800', icon: '🔍' },
+      archived: { label: 'Archivée', variant: 'secondary' as const, color: 'text-gray-600', icon: '📦' },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.assigned;
@@ -95,11 +88,13 @@ export default function CorrectiveActionDetailsModal({
   };
 
   const daysUntilDue = getDaysUntilDue(action.due_date);
-  const isOverdue = daysUntilDue < 0 && action.status !== 'completed' && action.status !== 'verified';
+  const isOverdue = daysUntilDue < 0 && action.status !== 'completed';
 
   const canChangeStatus = userRole === 'admin' || userRole === 'manager';
-  const canMarkCompleted = canChangeStatus && (action.status === 'assigned' || action.status === 'in_progress');
-  const canVerify = canChangeStatus && action.status === 'completed';
+  const canMarkCompleted = canChangeStatus && action.status === 'assigned';
+  const canArchive = canChangeStatus && action.status === 'completed';
+  const canEdit = canChangeStatus && action.status !== 'completed' && action.status !== 'archived';
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -199,41 +194,19 @@ export default function CorrectiveActionDetailsModal({
               </div>
             </div>
 
-            {/* Non-conformité associée */}
+            {/* Contexte - Section simplifiée */}
             <div className="space-y-4">
               <h3 className="font-medium text-foreground flex items-center">
                 <FiAlertTriangle className="w-4 h-4 mr-2" />
                 Contexte
               </h3>
               
-              {action.non_conformity ? (
-                <div className="p-4 border border-border rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-foreground">Non-conformité liée</h4>
-                    {getSeverityBadge(action.non_conformity.severity)}
-                  </div>
-                  
-                  <p className="text-sm text-foreground mb-3">{action.non_conformity.description}</p>
-                  
-                  <div className="space-y-2 text-xs text-muted-foreground">
-                    <div className="flex items-center">
-                      <HiOfficeBuilding className="w-3 h-3 mr-1" />
-                      {action.non_conformity.audit_execution.restaurant.name}
-                    </div>
-                    <div className="flex items-center">
-                      <HiClipboardCheck className="w-3 h-3 mr-1" />
-                      {action.non_conformity.audit_execution.template.name}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 border border-border rounded-lg">
-                  <h4 className="font-medium text-foreground mb-2">Action générale</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Cette action corrective n'est pas liée à une non-conformité spécifique.
-                  </p>
-                </div>
-              )}
+              <div className="p-4 border border-border rounded-lg">
+                <h4 className="font-medium text-foreground mb-2">Action corrective</h4>
+                <p className="text-sm text-muted-foreground">
+                  Action à réaliser par le franchisé pour corriger un problème identifié.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -273,23 +246,36 @@ export default function CorrectiveActionDetailsModal({
           </div>
 
           <div className="flex items-center gap-3">
+            {canEdit && (
+              <Button 
+                onClick={() => onEdit?.(action)}
+                variant="outline"
+              >
+                <FiEdit3 className="w-4 h-4 mr-2" />
+                Modifier
+              </Button>
+            )}
+
+            
             {canMarkCompleted && (
               <Button 
                 onClick={() => onStatusChange?.(action.id, 'completed')}
                 className="bg-green-600 hover:bg-green-700"
               >
                 <FiCheckCircle className="w-4 h-4 mr-2" />
-                Marquer terminée
+                Marquer réalisée
               </Button>
             )}
             
-            {canVerify && (
+
+            {canArchive && (
               <Button 
-                onClick={() => onStatusChange?.(action.id, 'verified')}
+                onClick={() => onArchive?.(action.id)}
                 variant="outline"
+                className="text-gray-600 hover:text-gray-800"
               >
-                <FiCheckCircle className="w-4 h-4 mr-2" />
-                Vérifier
+                <FiArchive className="w-4 h-4 mr-2" />
+                Archiver
               </Button>
             )}
             

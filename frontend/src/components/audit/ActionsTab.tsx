@@ -20,7 +20,7 @@ import {
 } from 'react-icons/hi';
 
 export default function ActionsTab() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [correctiveActions, setCorrectiveActions] = useState<CorrectiveAction[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +28,8 @@ export default function ActionsTab() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedAction, setSelectedAction] = useState<CorrectiveAction | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [editingAction, setEditingAction] = useState<CorrectiveAction | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [toast, setToast] = useState<{
     isOpen: boolean;
     type: 'success' | 'error' | 'warning' | 'info';
@@ -126,6 +128,57 @@ export default function ActionsTab() {
       }
     } catch (error) {
       showToast('error', 'Erreur réseau', 'Une erreur est survenue lors de la création.');
+    }
+  };
+
+  const handleArchiveAction = async (actionId: number) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/corrective-actions/${actionId}/archive`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        await fetchData(); // Recharger la liste
+        setShowDetailsModal(false);
+        showToast('success', 'Action archivée', 'L\'action corrective a été archivée avec succès.');
+      } else {
+        showToast('error', 'Erreur d\'archivage', 'Impossible d\'archiver l\'action corrective.');
+      }
+    } catch (error) {
+      showToast('error', 'Erreur réseau', 'Une erreur est survenue lors de l\'archivage.');
+    }
+  };
+
+  const handleEditAction = (action: CorrectiveAction) => {
+    setEditingAction(action);
+    setShowDetailsModal(false);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateAction = async (actionData: any) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/corrective-actions/${actionData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(actionData),
+      });
+
+      if (response.ok) {
+        await fetchData();
+        setShowEditModal(false);
+        setEditingAction(null);
+        showToast('success', 'Action modifiée', 'L\'action corrective a été modifiée avec succès.');
+      } else {
+        showToast('error', 'Erreur de modification', 'Impossible de modifier l\'action corrective.');
+      }
+    } catch (error) {
+      showToast('error', 'Erreur réseau', 'Une erreur est survenue lors de la modification.');
     }
   };
 
@@ -346,6 +399,21 @@ export default function ActionsTab() {
         users={users}
       />
 
+      {editingAction && (
+        <CreateCorrectiveActionModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingAction(null);
+          }}
+          onSubmit={handleUpdateAction}
+          nonConformities={[]}
+          users={users}
+          editAction={editingAction}
+          isEditMode={true}
+        />
+      )}
+
       {selectedAction && (
         <CorrectiveActionDetailsModal
           action={selectedAction}
@@ -355,6 +423,9 @@ export default function ActionsTab() {
             setSelectedAction(null);
           }}
           onStatusChange={handleStatusChange}
+          onArchive={handleArchiveAction}
+          onEdit={handleEditAction}
+          userRole={user?.role}
         />
       )}
 

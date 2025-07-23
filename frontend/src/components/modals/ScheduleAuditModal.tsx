@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FiX, FiCalendar, FiUser, FiFileText, FiClock, FiAlertTriangle } from 'react-icons/fi';
 
 interface Template {
@@ -81,6 +81,9 @@ export default function ScheduleAuditModal({
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [selectedInspector, setSelectedInspector] = useState<Inspector | null>(null);
   const [conflicts, setConflicts] = useState<string[]>([]);
+  
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (audit.template_id) {
@@ -397,27 +400,43 @@ export default function ScheduleAuditModal({
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Date prévue *
                   </label>
-                  <input
-                    type="date"
-                    value={audit.scheduled_date}
-                    onChange={(e) => setAudit({ ...audit, scheduled_date: e.target.value })}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      ref={dateInputRef}
+                      type="date"
+                      id="audit-date"
+                      value={audit.scheduled_date}
+                      onChange={(e) => setAudit({ ...audit, scheduled_date: e.target.value })}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-3 py-2 pr-10 border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary cursor-text hover:border-primary transition-colors [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                      required
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <FiCalendar className="text-primary w-5 h-5" />
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">Cliquez pour sélectionner une date</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Heure prévue *
                   </label>
-                  <input
-                    type="time"
-                    value={audit.scheduled_time}
-                    onChange={(e) => setAudit({ ...audit, scheduled_time: e.target.value })}
-                    className="w-full px-3 py-2 border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      ref={timeInputRef}
+                      type="time"
+                      id="audit-time"
+                      value={audit.scheduled_time}
+                      onChange={(e) => setAudit({ ...audit, scheduled_time: e.target.value })}
+                      className="w-full px-3 py-2 pr-10 border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary cursor-text hover:border-primary transition-colors [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                      required
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <FiClock className="text-primary w-5 h-5" />
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">Cliquez pour sélectionner l'heure</p>
                 </div>
               </div>
 

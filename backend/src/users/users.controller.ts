@@ -14,6 +14,7 @@ import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { Public } from 'src/auth/public.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 import * as bcrypt from 'bcrypt';
 
 @Controller('users')
@@ -34,7 +35,8 @@ export class UsersController {
   }
 
   @Get()
-  async find(@Query('email') email?: string): Promise<User[] | User> {
+  @UseGuards(JwtAuthGuard)
+  async find(@Request() req: { user: JwtUser }, @Query('email') email?: string): Promise<User[] | User> {
     if (email) {
       const user = await this.svc.findByEmail(email);
       if (!user) {
@@ -42,7 +44,11 @@ export class UsersController {
       }
       return user;
     }
-    return this.svc.findAll();
+    // Filtrer par tenant de l'utilisateur connecté
+    if (!req.user.tenant_id) {
+      throw new NotFoundException('Utilisateur sans tenant');
+    }
+    return this.svc.findByTenant(req.user.tenant_id);
   }
 
   @Patch(':id/password')

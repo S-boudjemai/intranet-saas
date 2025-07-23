@@ -57,9 +57,9 @@ export default function AuditPlanningPage() {
 
       if (inspectorsRes.ok) {
         const data = await inspectorsRes.json();
-        // Filtrer pour garder seulement les managers et admins
+        // Filtrer pour garder seulement les managers du tenant
         const filteredInspectors = (data.data || data).filter((u: any) => 
-          u.role === 'admin' || u.role === 'manager'
+          u.role === 'manager'
         ).map((u: any) => ({
           ...u,
           available: true // Simplification pour la démo

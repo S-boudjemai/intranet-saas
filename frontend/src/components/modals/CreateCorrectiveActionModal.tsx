@@ -16,6 +16,8 @@ interface CreateCorrectiveActionModalProps {
   nonConformities?: any[]; // Kept for compatibility but will be empty
   users: User[];
   preselectedNonConformity?: any; // Legacy prop, unused now
+  editAction?: any; // Action à modifier (si fournie, on est en mode édition)
+  isEditMode?: boolean; // Flag pour indiquer le mode édition
 }
 
 const ACTION_ORIGINS = [
@@ -127,7 +129,9 @@ export default function CreateCorrectiveActionModal({
   onSubmit, 
   nonConformities = [], 
   users,
-  preselectedNonConformity 
+  preselectedNonConformity,
+  editAction,
+  isEditMode = false
 }: CreateCorrectiveActionModalProps) {
   const [step, setStep] = useState(1);
   const [action, setAction] = useState({
@@ -142,6 +146,38 @@ export default function CreateCorrectiveActionModal({
     resources_needed: [] as string[],
     restaurant_id: ''
   });
+
+  // Initialiser avec les données d'édition si disponibles
+  useEffect(() => {
+    if (isEditMode && editAction) {
+      setAction({
+        title: editAction.action_description || '',
+        description: editAction.action_description || '',
+        origin: 'general', // Default value for existing actions
+        category: 'maintenance', // Default category
+        priority: 'normal', // Default priority
+        assigned_to: editAction.assigned_to?.toString() || '',
+        due_date: editAction.due_date ? new Date(editAction.due_date).toISOString().split('T')[0] : '',
+        cost_estimate: '',
+        resources_needed: [],
+        restaurant_id: ''
+      });
+    } else if (!isEditMode) {
+      // Reset form when creating new action
+      setAction({
+        title: '',
+        description: '',
+        origin: 'general',
+        category: '',
+        priority: 'normal',
+        assigned_to: '',
+        due_date: '',
+        cost_estimate: '',
+        resources_needed: [],
+        restaurant_id: ''
+      });
+    }
+  }, [isEditMode, editAction, isOpen]);
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showPredefined, setShowPredefined] = useState(false);
@@ -180,6 +216,11 @@ export default function CreateCorrectiveActionModal({
       due_date: action.due_date,
       notes: action.title // Using title as notes since backend expects notes field
     };
+
+    // Si on est en mode édition, ajouter l'ID
+    if (isEditMode && editAction) {
+      finalAction.id = editAction.id;
+    }
 
     onSubmit(finalAction);
     onClose();
@@ -228,7 +269,7 @@ export default function CreateCorrectiveActionModal({
         <div className="flex items-center justify-between p-6 border-b">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
-              Nouvelle Action Corrective
+              {isEditMode ? 'Modifier Action Corrective' : 'Nouvelle Action Corrective'}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               Étape {step} sur 4

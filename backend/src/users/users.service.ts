@@ -67,6 +67,13 @@ export class UsersService {
     return this.repo.find();
   }
 
+  findByTenant(tenant_id: number) {
+    return this.repo.find({ 
+      where: { tenant_id },
+      select: ['id', 'email', 'role', 'tenant_id', 'restaurant_id']
+    });
+  }
+
   async updatePassword(userId: number, hashedPassword: string) {
     return this.repo.update(userId, { password_hash: hashedPassword });
   }

@@ -16,17 +16,18 @@ export class CorrectiveActionsService {
     status?: string;
     assigned_to?: number;
     restaurant_id?: number;
+    tenant_id?: number;
   }) {
     const query = this.correctiveActionRepository
       .createQueryBuilder('ca')
-      .leftJoinAndSelect('ca.non_conformity', 'nc')
-      .leftJoinAndSelect('nc.execution', 'execution')
-      .leftJoinAndSelect('execution.restaurant', 'restaurant')
       .leftJoinAndSelect('ca.assigned_user', 'assigned_user')
       .orderBy('ca.due_date', 'ASC');
 
     if (filters.status) {
       query.andWhere('ca.status = :status', { status: filters.status });
+    } else {
+      // Par défaut, exclure les actions archivées
+      query.andWhere('ca.status != :archivedStatus', { archivedStatus: 'archived' });
     }
 
     if (filters.assigned_to) {
@@ -35,9 +36,10 @@ export class CorrectiveActionsService {
       });
     }
 
-    if (filters.restaurant_id) {
-      query.andWhere('execution.restaurant_id = :restaurantId', {
-        restaurantId: filters.restaurant_id,
+    // Filtrage multi-tenant via assigned_user
+    if (filters.tenant_id) {
+      query.andWhere('assigned_user.tenant_id = :tenantId', {
+        tenantId: filters.tenant_id,
       });
     }
 
@@ -48,9 +50,6 @@ export class CorrectiveActionsService {
     const action = await this.correctiveActionRepository.findOne({
       where: { id },
       relations: [
-        'non_conformity',
-        'non_conformity.execution',
-        'non_conformity.execution.restaurant',
         'assigned_user',
         'verifier',
       ],
@@ -97,12 +96,13 @@ export class CorrectiveActionsService {
 
   async getStats(restaurantId?: number) {
     const query = this.correctiveActionRepository
-      .createQueryBuilder('ca')
-      .leftJoin('ca.non_conformity', 'nc')
-      .leftJoin('nc.execution', 'execution');
+      .createQueryBuilder('ca');
 
+    // Note: Plus de filtrage par restaurant via non_conformity
+    // TODO: Ajouter un champ restaurant_id direct si nécessaire
     if (restaurantId) {
-      query.where('execution.restaurant_id = :restaurantId', { restaurantId });
+      // Pour l'instant, on ignore ce filtre car pas de relation directe
+      // query.where('ca.restaurant_id = :restaurantId', { restaurantId });
     }
 
     const [total, pending, inProgress, completed, overdue] = await Promise.all([
@@ -133,5 +133,22 @@ export class CorrectiveActionsService {
       by_status: { pending, in_progress: inProgress, completed },
       overdue,
     };
+  }
+
+  async archive(id: number) {
+    const action = await this.correctiveActionRepository.findOne({
+      where: { id },
+    });
+
+    if (!action) {
+      throw new NotFoundException('Action corrective non trouvée');
+    }
+
+    if (!['completed', 'verified'].includes(action.status)) {
+      throw new Error('Seules les actions terminées ou vérifiées peuvent être archivées');
+    }
+
+    action.status = 'archived';
+    return this.correctiveActionRepository.save(action);
   }
 }
