@@ -142,14 +142,14 @@ export class TicketsController {
 
   /**
    * DELETE /tickets/delete-all
-   * - Manager & Admin only: suppression de tous les tickets
+   * - Admin only: suppression de tous les tickets (global)
    */
   @Delete('delete-all')
-  @Roles(Role.Manager, Role.Admin)
+  @Roles(Role.Admin)
   async deleteAll(
     @Req() req: Request & { user: JwtUser },
   ): Promise<{ deleted: number }> {
-    const count = await this.svc.deleteAll(req.user);
+    const count = await this.svc.deleteAllGlobal(req.user);
     return { deleted: count };
   }
 

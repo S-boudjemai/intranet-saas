@@ -139,28 +139,6 @@ export default function TicketsPage() {
     }
   };
 
-  const handleDeleteAllTickets = async () => {
-    if (!token || !isManager) return;
-    
-    const confirmed = window.confirm(
-      'Êtes-vous sûr de vouloir supprimer TOUS les tickets ? Cette action est irréversible.'
-    );
-    
-    if (!confirmed) return;
-    
-    try {
-      await fetch(`${import.meta.env.VITE_API_URL}/tickets/delete-all`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      setTickets([]);
-      alert('Tous les tickets ont été supprimés avec succès.');
-    } catch (error) {
-      console.error('Erreur lors de la suppression des tickets:', error);
-      alert('Erreur lors de la suppression des tickets.');
-    }
-  };
 
   return (
     <motion.div 
@@ -169,37 +147,23 @@ export default function TicketsPage() {
       transition={{ duration: 0.5 }}
       className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8"
     >
-      <div className="flex justify-between items-center mb-8">
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.5 }}
-          className="text-3xl font-bold text-foreground flex items-center gap-3"
+      <motion.h1 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3"
+      >
+        <motion.div 
+          initial={{ scale: 0, rotate: -45 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+          className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
+          style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
         >
-          <motion.div 
-            initial={{ scale: 0, rotate: -45 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-            className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
-            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
-          >
-            <TicketIcon className="h-6 w-6 text-primary" />
-          </motion.div>
-          <span>Gestion des Tickets</span>
-        </motion.h1>
-        
-        {isManager && tickets.length > 0 && (
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            onClick={handleDeleteAllTickets}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-          >
-            Supprimer tous les tickets
-          </motion.button>
-        )}
-      </div>
+          <TicketIcon className="h-6 w-6 text-primary" />
+        </motion.div>
+        <span>Gestion des Tickets</span>
+      </motion.h1>
 
       {isViewer && (
         <motion.div 

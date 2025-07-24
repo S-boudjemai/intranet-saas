@@ -657,4 +657,49 @@ export class TicketsService {
     
     return tickets.length;
   }
+
+  /**
+   * Supprime tous les tickets de tous les tenants (admin seulement)
+   */
+  async deleteAllGlobal(user: JwtUser): Promise<number> {
+    // Vérifier que l'utilisateur est admin
+    if (user.role !== 'admin') {
+      throw new Error('Seuls les admins peuvent supprimer tous les tickets');
+    }
+
+    // Récupérer TOUS les tickets
+    const tickets = await this.ticketsRepo.find({
+      relations: ['comments', 'attachments'],
+    });
+
+    if (tickets.length === 0) {
+      return 0;
+    }
+
+    // Supprimer les attachments S3 si configuré
+    if (process.env.AWS_S3_BUCKET) {
+      for (const ticket of tickets) {
+        for (const attachment of ticket.attachments || []) {
+          if (attachment.url.includes('amazonaws.com')) {
+            try {
+              const urlParts = attachment.url.split('/');
+              const key = urlParts.slice(-3).join('/');
+              
+              await this.s3.send(new DeleteObjectCommand({
+                Bucket: process.env.AWS_S3_BUCKET,
+                Key: key,
+              }));
+            } catch (error) {
+              console.error('Erreur suppression S3:', error);
+            }
+          }
+        }
+      }
+    }
+
+    // Supprimer tous les tickets (cascade supprimera les comments et attachments)
+    await this.ticketsRepo.remove(tickets);
+    
+    return tickets.length;
+  }
 }

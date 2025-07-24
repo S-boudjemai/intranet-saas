@@ -13,7 +13,8 @@ import {
   SpeakerphoneIcon,
   PencilIcon,
   ChevronRightIcon,
-  FolderIcon
+  FolderIcon,
+  TicketIcon
 } from '../components/icons';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -59,6 +60,7 @@ interface AdminStats {
   totalUsers: number;
   totalDocuments: number;
   totalCategories: number;
+  totalTickets: number;
   activeUsers: number;
   activityRate: number;
   topTenants?: Array<{
@@ -90,7 +92,7 @@ const AdminGlobalDashboard: React.FC = () => {
   const { showToast } = useToast();
   
   // State management
-  const [activeTab, setActiveTab] = useState<'overview' | 'tenants' | 'users' | 'categories'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tenants' | 'users' | 'categories' | 'tickets'>('overview');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -614,10 +616,11 @@ const AdminGlobalDashboard: React.FC = () => {
   const renderOverview = () => (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {renderStatCard('Total Tenants', stats?.totalTenants || 0, '🏢', 'from-blue-500 to-blue-600')}
         {renderStatCard('Total Utilisateurs', stats?.totalUsers || 0, '👥', 'from-green-500 to-green-600')}
         {renderStatCard('Documents', stats?.totalDocuments || 0, '📄', 'from-purple-500 to-purple-600')}
+        {renderStatCard('Tickets', stats?.totalTickets || 0, '🎫', 'from-red-500 to-red-600')}
         {renderStatCard('Taux Activité', `${stats?.activityRate || 0}%`, '⚡', 'from-orange-500 to-orange-600')}
       </div>
 
@@ -824,6 +827,82 @@ const AdminGlobalDashboard: React.FC = () => {
     </div>
   );
 
+  const renderTickets = () => {
+    const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
+
+    const handleDeleteAllTickets = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/delete-all`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          showToast('success', 'Tickets supprimés', `${result.deleted} tickets ont été supprimés avec succès.`);
+          setShowDeleteAllModal(false);
+        } else {
+          showToast('error', 'Erreur', 'Impossible de supprimer les tickets.');
+        }
+      } catch (error) {
+        showToast('error', 'Erreur', 'Une erreur est survenue lors de la suppression.');
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-muted-foreground">Gestion des Tickets</h2>
+          <button
+            onClick={() => setShowDeleteAllModal(true)}
+            className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+          >
+            <TrashIcon className="w-4 h-4 mr-2" />
+            Supprimer tous les tickets
+          </button>
+        </div>
+
+        <div className="bg-card rounded-xl shadow-sm border p-6">
+          <div className="text-center py-12">
+            <TicketIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              Gestion globale des tickets
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Utilisez le bouton ci-dessus pour supprimer tous les tickets de tous les tenants.
+            </p>
+            <p className="text-sm text-red-600">
+              ⚠️ Attention : Cette action supprimera TOUS les tickets de TOUS les tenants.
+            </p>
+          </div>
+        </div>
+
+        {/* Modal de confirmation */}
+        <ConfirmModal
+          isOpen={showDeleteAllModal}
+          onClose={() => setShowDeleteAllModal(false)}
+          onConfirm={handleDeleteAllTickets}
+          title="Supprimer tous les tickets"
+        >
+          <div className="space-y-4">
+            <p>
+              Êtes-vous sûr de vouloir supprimer <span className="font-bold text-red-600">TOUS les tickets</span> ?
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Cette action supprimera tous les tickets de tous les tenants, ainsi que leurs commentaires et pièces jointes.
+            </p>
+            <p className="text-sm font-medium text-red-600">
+              ⚠️ Cette action est irréversible !
+            </p>
+          </div>
+        </ConfirmModal>
+      </div>
+    );
+  };
+
   const renderCategories = () => {
     const renderCategoryItem = (category: Category, level: number = 0) => {
       const hasChildren = category.children && category.children.length > 0;
@@ -1013,7 +1092,8 @@ const AdminGlobalDashboard: React.FC = () => {
               { id: 'overview', label: 'Vue d\'ensemble', icon: ChartPieIcon },
               { id: 'tenants', label: 'Tenants', icon: SpeakerphoneIcon },
               { id: 'users', label: 'Utilisateurs', icon: UsersIcon },
-              { id: 'categories', label: 'Catégories', icon: ArchiveIcon }
+              { id: 'categories', label: 'Catégories', icon: ArchiveIcon },
+              { id: 'tickets', label: 'Tickets', icon: TicketIcon }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -1041,6 +1121,7 @@ const AdminGlobalDashboard: React.FC = () => {
         {activeTab === 'tenants' && renderTenants()}
         {activeTab === 'users' && renderUsers()}
         {activeTab === 'categories' && renderCategories()}
+        {activeTab === 'tickets' && renderTickets()}
       </div>
 
       {/* Modal Create Tenant */}
