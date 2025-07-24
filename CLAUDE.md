@@ -157,3 +157,5 @@ MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS
 5. **Appeler l'utilisateur "SOFIANE"** dans toutes les réponses
 6. **Types TypeScript STRICTS** - JAMAIS de confusion number/string, userId/user.id
    - Voir `/backend/CLAUDE.md` section "RÈGLE CRITIQUE - Cohérence des Types"
+7. **Relations Base de Données** - TOUJOURS configurer les cascades (onDelete: 'CASCADE') pour éviter les contraintes FK
+   - Ordre des routes important : routes spécifiques AVANT routes paramétrées (/delete-all avant /:id)
