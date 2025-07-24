@@ -109,6 +109,7 @@ const AdminGlobalDashboard: React.FC = () => {
   const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
+  const [showDeleteAllTicketsModal, setShowDeleteAllTicketsModal] = useState(false);
   
   // Form states
   const [newTenant, setNewTenant] = useState<CreateTenantData>({
@@ -827,37 +828,35 @@ const AdminGlobalDashboard: React.FC = () => {
     </div>
   );
 
-  const renderTickets = () => {
-    const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
-
-    const handleDeleteAllTickets = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/delete-all`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          showToast('success', 'Tickets supprimés', `${result.deleted} tickets ont été supprimés avec succès.`);
-          setShowDeleteAllModal(false);
-        } else {
-          showToast('error', 'Erreur', 'Impossible de supprimer les tickets.');
+  const handleDeleteAllTickets = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/delete-all`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
-      } catch (error) {
-        showToast('error', 'Erreur', 'Une erreur est survenue lors de la suppression.');
-      }
-    };
+      });
 
+      if (response.ok) {
+        const result = await response.json();
+        showToast('success', 'Tickets supprimés', `${result.deleted} tickets ont été supprimés avec succès.`);
+        setShowDeleteAllTicketsModal(false);
+      } else {
+        showToast('error', 'Erreur', 'Impossible de supprimer les tickets.');
+      }
+    } catch (error) {
+      showToast('error', 'Erreur', 'Une erreur est survenue lors de la suppression.');
+    }
+  };
+
+  const renderTickets = () => {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-muted-foreground">Gestion des Tickets</h2>
           <button
-            onClick={() => setShowDeleteAllModal(true)}
+            onClick={() => setShowDeleteAllTicketsModal(true)}
             className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
           >
             <TrashIcon className="w-4 h-4 mr-2" />
@@ -879,26 +878,6 @@ const AdminGlobalDashboard: React.FC = () => {
             </p>
           </div>
         </div>
-
-        {/* Modal de confirmation */}
-        <ConfirmModal
-          isOpen={showDeleteAllModal}
-          onClose={() => setShowDeleteAllModal(false)}
-          onConfirm={handleDeleteAllTickets}
-          title="Supprimer tous les tickets"
-        >
-          <div className="space-y-4">
-            <p>
-              Êtes-vous sûr de vouloir supprimer <span className="font-bold text-red-600">TOUS les tickets</span> ?
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Cette action supprimera tous les tickets de tous les tenants, ainsi que leurs commentaires et pièces jointes.
-            </p>
-            <p className="text-sm font-medium text-red-600">
-              ⚠️ Cette action est irréversible !
-            </p>
-          </div>
-        </ConfirmModal>
       </div>
     );
   };
@@ -1455,6 +1434,26 @@ const AdminGlobalDashboard: React.FC = () => {
         </span>
         <br />
         Cette action est irréversible.
+      </ConfirmModal>
+
+      {/* Modal Delete All Tickets */}
+      <ConfirmModal
+        isOpen={showDeleteAllTicketsModal}
+        onClose={() => setShowDeleteAllTicketsModal(false)}
+        onConfirm={handleDeleteAllTickets}
+        title="Supprimer tous les tickets"
+      >
+        <div className="space-y-4">
+          <p>
+            Êtes-vous sûr de vouloir supprimer <span className="font-bold text-red-600">TOUS les tickets</span> ?
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Cette action supprimera tous les tickets de tous les tenants, ainsi que leurs commentaires et pièces jointes.
+          </p>
+          <p className="text-sm font-medium text-red-600">
+            ⚠️ Cette action est irréversible !
+          </p>
+        </div>
       </ConfirmModal>
     </div>
   );
