@@ -623,7 +623,7 @@ export class TicketsService {
   async deleteAll(user: JwtUser): Promise<number> {
     // Récupérer tous les tickets du tenant
     const tickets = await this.ticketsRepo.find({
-      where: { tenant_id: user.tenant_id || 0 },
+      where: { tenant_id: (user.tenant_id || 0).toString() },
       relations: ['comments', 'attachments'],
     });
 
