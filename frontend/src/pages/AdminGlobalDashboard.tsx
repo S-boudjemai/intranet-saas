@@ -110,6 +110,7 @@ const AdminGlobalDashboard: React.FC = () => {
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
   const [showDeleteAllTicketsModal, setShowDeleteAllTicketsModal] = useState(false);
+  const [selectedTenantForDeletion, setSelectedTenantForDeletion] = useState<string>('');
   
   // Form states
   const [newTenant, setNewTenant] = useState<CreateTenantData>({
@@ -830,7 +831,13 @@ const AdminGlobalDashboard: React.FC = () => {
 
   const handleDeleteAllTickets = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/tickets/delete-all`, {
+      // Construire l'URL avec le paramètre tenantId si un tenant est sélectionné
+      let url = `${import.meta.env.VITE_API_URL}/tickets/delete-all`;
+      if (selectedTenantForDeletion && selectedTenantForDeletion !== '') {
+        url += `?tenantId=${selectedTenantForDeletion}`;
+      }
+
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -840,8 +847,12 @@ const AdminGlobalDashboard: React.FC = () => {
 
       if (response.ok) {
         const result = await response.json();
-        showToast('success', 'Tickets supprimés', `${result.deleted} tickets ont été supprimés avec succès.`);
+        const tenantName = selectedTenantForDeletion 
+          ? tenants.find(t => t.id.toString() === selectedTenantForDeletion)?.name || 'tenant sélectionné'
+          : 'tous les tenants';
+        showToast('success', 'Tickets supprimés', `${result.deleted} tickets ont été supprimés avec succès pour ${tenantName}.`);
         setShowDeleteAllTicketsModal(false);
+        setSelectedTenantForDeletion('');
       } else {
         showToast('error', 'Erreur', 'Impossible de supprimer les tickets.');
       }
@@ -1439,17 +1450,48 @@ const AdminGlobalDashboard: React.FC = () => {
       {/* Modal Delete All Tickets */}
       <ConfirmModal
         isOpen={showDeleteAllTicketsModal}
-        onClose={() => setShowDeleteAllTicketsModal(false)}
+        onClose={() => {
+          setShowDeleteAllTicketsModal(false);
+          setSelectedTenantForDeletion('');
+        }}
         onConfirm={handleDeleteAllTickets}
         title="Supprimer tous les tickets"
       >
         <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-muted-foreground">
+              Sélectionner un tenant (optionnel)
+            </label>
+            <select
+              value={selectedTenantForDeletion}
+              onChange={(e) => setSelectedTenantForDeletion(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">Tous les tenants</option>
+              {tenants.map((tenant) => (
+                <option key={tenant.id} value={tenant.id.toString()}>
+                  {tenant.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          
           <p>
-            Êtes-vous sûr de vouloir supprimer <span className="font-bold text-red-600">TOUS les tickets</span> ?
+            {selectedTenantForDeletion ? (
+              <>Êtes-vous sûr de vouloir supprimer <span className="font-bold text-red-600">tous les tickets</span> du tenant <span className="font-bold">{tenants.find(t => t.id.toString() === selectedTenantForDeletion)?.name}</span> ?</>
+            ) : (
+              <>Êtes-vous sûr de vouloir supprimer <span className="font-bold text-red-600">TOUS les tickets</span> de <span className="font-bold text-red-600">TOUS les tenants</span> ?</>
+            )}
           </p>
+          
           <p className="text-sm text-muted-foreground">
-            Cette action supprimera tous les tickets de tous les tenants, ainsi que leurs commentaires et pièces jointes.
+            {selectedTenantForDeletion ? (
+              'Cette action supprimera tous les tickets du tenant sélectionné, ainsi que leurs commentaires et pièces jointes.'
+            ) : (
+              'Cette action supprimera tous les tickets de tous les tenants, ainsi que leurs commentaires et pièces jointes.'
+            )}
           </p>
+          
           <p className="text-sm font-medium text-red-600">
             ⚠️ Cette action est irréversible !
           </p>

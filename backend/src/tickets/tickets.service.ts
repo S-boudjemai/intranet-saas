@@ -661,19 +661,28 @@ export class TicketsService {
   /**
    * Supprime tous les tickets de tous les tenants (admin seulement)
    */
-  async deleteAllGlobal(user: JwtUser): Promise<number> {
-    console.log('deleteAllGlobal called with user:', { userId: user.userId, role: user.role });
+  async deleteAllGlobal(user: JwtUser, tenantId?: string): Promise<number> {
+    console.log('deleteAllGlobal called with user:', { userId: user.userId, role: user.role, tenantId });
     
     // Vérifier que l'utilisateur est admin
-    if (user.role !== 'admin') {
+    if (user.role !== Role.Admin) {
       console.error('Non-admin user attempted to delete all tickets:', user);
       throw new Error('Seuls les admins peuvent supprimer tous les tickets');
     }
 
     try {
-      // Récupérer TOUS les tickets
-      console.log('Fetching all tickets...');
+      // Construire les conditions de recherche
+      const whereConditions: any = {};
+      if (tenantId) {
+        whereConditions.tenant_id = tenantId;
+        console.log(`Filtering tickets for tenant: ${tenantId}`);
+      } else {
+        console.log('Fetching ALL tickets across all tenants...');
+      }
+
+      // Récupérer les tickets (tous ou filtrés par tenant)
       const tickets = await this.ticketsRepo.find({
+        where: whereConditions,
         relations: ['comments', 'attachments'],
       });
 
