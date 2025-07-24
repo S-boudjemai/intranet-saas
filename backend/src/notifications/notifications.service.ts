@@ -65,6 +65,18 @@ export class NotificationsService {
     targetId: string,
     message: string,
   ): Promise<Notification> {
+    // Validation : rejeter si targetId est null/undefined/vide
+    if (!targetId || targetId.trim() === '') {
+      console.error('NotificationsService: targetId cannot be null or empty', {
+        userId,
+        tenantId,
+        type,
+        targetId,
+        message
+      });
+      throw new Error('target_id cannot be null or empty');
+    }
+
     const notification = this.notificationRepository.create({
       user_id: userId,
       tenant_id: tenantId,
@@ -84,6 +96,18 @@ export class NotificationsService {
     message: string,
     excludeUserId?: number,
   ): Promise<Notification[]> {
+    // Validation : rejeter si targetId est null/undefined/vide
+    if (!targetId || targetId.trim() === '') {
+      console.error('NotificationsService: targetId cannot be null or empty in createNotificationsForTenant', {
+        tenantId,
+        type,
+        targetId,
+        message,
+        excludeUserId
+      });
+      throw new Error('target_id cannot be null or empty');
+    }
+
     const users = await this.userRepository.find({
       where: { tenant_id: tenantId },
     });
@@ -110,6 +134,17 @@ export class NotificationsService {
     targetId: string,
     message: string,
   ): Promise<Notification[]> {
+    // Validation : rejeter si targetId est null/undefined/vide
+    if (!targetId || targetId.trim() === '') {
+      console.error('NotificationsService: targetId cannot be null or empty in createNotificationsForManagers', {
+        tenantId,
+        type,
+        targetId,
+        message
+      });
+      throw new Error('target_id cannot be null or empty');
+    }
+
     const managers = await this.userRepository.find({
       where: {
         tenant_id: tenantId,
@@ -137,6 +172,17 @@ export class NotificationsService {
     targetId: string,
     message: string,
   ): Promise<Notification[]> {
+    // Validation : rejeter si targetId est null/undefined/vide
+    if (!targetId || targetId.trim() === '') {
+      console.error('NotificationsService: targetId cannot be null or empty in createNotificationsForViewers', {
+        tenantId,
+        type,
+        targetId,
+        message
+      });
+      throw new Error('target_id cannot be null or empty');
+    }
+
     const viewers = await this.userRepository.find({
       where: {
         tenant_id: tenantId,

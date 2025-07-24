@@ -128,20 +128,6 @@ export class TicketsController {
   }
 
   /**
-   * DELETE /tickets/:id
-   * - Manager & Admin only: suppression logique (uniquement si statut = "traitee")
-   */
-  @Delete(':id')
-  @Roles(Role.Manager, Role.Admin)
-  async remove(
-    @Param('id') id: string,
-    @Req() req: Request & { user: JwtUser },
-  ): Promise<{ deleted: true }> {
-    await this.svc.softDelete(id, req.user);
-    return { deleted: true };
-  }
-
-  /**
    * DELETE /tickets/delete-all
    * - Admin only: suppression de tous les tickets (global)
    * - Query param optionnel: tenantId pour filtrer par tenant
@@ -154,6 +140,20 @@ export class TicketsController {
   ): Promise<{ deleted: number }> {
     const count = await this.svc.deleteAllGlobal(req.user, tenantId);
     return { deleted: count };
+  }
+
+  /**
+   * DELETE /tickets/:id
+   * - Manager & Admin only: suppression logique (uniquement si statut = "traitee")
+   */
+  @Delete(':id')
+  @Roles(Role.Manager, Role.Admin)
+  async remove(
+    @Param('id') id: string,
+    @Req() req: Request & { user: JwtUser },
+  ): Promise<{ deleted: true }> {
+    await this.svc.softDelete(id, req.user);
+    return { deleted: true };
   }
 
   /**

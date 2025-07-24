@@ -39,11 +39,11 @@ export class TicketAttachment {
   created_at: Date;
 
   // Relations
-  @ManyToOne(() => Ticket, { nullable: true })
+  @ManyToOne(() => Ticket, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'ticket_id' })
   ticket?: Ticket;
 
-  @ManyToOne(() => Comment, { nullable: true })
+  @ManyToOne(() => Comment, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'comment_id' })
   comment?: Comment;
 }

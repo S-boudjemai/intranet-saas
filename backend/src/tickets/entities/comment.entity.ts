@@ -28,7 +28,7 @@ export class Comment {
   @CreateDateColumn()
   created_at: Date;
 
-  @ManyToOne(() => Ticket, (ticket) => ticket.comments)
+  @ManyToOne(() => Ticket, (ticket) => ticket.comments, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'ticket_id' })
   @Exclude({ toPlainOnly: true })
   ticket: Ticket;

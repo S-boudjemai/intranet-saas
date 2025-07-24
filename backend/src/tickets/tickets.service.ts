@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
@@ -662,28 +663,37 @@ export class TicketsService {
    * Supprime tous les tickets de tous les tenants (admin seulement)
    */
   async deleteAllGlobal(user: JwtUser, tenantId?: string): Promise<number> {
-    console.log('deleteAllGlobal called with user:', { userId: user.userId, role: user.role, tenantId });
+    console.log('deleteAllGlobal called with user:', { 
+      userId: user.userId, 
+      role: user.role, 
+      tenantId,
+      tenantIdType: typeof tenantId 
+    });
     
     // Vérifier que l'utilisateur est admin
     if (user.role !== Role.Admin) {
       console.error('Non-admin user attempted to delete all tickets:', user);
-      throw new Error('Seuls les admins peuvent supprimer tous les tickets');
+      throw new ForbiddenException('Seuls les admins peuvent supprimer tous les tickets');
     }
 
     try {
       // Construire les conditions de recherche
       const whereConditions: any = {};
+      
+      // Gérer le tenantId correctement selon son type
       if (tenantId) {
-        whereConditions.tenant_id = tenantId;
-        console.log(`Filtering tickets for tenant: ${tenantId}`);
+        // tenant_id dans ticket.entity est de type string
+        whereConditions.tenant_id = tenantId.toString();
+        console.log(`Filtering tickets for tenant: ${tenantId} (as string: ${tenantId.toString()})`);
       } else {
         console.log('Fetching ALL tickets across all tenants...');
       }
 
-      // Récupérer les tickets (tous ou filtrés par tenant)
+      // Récupérer les tickets avec leurs relations
+      console.log('Finding tickets with conditions:', whereConditions);
       const tickets = await this.ticketsRepo.find({
         where: whereConditions,
-        relations: ['comments', 'attachments'],
+        relations: ['comments', 'comments.attachments', 'attachments'],
       });
 
       console.log(`Found ${tickets.length} tickets to delete`);
@@ -692,17 +702,88 @@ export class TicketsService {
         return 0;
       }
 
-      // Supprimer les attachments S3 si configuré (skip pour éviter erreurs S3)
-      console.log('Skipping S3 cleanup to avoid errors');
+      // Collecter tous les fichiers S3 à supprimer
+      const s3FilesToDelete: string[] = [];
+      
+      for (const ticket of tickets) {
+        // Attachments directs du ticket
+        if (ticket.attachments && ticket.attachments.length > 0) {
+          for (const attachment of ticket.attachments) {
+            if (attachment.url) {
+              s3FilesToDelete.push(attachment.url);
+            }
+          }
+        }
+        
+        // Attachments des commentaires
+        if (ticket.comments && ticket.comments.length > 0) {
+          for (const comment of ticket.comments) {
+            if (comment.attachments && comment.attachments.length > 0) {
+              for (const attachment of comment.attachments) {
+                if (attachment.url) {
+                  s3FilesToDelete.push(attachment.url);
+                }
+              }
+            }
+          }
+        }
+      }
 
-      // Supprimer tous les tickets (cascade supprimera les comments et attachments)
-      console.log('Deleting tickets from database...');
+      console.log(`Collected ${s3FilesToDelete.length} S3 files to delete`);
+
+      // Supprimer les tickets - PostgreSQL gérera automatiquement les cascades grâce à onDelete: 'CASCADE'
+      console.log('Deleting tickets from database (with CASCADE)...');
       await this.ticketsRepo.remove(tickets);
+      
+      // Supprimer les fichiers S3 de manière asynchrone sans bloquer
+      if (s3FilesToDelete.length > 0) {
+        console.log('Scheduling S3 cleanup in background...');
+        this.cleanupS3Files(s3FilesToDelete).catch(error => {
+          console.error('Error during S3 cleanup (non-blocking):', error);
+        });
+      }
       
       console.log(`Successfully deleted ${tickets.length} tickets`);
       return tickets.length;
     } catch (error) {
-      console.error('Error in deleteAllGlobal:', error);
+      console.error('Error in deleteAllGlobal:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        tenantId,
+        userId: user.userId
+      });
+      
+      // Lancer une erreur plus descriptive
+      if (error.code === '23503') {
+        throw new BadRequestException('Impossible de supprimer les tickets : contraintes de clés étrangères');
+      }
+      
+      throw new InternalServerErrorException(`Erreur lors de la suppression des tickets: ${error.message}`);
+    }
+  }
+
+  private async cleanupS3Files(urls: string[]): Promise<void> {
+    for (const url of urls) {
+      try {
+        await this.deleteFileFromS3(url);
+      } catch (error) {
+        console.warn(`Failed to delete S3 file ${url}:`, error.message);
+      }
+    }
+  }
+
+  private async deleteFileFromS3(url: string): Promise<void> {
+    try {
+      const urlParts = url.split('/');
+      const key = urlParts.slice(-3).join('/');
+      
+      await this.s3.send(new DeleteObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET,
+        Key: key,
+      }));
+    } catch (error) {
+      console.error('Error deleting file from S3:', error);
       throw error;
     }
   }
