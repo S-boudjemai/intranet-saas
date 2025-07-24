@@ -22,6 +22,7 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ConfigService } from '@nestjs/config';
@@ -614,5 +615,46 @@ export class TicketsService {
     } catch (error) {
       return currentUrl; // Fallback sur l'URL originale
     }
+  }
+
+  /**
+   * Supprime tous les tickets d'un tenant
+   */
+  async deleteAll(user: JwtUser): Promise<number> {
+    // Récupérer tous les tickets du tenant
+    const tickets = await this.ticketsRepo.find({
+      where: { tenant_id: user.tenant_id || 0 },
+      relations: ['comments', 'attachments'],
+    });
+
+    if (tickets.length === 0) {
+      return 0;
+    }
+
+    // Supprimer les attachments S3 si configuré
+    if (process.env.AWS_S3_BUCKET) {
+      for (const ticket of tickets) {
+        for (const attachment of ticket.attachments || []) {
+          if (attachment.url.includes('amazonaws.com')) {
+            try {
+              const urlParts = attachment.url.split('/');
+              const key = urlParts.slice(-3).join('/');
+              
+              await this.s3.send(new DeleteObjectCommand({
+                Bucket: process.env.AWS_S3_BUCKET,
+                Key: key,
+              }));
+            } catch (error) {
+              console.error('Erreur suppression S3:', error);
+            }
+          }
+        }
+      }
+    }
+
+    // Supprimer tous les tickets (cascade supprimera les comments et attachments)
+    await this.ticketsRepo.remove(tickets);
+    
+    return tickets.length;
   }
 }

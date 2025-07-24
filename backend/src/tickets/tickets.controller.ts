@@ -141,6 +141,19 @@ export class TicketsController {
   }
 
   /**
+   * DELETE /tickets/delete-all
+   * - Manager & Admin only: suppression de tous les tickets
+   */
+  @Delete('delete-all')
+  @Roles(Role.Manager, Role.Admin)
+  async deleteAll(
+    @Req() req: Request & { user: JwtUser },
+  ): Promise<{ deleted: number }> {
+    const count = await this.svc.deleteAll(req.user);
+    return { deleted: count };
+  }
+
+  /**
    * POST /tickets/upload-image
    * - Tous les rôles: upload d'image pour un ticket ou commentaire
    */
