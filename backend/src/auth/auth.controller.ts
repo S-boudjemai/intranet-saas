@@ -8,6 +8,8 @@ import {
   Patch,
   Param,
   BadRequestException,
+  Get,
+  Req,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -16,6 +18,8 @@ import { Public } from './public.decorator';
 import { LocalAuthGuard } from './local-auth.guard';
 import { SignupWithInviteDto } from './dto/signup-with-invite.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -249,5 +253,23 @@ export class AuthController {
       throw new BadRequestException(result.message);
     }
     return { message: result.message, success: true };
+  }
+
+  @Get('navbar-info')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Obtenir les infos pour la navbar (tenant name + restaurant city)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Informations navbar',
+    schema: {
+      type: 'object',
+      properties: {
+        tenant_name: { type: 'string', example: 'PizzaLif' },
+        restaurant_city: { type: 'string', example: 'Givors', nullable: true },
+      },
+    },
+  })
+  async getNavbarInfo(@Req() req: Request & { user: JwtUser }) {
+    return this.authService.getNavbarInfo(req.user);
   }
 }

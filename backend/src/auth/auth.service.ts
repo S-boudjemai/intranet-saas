@@ -21,6 +21,8 @@ import { Announcement } from '../announcements/entities/announcement.entity';
 import { LoginDto } from './dto/login.dto';
 import { PasswordReset } from './entities/password-reset.entity';
 import { MailerService } from '@nestjs-modules/mailer';
+import { Tenant } from '../tenants/entities/tenant.entity';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +36,8 @@ export class AuthService {
     private announcementRepo: Repository<Announcement>,
     @InjectRepository(PasswordReset)
     private passwordResetRepo: Repository<PasswordReset>,
+    @InjectRepository(Tenant)
+    private tenantRepo: Repository<Tenant>,
     private notificationsService: NotificationsService,
     private notificationsGateway: NotificationsGateway,
     private mailerService: MailerService,
@@ -296,5 +300,44 @@ export class AuthService {
     await this.usersService.updatePassword(user.id, hashedPassword);
 
     return { success: true, message: 'Mot de passe réinitialisé avec succès' };
+  }
+
+  async getNavbarInfo(user: JwtUser): Promise<{ tenant_name: string; restaurant_city: string | null }> {
+    // Vérifier que l'utilisateur a un tenant_id
+    if (!user.tenant_id) {
+      throw new NotFoundException('Aucun tenant associé à cet utilisateur');
+    }
+
+    // Récupérer le tenant
+    const tenant = await this.tenantRepo.findOne({
+      where: { id: user.tenant_id },
+      select: ['name'] // On ne prend que le nom
+    });
+
+    if (!tenant) {
+      throw new NotFoundException('Tenant non trouvé');
+    }
+
+    let restaurant_city: string | null = null;
+
+    // Si l'utilisateur a un restaurant, récupérer la ville
+    if (user.restaurant_id) {
+      const restaurant = await this.restaurantRepo.findOne({
+        where: { 
+          id: user.restaurant_id,
+          tenant_id: user.tenant_id // Sécurité multi-tenant
+        },
+        select: ['city']
+      });
+
+      if (restaurant) {
+        restaurant_city = restaurant.city;
+      }
+    }
+
+    return {
+      tenant_name: tenant.name,
+      restaurant_city
+    };
   }
 }

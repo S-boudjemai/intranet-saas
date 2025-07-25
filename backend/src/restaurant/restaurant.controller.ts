@@ -1,5 +1,5 @@
 // src/restaurants/restaurants.controller.ts
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
@@ -14,5 +14,10 @@ export class RestaurantsController {
   @Get()
   list(@Req() req: Request & { user: JwtUser }) {
     return this.svc.findAllForTenant(req.user);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string, @Req() req: Request & { user: JwtUser }) {
+    return this.svc.findOne(+id, req.user);
   }
 }

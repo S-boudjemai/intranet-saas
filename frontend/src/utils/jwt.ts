@@ -2,6 +2,8 @@
 
 export interface JwtPayload {
   sub: number;
+  userId: number;
+  email: string;
   tenant_id: number | null;
   role: "admin" | "manager" | "viewer";
   restaurant_id?: number;

@@ -41,7 +41,7 @@ internet-saas/
 ### Core Business
 1. **Multi-tenant** - Isolation complète par franchiseur
 2. **Documents** - Stockage S3, tags, catégories, prévisualisation
-3. **Communication** - Annonces franchiseur → franchisés
+3. **Communication** - Annonces franchiseur → franchisés + tracking des lectures
 4. **Support** - Tickets avec images et commentaires
 5. **Audits** - Templates, planification, actions correctives
 6. **Admin Global** - Dashboard super-admin cross-tenant
@@ -54,10 +54,10 @@ internet-saas/
 
 ## 💾 Base de Données (PostgreSQL)
 
-### Entités Actives (17)
+### Entités Actives (18)
 - **Core:** User, Tenant, Restaurant
 - **Documents:** Document, Tag, Category
-- **Communication:** Announcement, Notification
+- **Communication:** Announcement, AnnouncementView, Notification
 - **Support:** Ticket, Comment, TicketAttachment
 - **Audits:** AuditTemplate, AuditItem, AuditExecution, AuditResponse, AuditArchive, CorrectiveAction
 - **Auth:** Invite, PasswordReset
@@ -182,6 +182,13 @@ MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS
 ---
 
 ## 📅 Historique des Changements
+
+### Juillet 2025 - Tracking des Annonces ✅
+- **Backend**: Entité AnnouncementView + 3 endpoints REST
+- **Frontend**: Hook auto-tracking + interface manager élégante
+- **UX**: Badge de lecture (X/Y 67%) + modal détaillée
+- **Sécurité**: Multi-tenant + permissions managers uniquement
+- **Tracking intelligent**: localStorage + délai 3s + une seule vue par user
 
 ### Janvier 2025
 - **JWT Simplifié**: Tokens 24h uniquement (plus de refresh)

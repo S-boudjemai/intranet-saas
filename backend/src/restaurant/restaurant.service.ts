@@ -35,4 +35,21 @@ export class RestaurantsService {
     // La requête est donc valide et sécurisée.
     return this.repo.find({ where: { tenant_id: user.tenant_id } });
   }
+
+  // Récupérer un restaurant par ID
+  async findOne(id: number, user: JwtUser): Promise<Restaurant | null> {
+    // Vérifier que l'utilisateur a un tenant_id
+    if (user.tenant_id === null) {
+      return null;
+    }
+
+    // Récupérer le restaurant avec la relation tenant
+    return this.repo.findOne({ 
+      where: { 
+        id,
+        tenant_id: user.tenant_id 
+      },
+      relations: ['tenant'] // Inclure les infos du tenant
+    });
+  }
 }
