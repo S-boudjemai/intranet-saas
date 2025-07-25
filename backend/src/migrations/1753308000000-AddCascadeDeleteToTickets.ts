@@ -14,7 +14,7 @@ export class AddCascadeDeleteToTickets1753308000000 implements MigrationInterfac
       ALTER TABLE "comment" 
       ADD CONSTRAINT "FK_9bf3c241d95fc8493047444f5ff" 
       FOREIGN KEY ("ticket_id") 
-      REFERENCES "ticket"("id") 
+      REFERENCES "tickets"("id") 
       ON DELETE CASCADE 
       ON UPDATE NO ACTION
     `);
@@ -23,7 +23,7 @@ export class AddCascadeDeleteToTickets1753308000000 implements MigrationInterfac
       ALTER TABLE "ticket_attachments" 
       ADD CONSTRAINT "FK_e0f8a06ef056fd08c74e7fb8173" 
       FOREIGN KEY ("ticket_id") 
-      REFERENCES "ticket"("id") 
+      REFERENCES "tickets"("id") 
       ON DELETE CASCADE 
       ON UPDATE NO ACTION
     `);
@@ -49,7 +49,7 @@ export class AddCascadeDeleteToTickets1753308000000 implements MigrationInterfac
       ALTER TABLE "comment" 
       ADD CONSTRAINT "FK_9bf3c241d95fc8493047444f5ff" 
       FOREIGN KEY ("ticket_id") 
-      REFERENCES "ticket"("id") 
+      REFERENCES "tickets"("id") 
       ON DELETE NO ACTION 
       ON UPDATE NO ACTION
     `);
@@ -58,7 +58,7 @@ export class AddCascadeDeleteToTickets1753308000000 implements MigrationInterfac
       ALTER TABLE "ticket_attachments" 
       ADD CONSTRAINT "FK_e0f8a06ef056fd08c74e7fb8173" 
       FOREIGN KEY ("ticket_id") 
-      REFERENCES "ticket"("id") 
+      REFERENCES "tickets"("id") 
       ON DELETE NO ACTION 
       ON UPDATE NO ACTION
     `);
