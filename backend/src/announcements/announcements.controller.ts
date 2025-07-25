@@ -8,6 +8,7 @@ import {
   Body,
   Req,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 import { AnnouncementsService } from './announcements.service';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
@@ -83,5 +84,53 @@ export class AnnouncementsController {
   ): Promise<{ deleted: true }> {
     await this.svc.softDelete(id, req.user);
     return { deleted: true };
+  }
+
+  // ===== ENDPOINTS DE TRACKING DES VUES =====
+
+  /**
+   * POST /announcements/:id/mark-as-read
+   * - Tous les rôles : marquer une annonce comme lue
+   */
+  @Post(':id/mark-as-read')
+  @Roles(Role.Admin, Role.Manager, Role.Viewer)
+  async markAsRead(
+    @Param('id') id: string,
+    @Req() req: Request & { user: JwtUser },
+  ): Promise<{ success: boolean; message: string }> {
+    const announcementId = parseInt(id, 10);
+    return this.svc.markAsRead(announcementId, req.user);
+  }
+
+  /**
+   * GET /announcements/:id/views
+   * - Manager & Admin : voir qui a lu l'annonce
+   */
+  @Get(':id/views')
+  @Roles(Role.Admin, Role.Manager)
+  async getViews(
+    @Param('id') id: string,
+    @Req() req: Request & { user: JwtUser },
+  ): Promise<any[]> {
+    const announcementId = parseInt(id, 10);
+    return this.svc.getAnnouncementViews(announcementId, req.user);
+  }
+
+  /**
+   * GET /announcements/:id/view-stats
+   * - Manager & Admin : statistiques de lecture
+   */
+  @Get(':id/view-stats')
+  @Roles(Role.Admin, Role.Manager)
+  async getViewStats(
+    @Param('id') id: string,
+    @Req() req: Request & { user: JwtUser },
+  ): Promise<{
+    total_views: number;
+    total_users: number;
+    percentage: number;
+  }> {
+    const announcementId = parseInt(id, 10);
+    return this.svc.getAnnouncementStats(announcementId, req.user);
   }
 }

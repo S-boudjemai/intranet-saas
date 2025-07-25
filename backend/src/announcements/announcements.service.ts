@@ -15,6 +15,7 @@ import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { User } from '../users/entities/user.entity';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
+import { AnnouncementView } from './entities/announcement-view.entity';
 
 @Injectable()
 export class AnnouncementsService {
@@ -30,6 +31,9 @@ export class AnnouncementsService {
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    @InjectRepository(AnnouncementView)
+    private readonly viewRepo: Repository<AnnouncementView>,
 
     private notificationsService: NotificationsService,
     private notificationsGateway: NotificationsGateway,
@@ -190,5 +194,150 @@ export class AnnouncementsService {
       throw new NotFoundException('Annonce introuvable');
     }
     await this.repo.update(numericId, { is_deleted: true });
+  }
+
+  // ===== MÉTHODES DE TRACKING DES VUES =====
+
+  async markAsRead(announcementId: number, user: JwtUser): Promise<{ success: boolean; message: string }> {
+    // Vérifier que l'utilisateur a un tenant_id
+    if (!user.tenant_id) {
+      throw new ForbiddenException('Aucun tenant associé à cet utilisateur');
+    }
+
+    // Vérifier que l'annonce existe et appartient au bon tenant
+    const announcement = await this.repo.findOne({
+      where: { 
+        id: announcementId, 
+        tenant_id: user.tenant_id,
+        is_deleted: false 
+      }
+    });
+
+    if (!announcement) {
+      throw new NotFoundException('Annonce introuvable');
+    }
+
+    // Vérifier si l'utilisateur a déjà vu cette annonce
+    const existingView = await this.viewRepo.findOne({
+      where: {
+        announcement_id: announcementId,
+        user_id: user.userId,
+        tenant_id: user.tenant_id,
+      }
+    });
+
+    if (existingView) {
+      return { success: true, message: 'Annonce déjà marquée comme lue' };
+    }
+
+    // Créer une nouvelle vue
+    const view = this.viewRepo.create({
+      announcement_id: announcementId,
+      user_id: user.userId,
+      tenant_id: user.tenant_id,
+    });
+
+    await this.viewRepo.save(view);
+
+    return { success: true, message: 'Annonce marquée comme lue' };
+  }
+
+  async getAnnouncementViews(announcementId: number, user: JwtUser): Promise<any[]> {
+    // Seuls les managers et admins peuvent voir qui a lu les annonces
+    if (user.role === Role.Viewer) {
+      throw new ForbiddenException('Accès non autorisé');
+    }
+
+    // Vérifier que l'utilisateur a un tenant_id
+    if (!user.tenant_id) {
+      throw new ForbiddenException('Aucun tenant associé à cet utilisateur');
+    }
+
+    // Vérifier que l'annonce existe et appartient au bon tenant
+    const announcement = await this.repo.findOne({
+      where: { 
+        id: announcementId, 
+        tenant_id: user.tenant_id,
+        is_deleted: false 
+      }
+    });
+
+    if (!announcement) {
+      throw new NotFoundException('Annonce introuvable');
+    }
+
+    // Récupérer les vues avec les infos utilisateur
+    const views = await this.viewRepo.find({
+      where: {
+        announcement_id: announcementId,
+        tenant_id: user.tenant_id,
+      },
+      relations: ['user'],
+      order: { viewed_at: 'DESC' }
+    });
+
+    return views.map(view => ({
+      id: view.id,
+      viewed_at: view.viewed_at,
+      user: {
+        id: view.user.id,
+        email: view.user.email,
+        role: view.user.role,
+        restaurant_id: view.user.restaurant_id,
+      }
+    }));
+  }
+
+  async getAnnouncementStats(announcementId: number, user: JwtUser): Promise<{
+    total_views: number;
+    total_users: number;
+    percentage: number;
+  }> {
+    // Seuls les managers et admins peuvent voir les stats
+    if (user.role === Role.Viewer) {
+      throw new ForbiddenException('Accès non autorisé');
+    }
+
+    // Vérifier que l'utilisateur a un tenant_id
+    if (!user.tenant_id) {
+      throw new ForbiddenException('Aucun tenant associé à cet utilisateur');
+    }
+
+    // Vérifier que l'annonce existe et appartient au bon tenant
+    const announcement = await this.repo.findOne({
+      where: { 
+        id: announcementId, 
+        tenant_id: user.tenant_id,
+        is_deleted: false 
+      }
+    });
+
+    if (!announcement) {
+      throw new NotFoundException('Annonce introuvable');
+    }
+
+    // Compter les vues
+    const totalViews = await this.viewRepo.count({
+      where: {
+        announcement_id: announcementId,
+        tenant_id: user.tenant_id,
+      }
+    });
+
+    // Compter le nombre total d'utilisateurs du tenant
+    const totalUsers = await this.userRepository.count({
+      where: {
+        tenant_id: user.tenant_id,
+        is_active: true,
+      }
+    });
+
+    const percentage = totalUsers > 0 ? Math.round((totalViews / totalUsers) * 100) : 0;
+
+    return {
+      total_views: totalViews,
+      total_users: totalUsers,
+      percentage,
+    };
   }
 }

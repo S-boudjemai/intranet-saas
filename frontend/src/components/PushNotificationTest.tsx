@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { pushNotifications, PushNotificationService } from '../services/pushNotifications';
-import { Bell, BellOff, Smartphone, Check, X, MessageSquare, FileText, Megaphone } from 'lucide-react';
+import { Bell, BellOff, Smartphone, Check, X, MessageSquare, FileText, Megaphone, Minimize2, Maximize2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export const PushNotificationTest: React.FC = () => {
@@ -14,6 +14,7 @@ export const PushNotificationTest: React.FC = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   useEffect(() => {
     checkStatus();
@@ -139,13 +140,28 @@ export const PushNotificationTest: React.FC = () => {
   return (
     <div className="fixed bottom-4 right-4 z-50 space-y-2">
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border dark:border-gray-700 max-w-sm">
-        <h3 className="font-bold mb-3 text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <Bell className="w-5 h-5" />
-          Test Notifications Push
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <Bell className="w-5 h-5" />
+            Test Notifications Push
+          </h3>
+          <button
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+            title={isMinimized ? "Agrandir" : "Réduire"}
+          >
+            {isMinimized ? (
+              <Maximize2 className="w-4 h-4" />
+            ) : (
+              <Minimize2 className="w-4 h-4" />
+            )}
+          </button>
+        </div>
         
-        {/* Statut */}
-        <div className="space-y-2 text-sm mb-4">
+        {!isMinimized && (
+          <>
+            {/* Statut */}
+            <div className="space-y-2 text-sm mb-4">
           <div className="flex items-center gap-2">
             {isSupported ? (
               <Check className="w-4 h-4 text-green-500" />
@@ -298,7 +314,9 @@ export const PushNotificationTest: React.FC = () => {
             <li>Acceptez les notifications</li>
             <li>Les notifs apparaîtront dans le centre de notifications</li>
           </ol>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -5,6 +5,9 @@ import type { Announcement } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import DocumentPreviewModal from "./DocumentPreviewModal";
 import { SpeakerphoneIcon, EyeIcon, TrashIcon } from "./icons";
+import { useAnnouncementTracking } from "../hooks/useAnnouncementTracking";
+import AnnouncementViewStats from "./AnnouncementViewStats";
+import AnnouncementViewModal from "./AnnouncementViewModal";
 
 // --- ICÔNES LOCALES SUPPRIMÉES, UTILISATION CENTRALISÉE ---
 
@@ -31,6 +34,10 @@ export default function AnnouncementCard({
 }: AnnouncementCardProps) {
   const { token } = useAuth();
   const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  
+  // Auto-tracking : marquer l'annonce comme lue après 3 secondes
+  const { isTracked } = useAnnouncementTracking(announcement.id);
 
   // Fonction pour prévisualiser un document
   const handlePreview = async (documentUrl: string, name: string) => {
@@ -102,14 +109,37 @@ export default function AnnouncementCard({
         }}
       >
         <div className="flex justify-between items-start gap-4">
-          <motion.h2 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="font-bold text-lg text-card-foreground"
-          >
-            {announcement.title}
-          </motion.h2>
+          <div className="flex-1">
+            <motion.h2 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="font-bold text-lg text-card-foreground"
+            >
+              {announcement.title}
+            </motion.h2>
+            
+            {/* Stats de lecture pour managers */}
+            {canManage && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="mt-2"
+              >
+                <button
+                  onClick={() => setShowViewModal(true)}
+                  className="transition-transform hover:scale-105"
+                >
+                  <AnnouncementViewStats 
+                    announcementId={announcement.id} 
+                    canManage={canManage} 
+                  />
+                </button>
+              </motion.div>
+            )}
+          </div>
+          
           <div className="flex items-center gap-2">
             <motion.small 
               initial={{ opacity: 0, x: 10 }}
@@ -197,6 +227,14 @@ export default function AnnouncementCard({
       {preview && (
         <DocumentPreviewModal {...preview} onClose={() => setPreview(null)} />
       )}
+
+      {/* Modal des vues d'annonce */}
+      <AnnouncementViewModal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        announcementId={announcement.id}
+        announcementTitle={announcement.title}
+      />
     </motion.div>
   );
 }
