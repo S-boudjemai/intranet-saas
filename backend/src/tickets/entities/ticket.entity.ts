@@ -19,6 +19,7 @@ export enum TicketStatus {
   NonTraitee = 'non_traitee',
   EnCours = 'en_cours',
   Traitee = 'traitee',
+  Archived = 'archived',
   Supprime = 'supprime',
 }
 

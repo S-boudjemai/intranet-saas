@@ -191,7 +191,7 @@ export default function ScheduleAuditModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-background rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden border">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
@@ -517,7 +517,7 @@ export default function ScheduleAuditModal({
                   onChange={(e) => setAudit({ ...audit, notes: e.target.value })}
                   placeholder="Instructions spéciales, contexte, points à vérifier..."
                   rows={3}
-                  className="w-full px-3 py-2 border bg-background text-gray-900 placeholder:text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border bg-background text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
             </div>

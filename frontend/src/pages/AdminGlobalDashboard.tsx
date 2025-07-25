@@ -168,11 +168,11 @@ const AdminGlobalDashboard: React.FC = () => {
         setStats(data.data || data);
       } else {
         // API stats error
-        showToast('Erreur lors du chargement des statistiques', 'error');
+        console.error('Erreur lors du chargement des statistiques');
       }
     } catch (error) {
       // Fetch stats error
-      showToast('Erreur lors du chargement des statistiques', 'error');
+      console.error('Erreur lors du chargement des statistiques');
     } finally {
       setLoading(false);
     }
@@ -242,7 +242,7 @@ const AdminGlobalDashboard: React.FC = () => {
       
       const rootData = await rootResponse.json();
       const rootCategories = rootData.data || rootData || [];
-      console.log('Catégories racines:', rootCategories);
+      showToast('Catégories racines:', rootCategories);
       
       // 2. Pour chaque catégorie racine, récupérer ses enfants
       const categoriesWithChildren = [];
@@ -257,7 +257,7 @@ const AdminGlobalDashboard: React.FC = () => {
         if (childrenResponse.ok) {
           const childrenData = await childrenResponse.json();
           const children = childrenData.data || childrenData || [];
-          console.log(`Enfants de ${rootCat.name}:`, children);
+          showToast(`Enfants de ${rootCat.name}:`, children);
           
           categoriesWithChildren.push({
             ...rootCat,
@@ -273,7 +273,7 @@ const AdminGlobalDashboard: React.FC = () => {
       }
       
       setCategories(categoriesWithChildren);
-      console.log('Toutes les catégories avec enfants:', categoriesWithChildren);
+      showToast('Toutes les catégories avec enfants:', categoriesWithChildren);
       
     } catch (error) {
       console.error('Erreur fetchCategories:', error);
@@ -660,7 +660,7 @@ const AdminGlobalDashboard: React.FC = () => {
           <h3 className="text-xl font-bold mb-4 text-muted-foreground">Top Tenants</h3>
           <div className="space-y-3">
             {stats.topTenants.map((tenant, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="flex items-center">
                   <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
                     {index + 1}
@@ -758,7 +758,7 @@ const AdminGlobalDashboard: React.FC = () => {
       <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Email
@@ -782,7 +782,7 @@ const AdminGlobalDashboard: React.FC = () => {
                 // Utiliser directement les informations du tenant depuis la requête
                 const tenantName = user.tenant?.name || 'N/A';
                 return (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-muted-foreground">
                       {user.email}
                     </td>
@@ -790,7 +790,7 @@ const AdminGlobalDashboard: React.FC = () => {
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         user.role === 'admin' ? 'bg-red-100 text-red-800' :
                         user.role === 'manager' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
+                        'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                       }`}>
                         {user.role}
                       </span>
@@ -900,13 +900,13 @@ const AdminGlobalDashboard: React.FC = () => {
 
       return (
         <div key={category.id}>
-          <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg group">
+          <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg group">
             <div className="flex items-center space-x-3">
               {/* Bouton expand/collapse pour les catégories avec enfants */}
               {hasChildren ? (
                 <button
                   onClick={() => toggleCategoryExpansion(category.id)}
-                  className="p-1 hover:bg-gray-100 rounded transition-transform duration-200"
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-transform duration-200"
                   title={isExpanded ? "Réduire" : "Développer"}
                 >
                   <ChevronRightIcon 
@@ -955,7 +955,7 @@ const AdminGlobalDashboard: React.FC = () => {
           {hasChildren && isExpanded && (
             <div className="ml-6 border-l-2 border-gray-100 pl-4 mt-2 space-y-2">
               {category.children.map(child => (
-                <div key={child.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg group">
+                <div key={child.id} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg group">
                   <div className="flex items-center space-x-3">
                     <ChevronRightIcon className="w-3 h-3 text-gray-400" />
                     <span className="text-gray-700">{child.name}</span>
@@ -1054,7 +1054,7 @@ const AdminGlobalDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-card shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1065,7 +1065,7 @@ const AdminGlobalDashboard: React.FC = () => {
             <div className="flex items-center space-x-4">
               <button
                 onClick={logout}
-                className="px-3 py-2 text-sm text-muted-foreground hover:text-gray-800 border border-border rounded-md hover:bg-gray-50"
+                className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 Déconnexion
               </button>
@@ -1116,7 +1116,7 @@ const AdminGlobalDashboard: React.FC = () => {
 
       {/* Modal Create Tenant */}
       {showCreateTenantModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-lg font-bold mb-4">Créer un nouveau tenant</h3>
@@ -1180,7 +1180,7 @@ const AdminGlobalDashboard: React.FC = () => {
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   onClick={() => setShowCreateTenantModal(false)}
-                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Annuler
                 </button>
@@ -1198,8 +1198,8 @@ const AdminGlobalDashboard: React.FC = () => {
 
       {/* Modal Create User */}
       {showCreateUserModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-lg font-bold mb-4">Créer un nouvel utilisateur</h3>
               
@@ -1271,7 +1271,7 @@ const AdminGlobalDashboard: React.FC = () => {
                     setShowCreateUserModal(false);
                     setNewUser({ email: '', password: '', role: 'viewer', tenant_id: 0 });
                   }}
-                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Annuler
                 </button>
@@ -1290,8 +1290,8 @@ const AdminGlobalDashboard: React.FC = () => {
 
       {/* Modal Edit User */}
       {showEditUserModal && userToEdit && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-lg font-bold mb-4">Modifier l'utilisateur</h3>
               
@@ -1341,7 +1341,7 @@ const AdminGlobalDashboard: React.FC = () => {
                     setShowEditUserModal(false);
                     setUserToEdit(null);
                   }}
-                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Annuler
                 </button>
@@ -1359,8 +1359,8 @@ const AdminGlobalDashboard: React.FC = () => {
 
       {/* Modal Create/Edit Category */}
       {showCategoryModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-lg font-bold mb-4">
                 {categoryToEdit ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
@@ -1409,7 +1409,7 @@ const AdminGlobalDashboard: React.FC = () => {
                     setCategoryForm({ name: '', parentId: '' });
                     setCategoryToEdit(null);
                   }}
-                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Annuler
                 </button>

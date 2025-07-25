@@ -54,6 +54,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         clearInvalidToken();
         setToken(null);
         setUser(null);
+        
+        // Afficher un message informatif si c'est un token obsolète
+        if (validation.error?.includes('Token obsolète')) {
+          // Stocker un flag pour afficher le message sur la page de login
+          localStorage.setItem('tokenObsolete', 'true');
+        }
         return;
       }
 

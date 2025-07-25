@@ -212,7 +212,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restau
   const prevStep = () => setStep(step - 1);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-background rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden border">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
@@ -274,7 +274,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restau
                   value={template.name}
                   onChange={(e) => setTemplate({ ...template, name: e.target.value })}
                   placeholder="Ex: Hygiène Cuisine Q1"
-                  className="w-full px-3 py-2 border bg-background text-gray-900 placeholder:text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border bg-background text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 />
               </div>
@@ -288,7 +288,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restau
                   onChange={(e) => setTemplate({ ...template, description: e.target.value })}
                   placeholder="Description du template..."
                   rows={3}
-                  className="w-full px-3 py-2 border bg-background text-gray-900 placeholder:text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border bg-background text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
 
@@ -444,7 +444,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restau
                             value={question.question}
                             onChange={(e) => updateQuestion(question.id, 'question', e.target.value)}
                             placeholder="Votre question..."
-                            className="w-full px-3 py-2 border bg-background text-gray-900 placeholder:text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 border bg-background text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                           />
                           
                           <div className="flex items-center space-x-4">
@@ -465,7 +465,7 @@ export default function CreateTemplateModal({ isOpen, onClose, onSuccess, restau
                                 max="10"
                                 value={question.max_score || 5}
                                 onChange={(e) => updateQuestion(question.id, 'max_score', parseInt(e.target.value))}
-                                className="w-20 px-2 py-1 border bg-background text-gray-900 placeholder:text-gray-500 rounded-md text-sm"
+                                className="w-20 px-2 py-1 border bg-background text-foreground placeholder:text-muted-foreground rounded-md text-sm"
                                 placeholder="Max"
                               />
                             )}

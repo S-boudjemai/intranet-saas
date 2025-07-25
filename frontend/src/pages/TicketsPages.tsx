@@ -71,6 +71,30 @@ export default function TicketsPage() {
 
   // --- AUTRES HANDLERS (inchangés) ---
   const handleCreated = () => loadTickets();
+
+  // --- ARCHIVAGE DE TICKET ---
+  const archiveTicket = async (ticketId: string) => {
+    if (!token) return;
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/tickets/${ticketId}/archive`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      if (response.ok) {
+        await loadTickets(); // Recharger la liste
+        console.log('✅ Ticket archivé avec succès');
+      } else {
+        console.error('❌ Erreur lors de l\'archivage du ticket');
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'archivage:', error);
+    }
+  };
   const changeStatus = async (
     ticketId: string,
     newStatus: TicketType["status"]
@@ -214,6 +238,7 @@ export default function TicketsPage() {
                 onStatusChange={changeStatus}
                 onDeleteRequest={handleDeleteRequest}
                 onAddComment={addComment}
+                onArchive={archiveTicket}
               />
             </motion.li>
           ))}

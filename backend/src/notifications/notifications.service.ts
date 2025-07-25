@@ -403,21 +403,13 @@ export class NotificationsService {
     userId: number,
     notification: SendPushNotificationDto,
   ): Promise<void> {
-    console.log(
-      `📱 PUSH SERVICE DEBUG - Looking for subscriptions for user ${userId}`,
-    );
-
     const subscriptions = await this.pushSubscriptionRepository.find({
       where: { userId },
     });
 
-    console.log(
-      `📱 PUSH SERVICE DEBUG - Found ${subscriptions.length} subscriptions for user ${userId}`,
-    );
-
     if (subscriptions.length === 0) {
       this.logger.warn(
-        `📱 PUSH SERVICE DEBUG - No push subscriptions found for user ${userId}`,
+        `No push subscriptions found for user ${userId}`,
       );
       return;
     }
@@ -447,25 +439,18 @@ export class NotificationsService {
     };
 
     const promises = subscriptions.map(async (subscription) => {
-      console.log(
-        `📱 PUSH SERVICE DEBUG - Sending to FCM token: ${subscription.endpoint.substring(0, 50)}...`,
-      );
       try {
         // Pour FCM, on utilise l'endpoint comme token
         const response = await admin.messaging().send({
           ...message,
           token: subscription.endpoint, // FCM token stocké dans endpoint
         });
-        console.log(
-          `📱 PUSH SERVICE DEBUG - Successfully sent push notification to user ${userId}. Response: ${response}`,
+        this.logger.log(
+          `Push notification sent successfully to user ${userId}`,
         );
       } catch (error) {
-        console.error(
-          `📱 PUSH SERVICE DEBUG - Failed to send push notification to ${subscription.endpoint}:`,
-          error,
-        );
         this.logger.error(
-          `Failed to send push notification to ${subscription.endpoint}`,
+          `Failed to send push notification to user ${userId}`,
           error,
         );
 

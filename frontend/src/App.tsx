@@ -11,6 +11,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ToastContainer } from "./components/ui/ToastContainer";
+// DEV ONLY - import { ToastTest } from "./components/ToastTest";
+import { PushNotificationTest } from "./components/PushNotificationTest";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import ThemeSwitcher from "./components/ThemeSwitcher";
@@ -34,6 +36,7 @@ import UsersPage from "./pages/UsersPage"; // <-- Import de la page Utilisateurs
 import AuditsPage from "./pages/AuditsPage";
 import AuditExecutionPage from "./pages/AuditExecutionPage";
 import ArchivesPage from "./pages/ArchivesPage";
+// DEV ONLY - import PushTestPage from "./pages/PushTestPage";
 
 
 // Ce composant interne gère l'affichage conditionnel de la NavBar
@@ -70,7 +73,7 @@ const AppContent = () => {
       {/* Le conteneur principal pour le contenu de la page */}
       <div className={showNav ? "p-4" : ""}>
         <ServiceWorkerUI />
-        {user && <PushNotificationPrompt />}
+        {/* {user && <PushNotificationPrompt />} */}
         <Routes>
           {/* Routes publiques */}
           <Route path="/" element={<LandingPage />} />
@@ -133,6 +136,17 @@ const AppContent = () => {
               } 
             />
             
+            {/* Test Push Notifications - dev only */}
+            <Route 
+              path="/push-test" 
+              element={
+                <ProtectedRoute>
+                  {/* DEV ONLY - <PushTestPage /> */}
+                  <div>Page de test push disponible seulement en développement</div>
+                </ProtectedRoute>
+              } 
+            />
+            
             {/* Redirections pour compatibilité avec anciennes URLs */}
             <Route path="/audit-templates" element={<Navigate to="/audits?tab=templates" replace />} />
             <Route path="/audit-planning" element={<Navigate to="/audits?tab=planning" replace />} />
@@ -161,6 +175,8 @@ export default function App() {
                   <div className="bg-background text-foreground min-h-screen">
                     <AppContent />
                     <ToastContainer />
+                    {/* DEV ONLY - <ToastTest /> */}
+                    <PushNotificationTest />
                   </div>
                 </BrowserRouter>
               </ToastProvider>

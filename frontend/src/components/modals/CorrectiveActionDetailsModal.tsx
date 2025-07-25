@@ -97,7 +97,7 @@ export default function CorrectiveActionDetailsModal({
 
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-background rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden border">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
@@ -156,39 +156,39 @@ export default function CorrectiveActionDetailsModal({
                 </div>
 
                 <div className={`flex items-center justify-between p-3 rounded-lg ${
-                  isOverdue ? 'bg-red-50 border border-red-200' : 'bg-muted/50'
+                  isOverdue ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' : 'bg-muted/50'
                 }`}>
                   <div>
                     <p className="text-sm font-medium text-foreground">Date d'échéance</p>
-                    <p className={`text-sm ${isOverdue ? 'text-red-600' : 'text-muted-foreground'}`}>
+                    <p className={`text-sm ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'}`}>
                       {new Date(action.due_date).toLocaleDateString('fr-FR')}
                     </p>
                     {daysUntilDue >= 0 ? (
-                      <p className={`text-xs ${daysUntilDue <= 3 ? 'text-orange-600' : 'text-muted-foreground'}`}>
+                      <p className={`text-xs ${daysUntilDue <= 3 ? 'text-orange-600 dark:text-orange-400' : 'text-muted-foreground'}`}>
                         {daysUntilDue === 0 ? 'Aujourd\'hui' : `Dans ${daysUntilDue} jour(s)`}
                       </p>
                     ) : (
-                      <p className="text-xs text-red-600">
+                      <p className="text-xs text-red-600 dark:text-red-400">
                         En retard de {Math.abs(daysUntilDue)} jour(s)
                       </p>
                     )}
                   </div>
                   {isOverdue ? (
-                    <FiAlertTriangle className="w-4 h-4 text-red-600" />
+                    <FiAlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
                   ) : (
                     <FiCalendar className="w-4 h-4 text-muted-foreground" />
                   )}
                 </div>
 
                 {action.completion_date && (
-                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                     <div>
                       <p className="text-sm font-medium text-foreground">Date de réalisation</p>
-                      <p className="text-sm text-green-600">
+                      <p className="text-sm text-green-600 dark:text-green-400">
                         {new Date(action.completion_date).toLocaleDateString('fr-FR')}
                       </p>
                     </div>
-                    <FiCheckCircle className="w-4 h-4 text-green-600" />
+                    <FiCheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
                 )}
               </div>
@@ -212,9 +212,9 @@ export default function CorrectiveActionDetailsModal({
 
           {/* Notes de réalisation */}
           {action.completion_notes && (
-            <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4 rounded-lg">
               <h3 className="font-medium text-foreground mb-2 flex items-center">
-                <FiCheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                <FiCheckCircle className="w-4 h-4 mr-2 text-green-600 dark:text-green-400" />
                 Notes de réalisation
               </h3>
               <p className="text-sm text-foreground whitespace-pre-wrap">{action.completion_notes}</p>
@@ -223,9 +223,9 @@ export default function CorrectiveActionDetailsModal({
 
           {/* Notes de vérification */}
           {action.verification_notes && (
-            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg">
               <h3 className="font-medium text-foreground mb-2 flex items-center">
-                <FiCheckCircle className="w-4 h-4 mr-2 text-blue-600" />
+                <FiCheckCircle className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                 Notes de vérification
               </h3>
               <p className="text-sm text-foreground whitespace-pre-wrap">{action.verification_notes}</p>
@@ -239,7 +239,7 @@ export default function CorrectiveActionDetailsModal({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between p-6 border-t bg-muted">
+        <div className="flex items-center justify-between p-6 border-t bg-muted/50">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <FiClock className="w-4 h-4" />
             <span>Dernière mise à jour: {new Date(action.updated_at).toLocaleDateString('fr-FR')}</span>

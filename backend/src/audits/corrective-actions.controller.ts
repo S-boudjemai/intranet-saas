@@ -44,6 +44,18 @@ export class CorrectiveActionsController {
     });
   }
 
+  @Get('archived')
+  @UseGuards(JwtAuthGuard)
+  findArchived(
+    @Request() req: { user: JwtUser },
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC'
+  ) {
+    return this.correctiveActionsService.findArchived(req.user.tenant_id || undefined, { page, limit, sortBy, sortOrder });
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -65,15 +77,15 @@ export class CorrectiveActionsController {
     return this.correctiveActionsService.update(id, updateCorrectiveActionDto);
   }
 
+  @Get('stats/summary')
+  getStats(@Query('restaurant_id') restaurantId?: number) {
+    return this.correctiveActionsService.getStats(restaurantId);
+  }
+
   @Delete(':id')
   @Roles(Role.Admin)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.correctiveActionsService.remove(id);
-  }
-
-  @Get('stats/summary')
-  getStats(@Query('restaurant_id') restaurantId?: number) {
-    return this.correctiveActionsService.getStats(restaurantId);
   }
 
   @Put(':id/complete')
@@ -92,5 +104,11 @@ export class CorrectiveActionsController {
   @Roles(Role.Admin, Role.Manager)
   archive(@Param('id', ParseIntPipe) id: number) {
     return this.correctiveActionsService.archive(id);
+  }
+
+  @Put(':id/restore')
+  @Roles(Role.Admin, Role.Manager)
+  restore(@Param('id', ParseIntPipe) id: number) {
+    return this.correctiveActionsService.restore(id);
   }
 }

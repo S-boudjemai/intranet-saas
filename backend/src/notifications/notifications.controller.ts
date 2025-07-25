@@ -170,15 +170,29 @@ export class NotificationsController {
     return { success: true };
   }
 
-  // Tester l'envoi d'une notification push (admin seulement)
+  // Tester l'envoi d'une notification push (pour tous les utilisateurs connectés)
   @Post('test-push')
-  @Roles(Role.Admin)
-  async testPushNotification(@Req() req) {
-    await this.notificationsService.sendPushToUser(req.user.userId.toString(), {
-      title: 'Test FranchiseHUB',
-      body: 'Ceci est une notification de test',
-      data: { test: true },
+  async testPushNotification(@Req() req, @Body() body: any) {
+    const userId = req.user.userId.toString();
+    
+    // Si aucun data fourni, envoyer notification de test simple
+    if (!body || !body.title) {
+      await this.notificationsService.sendPushToUser(userId, {
+        title: 'Test FranchiseHUB',
+        body: 'Ceci est une notification de test',
+        data: { test: true },
+      });
+      return { success: true, message: 'Notification de test envoyée' };
+    }
+
+    // Sinon, envoyer la notification personnalisée
+    await this.notificationsService.sendPushToUser(userId, {
+      title: body.title,
+      body: body.body,
+      data: body.data || {},
+      tag: body.tag,
     });
-    return { success: true, message: 'Notification de test envoyée' };
+    
+    return { success: true, message: `Notification "${body.title}" envoyée` };
   }
 }

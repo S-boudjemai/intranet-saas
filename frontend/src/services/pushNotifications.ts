@@ -91,26 +91,25 @@ export class PushNotificationService {
         vapidKey: await this.getVapidPublicKey(),
         serviceWorkerRegistration: this.registration
       });
-
+      
       if (fcmToken) {
-        console.log('FCM token obtained:', fcmToken);
         
         // Envoyer le token FCM au serveur (dans le format attendu)
         await this.sendFCMTokenToServer(fcmToken);
         
         // Écouter les messages en foreground
         onMessage(messaging, (payload) => {
-          console.log('Message received in foreground:', payload);
-          // Afficher la notification manuellement si l'app est au premier plan
-          if (payload.notification) {
-            new Notification(payload.notification.title || 'FranchiseHUB', {
-              body: payload.notification.body,
-              icon: payload.data?.icon || '/pwa-192x192.svg',
-              badge: payload.data?.badge || '/pwa-192x192.svg',
-              tag: payload.data?.tag,
-              data: payload.data
-            });
-          }
+          // Affichage forcé des notifications en foreground
+          const title = payload.notification?.title || payload.data?.title || 'FranchiseHUB';
+          const body = payload.notification?.body || payload.data?.body || 'Nouvelle notification';
+          
+          new Notification(title, {
+            body: body,
+            icon: payload.data?.icon || '/pwa-192x192.svg',
+            badge: payload.data?.badge || '/pwa-192x192.svg',
+            tag: payload.data?.tag,
+            data: payload.data
+          });
         });
         
         return fcmToken;
@@ -167,7 +166,7 @@ export class PushNotificationService {
   // Obtenir la clé publique VAPID depuis le serveur
   private async getVapidPublicKey(): Promise<string> {
     try {
-      const response = await axios.get(`${API_URL}/api/notifications/vapid-public-key`, {
+      const response = await axios.get(`${API_URL}/notifications/vapid-public-key`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
@@ -197,7 +196,7 @@ export class PushNotificationService {
       };
       
       await axios.post(
-        `${API_URL}/api/notifications/subscribe`,
+        `${API_URL}/notifications/subscribe`,
         subscriptionData,
         {
           headers: {
@@ -220,7 +219,7 @@ export class PushNotificationService {
   // Supprimer l'abonnement du serveur
   private async removeSubscriptionFromServer(): Promise<void> {
     try {
-      await axios.delete(`${API_URL}/api/notifications/unsubscribe`, {
+      await axios.delete(`${API_URL}/notifications/unsubscribe`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
@@ -268,24 +267,49 @@ export class PushNotificationService {
 
   // Tester l'envoi d'une notification locale
   async testNotification(): Promise<void> {
+    console.log('🔔 testNotification called');
+    console.log('Notification.permission:', Notification.permission);
+    
     if (Notification.permission !== 'granted') {
-      console.warn('Notification permission not granted');
-      return;
+      console.warn('❌ Notification permission not granted:', Notification.permission);
+      throw new Error(`Permission non accordée: ${Notification.permission}`);
     }
 
-    const notification = new Notification('Test FranchiseHUB', {
-      body: 'Ceci est une notification de test',
-      icon: '/pwa-192x192.svg',
-      badge: '/pwa-192x192.svg',
-      vibrate: [200, 100, 200],
-      tag: 'test-notification',
-      requireInteraction: false
-    });
+    try {
+      console.log('🚀 Creating notification...');
+      const notification = new Notification('Test FranchiseHUB', {
+        body: 'Ceci est une notification de test',
+        icon: '/pwa-192x192.svg',
+        badge: '/pwa-192x192.svg',
+        vibrate: [200, 100, 200],
+        tag: 'test-notification',
+        requireInteraction: false
+      });
 
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-    };
+      console.log('✅ Notification created:', notification);
+
+      notification.onclick = () => {
+        console.log('👆 Notification clicked');
+        window.focus();
+        notification.close();
+      };
+
+      notification.onshow = () => {
+        console.log('👁️ Notification shown');
+      };
+
+      notification.onerror = (error) => {
+        console.error('❌ Notification error:', error);
+      };
+
+      notification.onclose = () => {
+        console.log('🚪 Notification closed');
+      };
+
+    } catch (error) {
+      console.error('💥 Error creating notification:', error);
+      throw error;
+    }
   }
 }
 

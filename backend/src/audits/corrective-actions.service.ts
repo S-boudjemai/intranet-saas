@@ -151,4 +151,58 @@ export class CorrectiveActionsService {
     action.status = 'archived';
     return this.correctiveActionRepository.save(action);
   }
+
+  async findArchived(
+    tenantId?: number, 
+    options?: { page?: number; limit?: number; sortBy?: string; sortOrder?: 'ASC' | 'DESC' }
+  ) {
+    try {
+      const query = this.correctiveActionRepository
+        .createQueryBuilder('ca')
+        .leftJoinAndSelect('ca.assigned_user', 'assigned_user')
+        .leftJoinAndSelect('ca.verifier', 'verifier')
+        .where('ca.status = :status', { status: 'archived' });
+
+      if (tenantId) {
+        query.andWhere('assigned_user.tenant_id = :tenantId', { tenantId });
+      }
+
+      // Tri dynamique
+      const sortBy = options?.sortBy || 'updated_at';
+      const sortOrder = options?.sortOrder || 'DESC';
+      query.orderBy(`ca.${sortBy}`, sortOrder);
+
+      // Pagination
+      const page = options?.page || 1;
+      const limit = options?.limit || 20;
+      const offset = (page - 1) * limit;
+
+      // Compter le total
+      const total = await query.getCount();
+      
+      // Récupérer les données avec pagination
+      const data = await query.skip(offset).take(limit).getMany();
+
+      const totalPages = Math.ceil(total / limit);
+
+      return { data, total, page, limit, totalPages };
+    } catch (error) {
+      console.error('Error in findArchived:', error);
+      throw error;
+    }
+  }
+
+  async restore(id: number) {
+    const action = await this.correctiveActionRepository.findOne({
+      where: { id, status: 'archived' },
+    });
+
+    if (!action) {
+      throw new NotFoundException('Action corrective archivée non trouvée');
+    }
+
+    // Restaurer au statut "completed" par défaut
+    action.status = 'completed';
+    return this.correctiveActionRepository.save(action);
+  }
 }

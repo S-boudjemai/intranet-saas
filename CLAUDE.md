@@ -119,6 +119,68 @@ MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS
 
 ---
 
+## 🎯 Session Actuelle - Système d'Archivage (24/07/2025)
+
+### ✅ Tâches Complétées
+1. **Modifier l'enum TicketStatus pour ajouter 'archived'** ✅
+   - Ajout du statut 'archived' dans ticket.entity.ts
+   - Migration 1753308000000-AddArchivedTicketStatus.ts créée
+   - Mise à jour enum PostgreSQL
+
+2. **Ajouter bouton 'Archiver' sur les tickets résolus** ✅
+   - Méthodes archiveTicket() et restoreTicket() dans tickets.service.ts
+   - Routes PUT /tickets/:id/archive et /tickets/:id/restore
+   - Bouton archivage dans TicketItem.tsx (statut 'traitee' uniquement)
+   - Logique de permissions manager/admin respectée
+
+3. **Créer interface d'archives avec filtres** ✅
+   - Page ArchivesPage.tsx avec 3 onglets (Audits/Tickets/Actions)
+   - TabNavigation avec badges de comptage
+   - Modales de détails pour chaque type d'archive
+   - Fonctions de restauration intégrées
+
+4. **Implémenter workflow actions correctives (completed->archived)** ✅
+   - Méthodes findArchived() et restore() dans corrective-actions.service.ts
+   - Routes GET /corrective-actions/archived et PUT /:id/restore
+   - Interface complète dans onglet Actions archivées
+   - Workflow completed/verified → archived → restored
+
+5. **Tester l'archivage et la restauration** ✅
+   - Corrections erreurs TypeScript (logique archiveTicket)
+   - Fixes imports TabNavigation et ChecklistIcon → ClipboardIcon
+   - Build backend successful
+   - Interface frontend opérationnelle
+
+### 🏗️ Architecture Implémentée
+- **Approche "Soft Archive"** : Utilisation de statuts au lieu d'entités séparées
+- **Sécurité** : Préservation des droits viewers sur leurs archives
+- **Réversibilité** : Fonctions de restauration complètes
+- **Multi-tenant** : Isolation des archives par tenant
+
+### 📁 Fichiers Modifiés
+**Backend:**
+- `src/tickets/entities/ticket.entity.ts` - Enum TicketStatus
+- `src/tickets/tickets.service.ts` - Méthodes archivage/restauration
+- `src/tickets/tickets.controller.ts` - Routes archives
+- `src/audits/corrective-actions.service.ts` - Gestion archives actions
+- `src/audits/corrective-actions.controller.ts` - Routes archives actions
+- `src/migrations/1753308000000-AddArchivedTicketStatus.ts` - Migration
+
+**Frontend:**
+- `src/pages/ArchivesPage.tsx` - Interface complète 3 onglets
+- `src/components/TicketItem.tsx` - Bouton archivage
+- `src/pages/TicketsPages.tsx` - Intégration fonction archivage
+
+### 🎯 Statut Final
+**SYSTÈME D'ARCHIVAGE COMPLET ET OPÉRATIONNEL** 
+- ✅ Tickets archivables depuis interface tickets
+- ✅ Actions correctives archivables selon workflow
+- ✅ Page Archives centralisée avec filtres
+- ✅ Restauration possible pour tous types
+- ✅ Respect des permissions et multi-tenancy
+
+---
+
 ## 📅 Historique des Changements
 
 ### Janvier 2025
@@ -159,3 +221,10 @@ MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS
    - Voir `/backend/CLAUDE.md` section "RÈGLE CRITIQUE - Cohérence des Types"
 7. **Relations Base de Données** - TOUJOURS configurer les cascades (onDelete: 'CASCADE') pour éviter les contraintes FK
    - Ordre des routes important : routes spécifiques AVANT routes paramétrées (/delete-all avant /:id)
+8. **Dark Mode UI** - JAMAIS de couleurs fixes sans variante dark (text-gray-900 → text-gray-900 dark:text-gray-100)
+   - Utiliser les tokens Tailwind adaptatifs : text-foreground, bg-background, text-muted-foreground
+   - Overlays de modales : bg-black/50 au lieu de bg-black bg-opacity-50
+9. **UX & Animations** - Autorisation d'utiliser des librairies pour améliorer l'UI/UX
+   - Framer Motion pour animations fluides et micro-interactions
+   - Librairies UI/UX appropriées pour améliorer l'expérience utilisateur
+   - Éviter les éléments invisibles (opacity-0) sans feedback visuel clair

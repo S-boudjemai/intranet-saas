@@ -53,27 +53,27 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     >
       {/* Container Waitify */}
       <div
-        className="bg-white border border-gray-200 rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col animate-scale-in overflow-hidden"
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col animate-scale-in overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         style={{
           boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
         }}
       >
         {/* Header Waitify */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
-          <h2 className="text-xl font-bold text-gray-900">{name}</h2>
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{name}</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-all duration-300"
+            className="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300 transition-all duration-300"
           >
             <XIcon className="h-5 w-5" />
           </button>
         </div>
 
         {/* Contenu Waitify */}
-        <div className="p-6 overflow-auto bg-gray-50">
+        <div className="p-6 overflow-auto bg-gray-50 dark:bg-gray-900">
           {isPdf ? (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <iframe
                 src={url}
                 title={name}
@@ -84,7 +84,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
               />
             </div>
           ) : isImage ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-center">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-center">
               <img
                 src={url}
                 alt={name}
@@ -98,17 +98,17 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
               />
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 p-8 flex flex-col items-center justify-center h-[75vh] text-center">
-              <div className="p-4 bg-blue-50 rounded-2xl mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 flex flex-col items-center justify-center h-[75vh] text-center">
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl mb-4">
                 <div className="text-4xl">📄</div>
               </div>
-              <p className="text-xl font-bold text-gray-900 mb-2">{name}</p>
-              <p className="text-gray-600 mb-6">
+              <p className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{name}</p>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Aperçu non disponible pour ce type de fichier
               </p>
               <button
                 onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
-                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-300 shadow-sm hover:shadow-md font-medium"
               >
                 Ouvrir dans un nouvel onglet
               </button>

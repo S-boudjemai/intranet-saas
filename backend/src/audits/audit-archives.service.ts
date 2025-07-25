@@ -170,7 +170,7 @@ export class AuditArchivesService {
   async findArchives(
     filters: ArchiveFiltersDto,
     user: JwtUser,
-  ): Promise<AuditArchive[]> {
+  ): Promise<{ data: AuditArchive[]; total: number; page: number; limit: number; totalPages: number }> {
     const qb = this.archiveRepo.createQueryBuilder('archive');
 
     // Filtrage par tenant
@@ -228,10 +228,25 @@ export class AuditArchivesService {
       qb.andWhere('archive.status = :status', { status: filters.status });
     }
 
-    return qb
-      .orderBy('archive.completed_date', 'DESC')
-      .limit(100) // Limiter pour éviter les grandes requêtes
-      .getMany();
+    // Tri dynamique
+    const sortBy = filters.sortBy || 'archived_at';
+    const sortOrder = filters.sortOrder || 'DESC';
+    qb.orderBy(`archive.${sortBy}`, sortOrder);
+
+    // Pagination
+    const page = filters.page || 1;
+    const limit = filters.limit || 20;
+    const offset = (page - 1) * limit;
+
+    // Compter le total pour la pagination
+    const total = await qb.getCount();
+    
+    // Appliquer pagination et récupérer les données
+    const data = await qb.skip(offset).take(limit).getMany();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return { data, total, page, limit, totalPages };
   }
 
   /**

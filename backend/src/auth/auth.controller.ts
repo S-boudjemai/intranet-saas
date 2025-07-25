@@ -67,8 +67,9 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Identifiants invalides' })
   async login(@Request() req, @Res({ passthrough: true }) res: Response) {
     const user = req.user;
+    
     const tokens = this.tokensService.generateTokenPair({
-      userId: user.userId,
+      userId: user.id, // CORRECTION: utiliser user.id au lieu de user.userId
       email: user.email,
       role: user.role,
       tenant_id: user.tenant_id,
@@ -86,7 +87,7 @@ export class AuthController {
     return {
       access_token: tokens.accessToken,
       user: {
-        userId: user.userId,
+        userId: user.id, // CORRECTION: utiliser user.id
         email: user.email,
         role: user.role,
         tenant_id: user.tenant_id,
@@ -109,7 +110,7 @@ export class AuthController {
     );
 
     const tokens = this.tokensService.generateTokenPair({
-      userId: result.user.userId,
+      userId: result.user.userId, // Ici c'est OK, authService.signupWithInvite retourne déjà userId
       email: result.user.email,
       role: result.user.role,
       tenant_id: result.user.tenant_id,

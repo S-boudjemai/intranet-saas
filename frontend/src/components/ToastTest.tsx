@@ -6,9 +6,9 @@ export const ToastTest: React.FC = () => {
 
   return (
     <div className="fixed bottom-4 left-4 z-50 space-y-2">
-      <div className="bg-white p-4 rounded-lg shadow-lg border">
-        <h3 className="font-bold mb-2">Test Toast System</h3>
-        <div className="space-x-2">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border dark:border-gray-700">
+        <h3 className="font-bold mb-2 text-gray-900 dark:text-gray-100">Test Toast System</h3>
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => showToast('Opération réussie !', 'success')}
             className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
@@ -22,7 +22,7 @@ export const ToastTest: React.FC = () => {
             Error
           </button>
           <button
-            onClick={() => showToast('Attention, action requise', 'warning')}
+            onClick={() => showToast('Attention requise', 'warning')}
             className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"
           >
             Warning

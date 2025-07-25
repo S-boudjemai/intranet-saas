@@ -95,7 +95,7 @@ export default function ManageTagsModal({
     (t) => !currentTagIds.includes(t.id)
   );
 
-  const inputClasses = `flex-grow bg-gray-50 border border-gray-200 rounded-xl p-3 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-300`;
+  const inputClasses = `flex-grow bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-300`;
 
   return (
     <div
@@ -103,7 +103,7 @@ export default function ManageTagsModal({
       onClick={onClose}
     >
       <div
-        className="bg-white border border-gray-200 rounded-2xl w-full max-w-2xl overflow-hidden"
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl w-full max-w-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         style={{
           boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
@@ -111,7 +111,7 @@ export default function ManageTagsModal({
       >
         <div className="p-6 border-b border-gray-200 bg-gray-50">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold text-xl text-gray-900 flex items-center gap-3">
+            <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 flex items-center gap-3">
               <div className="p-2 bg-blue-50 rounded-xl">
                 <TagIcon className="h-5 w-5 text-blue-600" />
               </div>
@@ -119,14 +119,14 @@ export default function ManageTagsModal({
             </h3>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-all duration-300"
+              className="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300 transition-all duration-300"
             >
               <XIcon className="h-5 w-5" />
             </button>
           </div>
           <p className="text-gray-600 mt-2">
             Pour le document:{" "}
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-gray-900 dark:text-gray-100">
               {documentName}
             </span>
           </p>
@@ -134,7 +134,7 @@ export default function ManageTagsModal({
 
         <div className="p-6 max-h-[60vh] overflow-y-auto space-y-6">
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
               Créer un nouveau tag
             </h4>
@@ -157,7 +157,7 @@ export default function ManageTagsModal({
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
               <div className="w-2 h-2 bg-green-600 rounded-full"></div>
               Tags assignés
             </h4>
@@ -182,7 +182,7 @@ export default function ManageTagsModal({
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
               <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
               Tags disponibles
             </h4>
@@ -192,7 +192,7 @@ export default function ManageTagsModal({
                   <button
                     key={tag.id}
                     onClick={() => handleToggleTag(tag.id)}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 border border-gray-200 hover:border-gray-300"
+                    className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
                   >
                     + {tag.name}
                   </button>
@@ -209,7 +209,7 @@ export default function ManageTagsModal({
         <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-gray-700 font-medium hover:bg-gray-200 transition-all duration-300"
+            className="px-4 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300"
           >
             Annuler
           </button>

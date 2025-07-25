@@ -81,6 +81,24 @@ export class TicketsController {
   }
 
   /**
+   * GET /tickets/archived
+   * - Viewer, Manager, Admin: liste des tickets archivés
+   *   * Viewer : ne voit que ses tickets archivés
+   *   * Manager/Admin : voient tous les tickets archivés de leur tenant
+   */
+  @Get('archived')
+  @Roles(Role.Viewer, Role.Manager, Role.Admin)
+  async findArchived(
+    @Req() req: Request & { user: JwtUser },
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC'
+  ) {
+    return this.svc.findArchivedTickets(req.user, { page, limit, sortBy, sortOrder });
+  }
+
+  /**
    * GET /tickets/:id
    * - Viewer, Manager, Admin: détail d’un ticket (avec commentaires)
    *   * Viewer : ne peut accéder qu’à ses propres tickets
@@ -107,6 +125,32 @@ export class TicketsController {
     @Req() req: Request & { user: JwtUser },
   ): Promise<Ticket> {
     return this.svc.updateStatus(id, updateTicketDto.status!, req.user);
+  }
+
+  /**
+   * PUT /tickets/:id/archive
+   * - Manager & Admin only: archiver un ticket traité
+   */
+  @Put(':id/archive')
+  @Roles(Role.Manager, Role.Admin)
+  async archiveTicket(
+    @Param('id') id: string,
+    @Req() req: Request & { user: JwtUser },
+  ): Promise<Ticket> {
+    return this.svc.archiveTicket(id, req.user);
+  }
+
+  /**
+   * PUT /tickets/:id/restore
+   * - Manager & Admin only: restaurer un ticket archivé
+   */
+  @Put(':id/restore')
+  @Roles(Role.Manager, Role.Admin)
+  async restoreTicket(
+    @Param('id') id: string,
+    @Req() req: Request & { user: JwtUser },
+  ): Promise<Ticket> {
+    return this.svc.restoreTicket(id, req.user);
   }
 
   /**

@@ -12,7 +12,7 @@ const QuickActions: React.FC = () => {
       description: "Programmer un nouvel audit",
       icon: ClipboardIcon,
       onClick: () => navigate("/audits"),
-      color: "bg-blue-50 hover:bg-blue-100 border-blue-200",
+      color: "bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border-blue-200 dark:border-blue-800",
       iconColor: "text-blue-600",
     },
     {
@@ -20,7 +20,7 @@ const QuickActions: React.FC = () => {
       description: "Gérer les demandes",
       icon: TicketIcon,
       onClick: () => navigate("/tickets"),
-      color: "bg-green-50 hover:bg-green-100 border-green-200",
+      color: "bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 border-green-200 dark:border-green-800",
       iconColor: "text-green-600",
     },
     {
@@ -28,7 +28,7 @@ const QuickActions: React.FC = () => {
       description: "Uploader un fichier",
       icon: UploadIcon,
       onClick: () => navigate("/documents"),
-      color: "bg-purple-50 hover:bg-purple-100 border-purple-200",
+      color: "bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border-purple-200 dark:border-purple-800",
       iconColor: "text-purple-600",
     },
     {
@@ -36,7 +36,7 @@ const QuickActions: React.FC = () => {
       description: "Diffuser une info",
       icon: PlusIcon,
       onClick: () => navigate("/announcements"),
-      color: "bg-orange-50 hover:bg-orange-100 border-orange-200",
+      color: "bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border-orange-200 dark:border-orange-800",
       iconColor: "text-orange-600",
     },
   ];
@@ -73,7 +73,7 @@ const QuickActions: React.FC = () => {
           >
             <div className="flex items-center gap-3 mb-2">
               <div className={`
-                p-2 rounded-lg bg-white shadow-sm
+                p-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm
                 transition-transform duration-300
                 group-hover:scale-110
               `}>

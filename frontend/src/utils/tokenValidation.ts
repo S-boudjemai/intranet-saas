@@ -36,11 +36,43 @@ export function validateJWTStructure(token: string): { isValid: boolean; error?:
     }
   }
 
+  // Vérifier la structure du payload pour détecter les tokens obsolètes
+  try {
+    const payload = JSON.parse(atob(parts[1]));
+    
+    // TEMPORAIRE: Désactiver la validation userId pour permettre la reconnexion
+    // TODO: Réactiver après que tous les utilisateurs se soient reconnectés
+    /*
+    if (typeof payload.userId === 'undefined') {
+      return { 
+        isValid: false, 
+        error: 'Token obsolète: userId manquant. Reconnexion requise.' 
+      };
+    }
+    */
+
+    // Vérifier les champs obligatoires
+    if (!payload.email || !payload.role) {
+      return { 
+        isValid: false, 
+        error: 'Token invalide: champs obligatoires manquants' 
+      };
+    }
+
+  } catch (e) {
+    return { 
+      isValid: false, 
+      error: 'Impossible de décoder le payload du token' 
+    };
+  }
+
   return { isValid: true };
 }
 
 export function clearInvalidToken(): void {
   localStorage.removeItem('token');
+  // Forcer le rechargement complet de la page pour réinitialiser tous les contextes
+  window.location.reload();
 }
 
 export function debugToken(token: string): void {

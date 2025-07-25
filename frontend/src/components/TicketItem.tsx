@@ -5,7 +5,7 @@ import type { TicketType, TicketAttachment } from "../types";
 import TicketBadge from "./TicketBadge";
 import ImageUpload from "./ImageUpload";
 import AttachmentGallery from "./AttachmentGallery";
-import { ChevronDownIcon, TrashIcon, ChatAlt2Icon } from "./icons";
+import { ChevronDownIcon, TrashIcon, ChatAlt2Icon, ArchiveIcon } from "./icons";
 
 interface TicketItemProps {
   ticket: TicketType;
@@ -13,6 +13,7 @@ interface TicketItemProps {
   onStatusChange: (id: string, status: TicketType["status"]) => void;
   onDeleteRequest: (ticket: TicketType) => void; // <-- MODIFIÉ
   onAddComment: (id: string, message: string) => void;
+  onArchive?: (ticketId: string) => void;
   defaultExpanded?: boolean;
 }
 
@@ -23,6 +24,7 @@ export default function TicketItem({
   onStatusChange,
   onDeleteRequest, // <-- MODIFIÉ
   onAddComment,
+  onArchive,
   defaultExpanded = false,
 }: TicketItemProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -54,7 +56,7 @@ export default function TicketItem({
   };
 
   const inputClasses =
-    "bg-input border border-border rounded-md w-full p-2 text-gray-900 focus:border-primary focus:ring-primary/30 focus:outline-none transition-all";
+    "bg-input border border-border rounded-md w-full p-2 text-foreground focus:border-primary focus:ring-primary/30 focus:outline-none transition-all";
 
   return (
     <motion.div 
@@ -204,20 +206,36 @@ export default function TicketItem({
                     )}
                   </div>
                 </div>
-                {/* Bouton suppression uniquement si ticket traité */}
-                {ticket.status === "traitee" && (
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => onDeleteRequest(ticket)}
-                    className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-transparent hover:border-destructive/20 transition-all duration-300"
-                    title="Supprimer le ticket traité"
-                  >
-                    <TrashIcon className="h-5 w-5" />
-                  </motion.button>
-                )}
+                <div className="flex gap-2">
+                  {/* Bouton archivage uniquement si ticket traité */}
+                  {ticket.status === "traitee" && onArchive && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => onArchive(ticket.id)}
+                      className="p-2 rounded-full text-muted-foreground hover:bg-blue-100 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-all duration-300"
+                      title="Archiver le ticket traité"
+                    >
+                      <ArchiveIcon className="h-5 w-5" />
+                    </motion.button>
+                  )}
+                  {/* Bouton suppression uniquement si ticket traité */}
+                  {ticket.status === "traitee" && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => onDeleteRequest(ticket)}
+                      className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-transparent hover:border-destructive/20 transition-all duration-300"
+                      title="Supprimer le ticket traité"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </motion.button>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}

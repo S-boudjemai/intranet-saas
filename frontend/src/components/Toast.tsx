@@ -71,25 +71,23 @@ export default function Toast({
 
   return (
     <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
-      <div className={`max-w-sm w-full border rounded-lg shadow-lg p-4 ${getStyles()}`}>
-        <div className="flex items-start">
+      <div className={`min-w-80 max-w-sm border rounded-lg shadow-lg p-4 ${getStyles()}`}>
+        <div className="flex items-start gap-3">
           <div className={`flex-shrink-0 ${getIconStyles()}`}>
             {getIcon()}
           </div>
-          <div className="ml-3 w-0 flex-1">
-            <p className="text-sm font-medium">{title}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium break-words">{title}</p>
             {message && (
-              <p className="mt-1 text-sm opacity-80">{message}</p>
+              <p className="mt-1 text-sm opacity-80 break-words">{message}</p>
             )}
           </div>
-          <div className="ml-4 flex-shrink-0 flex">
-            <button
-              onClick={onClose}
-              className="inline-flex rounded-md p-1.5 hover:bg-black/10 focus:outline-none"
-            >
-              <FiX className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="flex-shrink-0 ml-2 p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+          >
+            <FiX className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>

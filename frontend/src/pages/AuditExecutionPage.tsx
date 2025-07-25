@@ -271,7 +271,7 @@ export default function AuditExecutionPage() {
               {currentItem.type === 'text' && (
                 <div>
                   <textarea
-                    className="w-full p-3 border border-border rounded-md resize-none h-32 text-gray-900 placeholder-gray-500"
+                    className="w-full p-3 border border-border rounded-md resize-none h-32 text-foreground placeholder:text-muted-foreground bg-background"
                     placeholder="Entrez votre commentaire..."
                     value={responses[currentItem.id]?.value || ''}
                     onChange={(e) => handleTextResponse(currentItem, e.target.value)}

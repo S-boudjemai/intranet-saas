@@ -17,7 +17,6 @@ const messaging = firebase.messaging();
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
-  console.log('Received background message:', payload);
   
   // Customize notification here
   const notificationTitle = payload.notification?.title || 'FranchiseHUB';

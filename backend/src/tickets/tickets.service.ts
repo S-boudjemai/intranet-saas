@@ -226,7 +226,9 @@ export class TicketsService {
       .leftJoinAndSelect('ticket.restaurant', 'restaurant') // <-- On joint pour récupérer le nom du restaurant
       .leftJoinAndSelect('ticket.attachments', 'attachment') // <-- Ajouter les attachments
       .leftJoinAndSelect('comment.attachments', 'commentAttachment') // <-- Attachments des commentaires
-      .where('ticket.status != :supprime', { supprime: TicketStatus.Supprime });
+      .where('ticket.status NOT IN (:...excludedStatuses)', { 
+        excludedStatuses: [TicketStatus.Supprime, TicketStatus.Archived] 
+      });
 
     if (user.role === Role.Viewer) {
       // Un viewer ne voit que les tickets de son restaurant
@@ -272,6 +274,81 @@ export class TicketsService {
     }
 
     return tickets;
+  }
+
+  // Récupérer les tickets archivés avec pagination
+  async findArchivedTickets(
+    user: JwtUser, 
+    options?: { page?: number; limit?: number; sortBy?: string; sortOrder?: 'ASC' | 'DESC' }
+  ): Promise<{ data: Ticket[]; total: number; page: number; limit: number; totalPages: number }> {
+    const qb = this.ticketsRepo
+      .createQueryBuilder('ticket')
+      .leftJoinAndSelect('ticket.comments', 'comment')
+      .leftJoinAndSelect('ticket.restaurant', 'restaurant')
+      .leftJoinAndSelect('ticket.attachments', 'attachment')
+      .leftJoinAndSelect('comment.attachments', 'commentAttachment')
+      .where('ticket.status = :archived', { archived: TicketStatus.Archived });
+
+    if (user.role === Role.Viewer) {
+      // Un viewer ne voit que les tickets archivés de son restaurant
+      if (!user.restaurant_id) {
+        return { data: [], total: 0, page: 1, limit: 20, totalPages: 0 };
+      }
+      qb.andWhere('ticket.restaurant_id = :rid', { rid: user.restaurant_id });
+    } else if (user.role === Role.Manager) {
+      // Un manager voit tous les tickets archivés de sa franchise
+      if (!user.tenant_id) {
+        return { data: [], total: 0, page: 1, limit: 20, totalPages: 0 };
+      }
+      qb.andWhere('ticket.tenant_id = :tid', {
+        tid: user.tenant_id.toString(),
+      });
+    }
+    // Un admin voit tout (pas de filtre de tenant)
+
+    // Tri dynamique
+    const sortBy = options?.sortBy || 'updated_at';
+    const sortOrder = options?.sortOrder || 'DESC';
+    qb.orderBy(`ticket.${sortBy}`, sortOrder);
+
+    // Pagination
+    const page = options?.page || 1;
+    const limit = options?.limit || 20;
+    const offset = (page - 1) * limit;
+
+    // Compter le total
+    const total = await qb.getCount();
+    
+    // Récupérer les données avec pagination
+    const tickets = await qb.skip(offset).take(limit).getMany();
+
+    // Générer des URLs présignées pour les attachments S3
+    for (const ticket of tickets) {
+      if (ticket.attachments && ticket.attachments.length > 0) {
+        for (const attachment of ticket.attachments) {
+          attachment.url = await this.getPresignedUrlForAttachment(
+            attachment.url,
+          );
+        }
+      }
+
+      // Faire de même pour les commentaires avec attachments
+      if (ticket.comments) {
+        for (const comment of ticket.comments) {
+          if (comment.attachments && comment.attachments.length > 0) {
+            for (const attachment of comment.attachments) {
+              attachment.url = await this.getPresignedUrlForAttachment(
+                attachment.url,
+              );
+            }
+          }
+        }
+      }
+    }
+
+    const totalPages = Math.ceil(total / limit);
+
+    return { data: tickets, total, page, limit, totalPages };
   }
 
   // ... le reste du service (findOne, updateStatus, etc.) reste globalement identique ...
@@ -460,6 +537,59 @@ export class TicketsService {
 
     // Mettre le statut à "supprime" au lieu d'utiliser is_deleted
     await this.ticketsRepo.update(id, { status: TicketStatus.Supprime });
+  }
+
+  async archiveTicket(id: string, user: JwtUser): Promise<Ticket> {
+    // Récupérer le ticket pour vérifier son statut et les permissions
+    const ticket = await this.ticketsRepo.findOne({
+      where: { id },
+      relations: ['restaurant'],
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket introuvable');
+    }
+
+    // Vérifier les permissions
+    await this.checkTicketAccess(ticket, user);
+
+    // Vérifier que le ticket peut être archivé (doit être traité)
+    if (ticket.status === TicketStatus.Archived) {
+      throw new BadRequestException('Ticket déjà archivé');
+    }
+
+    if (ticket.status !== TicketStatus.Traitee) {
+      throw new BadRequestException('Seuls les tickets traités peuvent être archivés');
+    }
+
+    // Archiver le ticket
+    ticket.status = TicketStatus.Archived;
+    const archivedTicket = await this.ticketsRepo.save(ticket);
+
+    console.log(`📁 Ticket ${id} archivé par ${user.userId}`);
+    return archivedTicket;
+  }
+
+  async restoreTicket(id: string, user: JwtUser): Promise<Ticket> {
+    // Récupérer le ticket archivé
+    const ticket = await this.ticketsRepo.findOne({
+      where: { id, status: TicketStatus.Archived },
+      relations: ['restaurant'],
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket archivé introuvable');
+    }
+
+    // Vérifier les permissions
+    await this.checkTicketAccess(ticket, user);
+
+    // Restaurer le ticket en statut traité
+    ticket.status = TicketStatus.Traitee;
+    const restoredTicket = await this.ticketsRepo.save(ticket);
+
+    console.log(`📤 Ticket ${id} restauré par ${user.userId}`);
+    return restoredTicket;
   }
 
   /**

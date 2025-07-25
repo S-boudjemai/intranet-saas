@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
@@ -64,8 +65,12 @@ export class AuthService {
   }
 
   async login(user: User) {
+    if (!user.id) {
+      throw new InternalServerErrorException('user.id manquant au login');
+    }
+
     const payload = {
-      userId: user.id, // Utiliser userId dans le token
+      userId: user.id,
       email: user.email,
       tenant_id: user.tenant_id,
       role: user.role,
@@ -74,10 +79,7 @@ export class AuthService {
 
     const token = this.jwtService.sign(payload);
 
-    return {
-      access_token: token,
-      user: payload,
-    };
+    return { access_token: token };
   }
 
   async validateUserById(userId: number): Promise<any> {

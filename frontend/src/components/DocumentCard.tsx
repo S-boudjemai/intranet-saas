@@ -57,17 +57,17 @@ export default function DocumentCard({
           </motion.div>
           <motion.div 
             initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 0, x: 0 }}
+            animate={{ opacity: 0.8, x: 0 }}
             whileHover={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300"
+            className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-all duration-300"
           >
             {canManage && (
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={onManageTags}
-                className="p-2 rounded-full text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300"
+                className="p-2 rounded-full text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 hover:scale-110"
                 title="Gérer les tags"
               >
                 <TagIcon className="h-5 w-5" />
@@ -78,7 +78,7 @@ export default function DocumentCard({
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => onDelete(doc.id)}
-                className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
+                className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300 hover:scale-110"
                 title="Supprimer le document"
               >
                 <TrashIcon className="h-5 w-5" />
