@@ -28,6 +28,8 @@ export default function AnnouncementsPageNew() {
 
   const raw = token ? parseJwt<JwtPayload>(token) : null;
   const canManage = raw?.role === 'manager' || raw?.role === 'admin';
+  
+  // Force rebuild - 28/01/2025
 
   // Gestionnaire de succès de création
   const handleCreateSuccess = useCallback(() => {
