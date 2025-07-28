@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { XIcon, UserCircleIcon, ClockIcon, EyeIcon } from './icons';
+import { UserListSkeleton } from './Skeleton';
 
 interface AnnouncementView {
   id: number;
@@ -119,10 +120,7 @@ export default function AnnouncementViewModal({
             {/* Content */}
             <div className="p-6 overflow-y-auto max-h-96">
               {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  <span className="ml-3 text-muted-foreground">Chargement...</span>
-                </div>
+                <UserListSkeleton />
               ) : views.length === 0 ? (
                 <div className="text-center py-8">
                   <EyeIcon className="w-12 h-12 text-muted-foreground mx-auto mb-3" />

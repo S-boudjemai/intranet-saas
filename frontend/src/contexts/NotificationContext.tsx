@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
-import { pushNotifications } from '../services/pushNotifications';
+// Utilise OneSignal pour les notifications push
 
 interface NotificationCounts {
   documents: number;
@@ -62,9 +62,19 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         };
         setNotificationCounts(newCounts);
         
-        // Mettre à jour le badge de l'application PWA
+        // ✅ Badge PWA natif (plus besoin de Firebase)
         const totalCount = newCounts.documents + newCounts.announcements + newCounts.tickets;
-        pushNotifications.updateAppBadge(totalCount);
+        if ('setAppBadge' in navigator) {
+          try {
+            if (totalCount > 0) {
+              await (navigator as any).setAppBadge(totalCount);
+            } else {
+              await (navigator as any).clearAppBadge();
+            }
+          } catch (err) {
+            console.warn('Badge PWA non supporté:', err);
+          }
+        }
       }
     } catch (error) {
       // Error fetching notification counts
@@ -75,7 +85,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   useEffect(() => {
     if (token && user) {
       const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      console.log('🔗 Connecting to WebSocket:', socketUrl);
       
       const newSocket = io(socketUrl, {
         auth: {
@@ -83,54 +92,46 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         },
         autoConnect: true,
         transports: ['websocket', 'polling'],
-        reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
-        reconnectionAttempts: 10,
+        reconnection: true,        // ✅ Réactiver reconnexion automatique
+        reconnectionAttempts: 5,   // ✅ Limite de tentatives
+        reconnectionDelay: 1000,   // ✅ Délai entre tentatives
         timeout: 20000,
         forceNew: true,
         upgrade: true
       });
 
       newSocket.on('connect', () => {
-        console.log('🔌 WebSocket connected to notifications server');
       });
 
       newSocket.on('disconnect', (reason) => {
-        console.log('❌ WebSocket disconnected:', reason);
         if (reason === 'io server disconnect') {
-          // Server disconnected, reconnect
+          // Server disconnected, attempt to reconnect
           newSocket.connect();
         }
       });
 
       newSocket.on('connect_error', (error) => {
-        console.error('🚨 WebSocket connection error:', error);
+        console.error('WebSocket connection error:', error);
       });
 
       // Écouter les notifications en temps réel avec délai
       newSocket.on('document_uploaded', (data) => {
-        console.log('📄 WebSocket event: document_uploaded', data);
         setTimeout(refreshCounts, 500); // 0.5 seconde de délai
       });
 
       newSocket.on('announcement_posted', (data) => {
-        console.log('📢 WebSocket event: announcement_posted', data);
         setTimeout(refreshCounts, 500);
       });
 
       newSocket.on('ticket_created', (data) => {
-        console.log('🎫 WebSocket event: ticket_created', data);
         setTimeout(refreshCounts, 500);
       });
 
       newSocket.on('ticket_updated', (data) => {
-        console.log('🔄 WebSocket event: ticket_updated', data);
         setTimeout(refreshCounts, 500);
       });
 
       newSocket.on('restaurant_joined', (data) => {
-        console.log('🏪 WebSocket event: restaurant_joined', data);
         setTimeout(refreshCounts, 500);
       });
 
@@ -139,15 +140,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       return () => {
         newSocket.close();
       };
+    } else {
+      // ✅ Si pas de token/user, fermer WebSocket existant
+      if (socket) {
+        socket.close();
+        setSocket(null);
+      }
     }
-  }, [token, user, refreshCounts]);
+  }, [token, user]); // ✅ RETIRER refreshCounts des dépendances
 
   // Charger les compteurs au montage
   useEffect(() => {
-    if (token) {
+    if (token && user) {
       refreshCounts();
     }
-  }, [token, refreshCounts]);
+  }, [token, user, refreshCounts]);
 
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -185,14 +192,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         throw new Error(`Erreur ${response.status}: ${response.statusText}`);
       }
 
-      // Rafraîchir les compteurs après avoir marqué comme lu
+      // ✅ Rafraîchir les compteurs après avoir marqué comme lu
       await refreshCounts();
-      
-      // Réinitialiser le badge si toutes les notifications sont lues
-      const totalUnread = notificationCounts.documents + notificationCounts.announcements + notificationCounts.tickets;
-      if (totalUnread === 0) {
-        pushNotifications.updateAppBadge(0);
-      }
     } catch (error) {
       // Error marking notifications as read
       // TODO: Afficher une notification d'erreur à l'utilisateur

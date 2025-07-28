@@ -17,20 +17,57 @@ import {
   Cell,
 } from "recharts";
 import KpiCard from "../components/KipCard";
-import QuickActions from "../components/QuickActions";
+import AlertsSection from "../components/AlertsSection";
 import { 
   ChartPieIcon, 
   DocumentReportIcon, 
-  ExclamationCircleIcon, 
-  SpinnerIcon, 
+  ExclamationCircleIcon,
   TicketIcon, 
   RestaurantIcon,
   CalendarIcon,
   CogIcon,
   TrendingUpIcon
 } from "../components/icons";
+import { DashboardSkeleton } from "../components/Skeleton";
+
+interface Restaurant {
+  id: string;
+  name: string;
+  city: string;
+  address?: string;
+}
+
+interface CriticalTicket {
+  id: string;
+  title: string;
+  created_at: string;
+  priority?: string;
+}
+
+interface OverdueAction {
+  id: string;
+  title: string;
+  due_date: string;
+  status: string;
+  priority?: string;
+}
+
+interface AlertsData {
+  restaurantsWithoutRecentAudit: Restaurant[];
+  criticalTickets: CriticalTicket[];
+  overdueActions: OverdueAction[];
+  auditThresholdDays: number;
+}
+
+interface ComparisonsData {
+  docsPreviousWeek: number;
+  auditsPreviousWeek: number;
+  ticketsNonTraiteePreviousWeek: number;
+}
 
 interface DashboardData {
+  // 🚨 ALERTES CRITIQUES (nouveau)
+  alerts?: AlertsData;
   // KPIs existants
   totalDocuments: number;
   docsThisWeek: number;
@@ -42,6 +79,8 @@ interface DashboardData {
   activeCorrectiveActions: number;
   auditsByStatus: Record<string, number>;
   actionsByStatus: Record<string, number>;
+  // 📊 COMPARAISONS TEMPORELLES (nouveau)
+  comparisons?: ComparisonsData;
 }
 
 const DashboardPage: React.FC = () => {
@@ -60,7 +99,9 @@ const DashboardPage: React.FC = () => {
         if (!res.ok) throw new Error("Impossible de charger les données");
         return res.json();
       })
-      .then((json: any) => setData(json.data || json))
+      .then((json: any) => {
+        setData(json.data || json);
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [token]);
@@ -80,6 +121,16 @@ const DashboardPage: React.FC = () => {
       danger: "#ef4444",
     };
   }, []);
+
+  // 📊 Fonction pour calculer les tendances avec comparaisons
+  const calculateTrend = (current: number, previous: number) => {
+    if (previous === 0) return { percentage: 0, isPositive: true };
+    const percentage = Math.round(((current - previous) / previous) * 100);
+    return { 
+      percentage: Math.abs(percentage), 
+      isPositive: percentage >= 0 
+    };
+  };
 
   // Préparer les données pour les graphiques
   const auditStatusData = useMemo(() => {
@@ -119,17 +170,7 @@ const DashboardPage: React.FC = () => {
   }, [data?.actionsByStatus]);
 
   if (loading) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex h-64 items-center justify-center space-x-3 text-muted-foreground"
-      >
-        <SpinnerIcon className="h-8 w-8 animate-spin text-primary" />
-        <span className="text-lg font-medium">Chargement du tableau de bord...</span>
-      </motion.div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (!data) {
@@ -176,51 +217,63 @@ const DashboardPage: React.FC = () => {
         </h1>
       </motion.div>
 
-      {/* Actions rapides */}
-      <QuickActions />
 
-      {/* KPIs Grid - Améliorés */}
+      {/* 🚨 ALERTES CRITIQUES - Section prioritaire */}
+      {data.alerts && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          <AlertsSection alerts={data.alerts} />
+        </motion.div>
+      )}
+
+
+      {/* KPIs Essentiels - 4 métriques critiques avec tendances */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
       >
         <KpiCard
-          title="Restaurants"
+          title="Réseau"
           value={data.totalRestaurants}
           icon={<RestaurantIcon />}
           index={0}
+          subtitle="restaurants"
+          // Pas de comparaison pour le nombre total de restaurants
+        />
+        <KpiCard
+          title="Support actif"
+          value={data.ticketsByStatus?.non_traitee || 0}
+          icon={<TicketIcon />}
+          index={1}
+          subtitle="tickets en attente"
+          trend={data.comparisons ? calculateTrend(
+            data.ticketsByStatus?.non_traitee || 0,
+            data.comparisons.ticketsNonTraiteePreviousWeek
+          ) : undefined}
         />
         <KpiCard
           title="Audits cette semaine"
           value={data.auditsThisWeek}
           icon={<CalendarIcon />}
-          index={1}
+          index={2}
+          subtitle="conformité"
+          trend={data.comparisons ? calculateTrend(
+            data.auditsThisWeek,
+            data.comparisons.auditsPreviousWeek
+          ) : undefined}
         />
         <KpiCard
           title="Actions en cours"
           value={data.activeCorrectiveActions}
           icon={<CogIcon />}
-          index={2}
-        />
-        <KpiCard
-          title="Total documents"
-          value={data.totalDocuments}
-          icon={<DocumentReportIcon />}
           index={3}
-        />
-        <KpiCard
-          title="Docs cette semaine"
-          value={data.docsThisWeek}
-          icon={<TrendingUpIcon />}
-          index={4}
-        />
-        <KpiCard
-          title="Tickets non traités"
-          value={data.ticketsByStatus?.non_traitee || 0}
-          icon={<TicketIcon />}
-          index={5}
+          subtitle="améliorations"
+          // Pas de comparaison pour les actions en cours (statut global)
         />
       </motion.div>
 
@@ -237,30 +290,36 @@ const DashboardPage: React.FC = () => {
             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
             Statut des audits
           </h2>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={auditStatusData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {auditStatusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: chartColors.tooltipBg,
-                  border: `1px solid ${chartColors.tooltipBorder}`,
-                  borderRadius: "8px",
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          {auditStatusData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={auditStatusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {auditStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: chartColors.tooltipBg,
+                    border: `1px solid ${chartColors.tooltipBorder}`,
+                    borderRadius: "8px",
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+              Aucun audit à afficher
+            </div>
+          )}
         </motion.div>
 
         {/* Graphique Actions correctives */}
@@ -274,36 +333,42 @@ const DashboardPage: React.FC = () => {
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             Actions correctives
           </h2>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={actionsStatusData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-              <XAxis 
-                dataKey="name"
-                stroke={chartColors.text}
-                tickLine={false}
-                axisLine={{ stroke: chartColors.grid }}
-                fontSize={12}
-              />
-              <YAxis
-                allowDecimals={false}
-                stroke={chartColors.text}
-                tickLine={false}
-                axisLine={{ stroke: chartColors.grid }}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: chartColors.tooltipBg,
-                  border: `1px solid ${chartColors.tooltipBorder}`,
-                  borderRadius: "8px",
-                }}
-              />
-              <Bar 
-                dataKey="value" 
-                fill={chartColors.secondary}
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          {actionsStatusData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={actionsStatusData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                <XAxis 
+                  dataKey="name"
+                  stroke={chartColors.text}
+                  tickLine={false}
+                  axisLine={{ stroke: chartColors.grid }}
+                  fontSize={12}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  stroke={chartColors.text}
+                  tickLine={false}
+                  axisLine={{ stroke: chartColors.grid }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: chartColors.tooltipBg,
+                    border: `1px solid ${chartColors.tooltipBorder}`,
+                    borderRadius: "8px",
+                  }}
+                />
+                <Bar 
+                  dataKey="value" 
+                  fill={chartColors.secondary}
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+              Aucune action corrective à afficher
+            </div>
+          )}
         </motion.div>
       </div>
 

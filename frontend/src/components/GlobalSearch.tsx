@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
+import { GlobalSearchSkeleton } from './Skeleton';
 
 // Types pour les résultats de recherche
 interface SearchResult {
@@ -201,8 +202,8 @@ const GlobalSearch: React.FC = () => {
       {isOpen && (query.length >= 2 || results) && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
           {isLoading ? (
-            <div className="p-4 text-center text-muted-foreground">
-              Recherche en cours...
+            <div className="p-2">
+              <GlobalSearchSkeleton />
             </div>
           ) : results && results.total > 0 ? (
             <div className="p-2">

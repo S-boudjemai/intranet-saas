@@ -1,5 +1,8 @@
 // Données des catégories pour restaurant
 export const categoryData = [
+  // Catégorie par défaut en première position
+  { name: 'Documents Généraux', parentName: null },
+  
   // Catégories principales
   { name: 'Plats Principaux', parentName: null },
   { name: 'Desserts & Glaces', parentName: null },

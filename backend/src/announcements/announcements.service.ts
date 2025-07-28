@@ -164,12 +164,29 @@ export class AnnouncementsService {
       );
     }
 
-    // Envoyer notification temps réel
+    // Envoyer notification temps réel WebSocket
     this.notificationsGateway.notifyAnnouncementPosted(data.tenant_id, {
       id: savedAnnouncement.id,
       title: savedAnnouncement.title,
       message,
     });
+
+    // ✅ Envoyer notifications push aux viewers du tenant
+    try {
+      console.log('📱 Envoi push notifications pour annonce aux viewers du tenant:', data.tenant_id);
+      await this.notificationsService.sendPushToTenant(data.tenant_id, {
+        title: 'Nouvelle annonce',
+        body: `${savedAnnouncement.title}`,
+        data: {
+          type: 'announcement_posted',
+          targetId: savedAnnouncement.id.toString(),
+          url: `/announcements`,
+        },
+        tag: `announcement-${savedAnnouncement.id}`,
+      }, user.userId.toString()); // Exclure l'auteur
+    } catch (error) {
+      console.error('❌ Erreur push notification annonce:', error);
+    }
 
     // Recharger l'annonce avec les restaurants et documents pour la retourner complète
     const reloadedAnnouncement = await this.repo.findOne({

@@ -1,14 +1,21 @@
 // src/components/KpiCard.tsx
 import { motion } from "framer-motion";
 
+interface TrendData {
+  percentage: number;
+  isPositive: boolean;
+}
+
 interface KpiCardProps {
   title: string;
   value: number | string;
   icon?: React.ReactNode;
   index?: number;
+  subtitle?: string;
+  trend?: TrendData;
 }
 
-const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, index = 0 }) => (
+const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, index = 0, subtitle, trend }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -70,6 +77,19 @@ const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, index = 0 }) => (
       >
         {value}
       </motion.p>
+      {subtitle && (
+        <p className="text-xs text-muted-foreground mt-1 font-medium">
+          {subtitle}
+        </p>
+      )}
+      {trend && trend.percentage > 0 && (
+        <div className={`flex items-center gap-1 mt-2 text-xs font-medium ${
+          trend.isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+        }`}>
+          <span>{trend.isPositive ? '↗' : '↘'}</span>
+          <span>{trend.percentage}% vs semaine précédente</span>
+        </div>
+      )}
     </div>
   </motion.div>
 );

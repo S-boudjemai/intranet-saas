@@ -75,6 +75,7 @@ export class AuthService {
 
     const payload = {
       userId: user.id,
+      id: user.id,        // ✅ Ajouter 'id' pour compatibilité WebSocket
       email: user.email,
       tenant_id: user.tenant_id,
       role: user.role,

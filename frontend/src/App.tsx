@@ -9,13 +9,11 @@ import {
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
-import { ToastProvider } from "./contexts/ToastContext";
-import { ToastContainer } from "./components/ui/ToastContainer";
+import { ToastProvider } from "./components/ToastContainer";
 // DEV ONLY - import { ToastTest } from "./components/ToastTest";
-import { PushNotificationTest } from "./components/PushNotificationTest";
+import { useState, useEffect } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
-import ThemeSwitcher from "./components/ThemeSwitcher";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ServiceWorkerUI from "./components/ServiceWorkerUI";
 import { PushNotificationPrompt } from "./components/notifications/PushNotificationPrompt";
@@ -31,6 +29,7 @@ import MobileNav from "./components/MobileNav";
 import UnifiedDashboard from "./pages/UnifiedDashboard";
 import AdminGlobalDashboard from "./pages/AdminGlobalDashboard";
 import Announcements from "./pages/AnnouncementsPage";
+import AnnouncementsNew from "./pages/AnnouncementsPageNew";
 import LandingPage from "./pages/LandingPage";
 import UsersPage from "./pages/UsersPage"; // <-- Import de la page Utilisateurs
 import AuditsPage from "./pages/AuditsPage";
@@ -56,13 +55,8 @@ const AppContent = () => {
       {showNav && (
         <>
           {/* Desktop Navigation - Style Waitify */}
-          <header className="hidden lg:block sticky top-0 z-10">
-            <div className="flex justify-between items-center gap-6">
-              <NavBar />
-              <div className="flex items-center gap-4 mr-4 mt-4">
-                <ThemeSwitcher />
-              </div>
-            </div>
+          <header className="hidden lg:block">
+            <NavBar />
           </header>
           
           {/* Mobile Navigation */}
@@ -101,7 +95,8 @@ const AppContent = () => {
             {/* Routes communes - comportement conditionnel selon le mode */}
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/tickets" element={<TicketsPage />} />
-            <Route path="/announcements" element={<Announcements />} />
+            <Route path="/announcements" element={<AnnouncementsNew />} />
+            {/* <Route path="/announcements-old" element={<Announcements />} /> */}
             
             {/* Users - adaptatif selon le mode */}
             <Route 
@@ -174,9 +169,6 @@ export default function App() {
                 <BrowserRouter>
                   <div className="bg-background text-foreground min-h-screen">
                     <AppContent />
-                    <ToastContainer />
-                    {/* DEV ONLY - <ToastTest /> */}
-                    <PushNotificationTest />
                   </div>
                 </BrowserRouter>
               </ToastProvider>

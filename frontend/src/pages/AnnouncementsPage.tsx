@@ -7,7 +7,8 @@ import AnnouncementCard from "../components/AnnouncementCard";
 import ConfirmModal from "../components/ConfirmModal";
 import { parseJwt, type JwtPayload } from "../utils/jwt";
 import type { Announcement } from "../types";
-import { SpeakerphoneIcon, ExclamationCircleIcon, SpinnerIcon } from "../components/icons";
+import { SpeakerphoneIcon, ExclamationCircleIcon } from "../components/icons";
+import { AnnouncementFeedSkeleton } from "../components/Skeleton";
 
 // --- ICÔNES LOCALES SUPPRIMÉES, UTILISATION CENTRALISÉE ---
 
@@ -77,16 +78,7 @@ export default function AnnouncementsPage() {
 
   const renderContent = () => {
     if (loading) {
-      return (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex items-center justify-center space-x-2 text-muted-foreground p-8"
-        >
-          <SpinnerIcon className="h-6 w-6" />
-          <span>Chargement...</span>
-        </motion.div>
-      );
+      return <AnnouncementFeedSkeleton />;
     }
     if (err) {
       return (

@@ -1,6 +1,6 @@
 // src/components/ui/Button.tsx
 import React from 'react';
-import { motion } from 'framer-motion';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'destructive' | 'outline' | 'ghost';
@@ -11,14 +11,15 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className = '', variant = 'primary', size = 'md', loading = false, icon, children, disabled, ...props }, ref) => {
-    const baseClasses = 'inline-flex items-center justify-center font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+    const prefersReducedMotion = useReducedMotion();
+    const baseClasses = 'inline-flex items-center justify-center font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
     
     const variants = {
-      primary: 'bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary shadow-lg hover:shadow-xl',
-      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 focus:ring-secondary shadow-md hover:shadow-lg',
-      destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:ring-destructive shadow-lg hover:shadow-xl',
-      outline: 'border border-border bg-card hover:bg-accent hover:border-accent focus:ring-primary shadow-sm hover:shadow-md',
-      ghost: 'hover:bg-accent hover:text-accent-foreground focus:ring-primary'
+      primary: 'bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary shadow-lg hover:shadow-xl active:scale-95',
+      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 focus-visible:ring-secondary shadow-md hover:shadow-lg active:scale-95',
+      destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive shadow-lg hover:shadow-xl active:scale-95',
+      outline: 'border border-border bg-card hover:bg-accent hover:border-accent focus-visible:ring-primary shadow-sm hover:shadow-md active:scale-95',
+      ghost: 'hover:bg-accent hover:text-accent-foreground focus-visible:ring-primary active:scale-95'
     };
     
     const sizes = {
@@ -34,12 +35,21 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       </svg>
     );
     
+    const buttonClasses = `${
+      baseClasses
+    } ${
+      variants[variant]
+    } ${
+      sizes[size]
+    } ${
+      prefersReducedMotion ? '' : 'hover:scale-105 transform'
+    } ${
+      className
+    }`;
+
     return (
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
+      <button
+        className={buttonClasses}
         disabled={disabled || loading}
         ref={ref}
         {...props}
@@ -47,7 +57,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {loading && <LoadingSpinner />}
         {!loading && icon && <span className="mr-2">{icon}</span>}
         {children}
-      </motion.button>
+      </button>
     );
   }
 );

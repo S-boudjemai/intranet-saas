@@ -34,7 +34,6 @@ export const useAnnouncementTracking = (announcementId: number) => {
         if (response.ok) {
           hasTracked.current = true;
           localStorage.setItem(localKey, 'true');
-          console.log(`📖 Annonce ${announcementId} marquée comme lue`);
         }
       } catch (error) {
         console.error('Erreur lors du tracking de l\'annonce:', error);

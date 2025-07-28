@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import ConfirmModal from "../components/ConfirmModal";
 import type { InviteType } from "../types";
 import { UsersIcon, PaperAirplaneIcon, TrashIcon } from "../components/icons";
+import { UserListSkeleton } from "../components/Skeleton";
 
 // --- ICÔNES LOCALES SUPPRIMÉES, UTILISATION CENTRALISÉE ---
 
@@ -191,13 +192,9 @@ export default function UsersPage() {
           <div className="bg-card border border-border rounded-2xl" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
             <ul className="divide-y divide-border">
               {loading ? (
-                <motion.li 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="p-4 text-center text-muted-foreground"
-                >
-                  Chargement...
-                </motion.li>
+                <li className="p-4">
+                  <UserListSkeleton />
+                </li>
               ) : invites.filter((inv) => !inv.used_at).length === 0 ? (
                 <motion.li 
                   initial={{ opacity: 0, scale: 0.9 }}

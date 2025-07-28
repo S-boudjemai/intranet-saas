@@ -62,15 +62,14 @@ export class NotificationsGateway
       const payload = this.jwtService.verify(token);
       console.log('🔍 JWT Payload reçu:', JSON.stringify(payload, null, 2));
       
-      // Normaliser le userId comme dans jwt.strategy.ts
+      // Normaliser le userId (maintenant toujours présent grâce à auth.service.ts)
       const userId = payload.userId || payload.id;
       if (!userId) {
-        console.log('⚠️ Pas d\'userId dans le payload, utilisation de fallback');
-        // Utiliser l'email comme fallback temporaire pour éviter la boucle infinie
-        client.userId = payload.email ? payload.email.split('@')[0] : 'anonymous';
-      } else {
-        client.userId = userId;
+        console.log('❌ userId manquant dans JWT payload, déconnexion');
+        client.disconnect();
+        return;
       }
+      client.userId = userId;
       client.tenantId = payload.tenant_id || payload.tenantId;
 
       console.log(
@@ -103,21 +102,7 @@ export class NotificationsGateway
 
   // Envoyer une notification à un utilisateur spécifique
   sendToUser(userId: number, event: string, data: any) {
-    // Chercher d'abord avec l'ID numérique, puis avec la conversion string
-    let socketId = this.connectedUsers.get(userId);
-    
-    // Si pas trouvé avec number, essayer de trouver par string fallback
-    if (!socketId) {
-      // Chercher dans toutes les clés string (fallback pour userId manquant)
-      for (const [key, value] of this.connectedUsers.entries()) {
-        if (typeof key === 'string') {
-          // Prendre la première connexion string trouvée
-          socketId = value;
-          console.log(`🔄 Fallback: utilisation de la clé string "${key}" pour userId ${userId}`);
-          break;
-        }
-      }
-    }
+    const socketId = this.connectedUsers.get(userId);
     
     console.log(
       `🔍 sendToUser - userId: ${userId}, event: ${event}, socketId: ${socketId}`,

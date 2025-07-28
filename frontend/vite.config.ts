@@ -9,12 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'pwa-192x192.svg', 'pwa-512x512.svg'],
       strategies: 'generateSW',
-      injectRegister: 'auto',
+      injectRegister: false,
       devOptions: {
         enabled: true
-      },
-      injectManifest: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       },
       includeManifestIcons: true,
       manifest: {
@@ -67,6 +64,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globDirectory: 'dist',
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -91,9 +89,8 @@ export default defineConfig({
             }
           }
         ],
-        navigationPreload: true
-      },
-      selfDestroying: false
+        // Service worker pour PWA uniquement (Firebase supprimé)
+      }
     })
   ],
   server: {

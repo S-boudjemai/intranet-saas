@@ -13,6 +13,7 @@ import { RolesGuard } from '../auth/roles/roles.guard';
 import { Roles } from '../auth/roles/roles.decorator';
 import { Role } from '../auth/roles/roles.enum';
 import { NotificationsService } from './notifications.service';
+import { OneSignalService } from './onesignal.service';
 import { ViewTargetType } from './entities/view.entity';
 import { NotificationType } from './entities/notification.entity';
 import { CreatePushSubscriptionDto } from './dto/push-subscription.dto';
@@ -20,7 +21,10 @@ import { CreatePushSubscriptionDto } from './dto/push-subscription.dto';
 @Controller('notifications')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly oneSignalService: OneSignalService,
+  ) {}
 
   // Récupérer les notifications de l'utilisateur connecté
   @Get()
@@ -170,6 +174,25 @@ export class NotificationsController {
     return { success: true };
   }
 
+  // ✅ DEBUG - Vérifier si user a un token FCM enregistré
+  @Get('debug-token')
+  async debugToken(@Req() req) {
+    const tokens = await this.notificationsService['pushSubscriptionRepository'].find({
+      where: { userId: req.user.userId }
+    });
+    
+    return {
+      userId: req.user.userId,
+      tokensCount: tokens.length,
+      tokens: tokens.map(t => ({
+        id: t.id,
+        endpoint: t.endpoint?.substring(0, 20) + '...',
+        platform: t.platform,
+        createdAt: t.createdAt
+      }))
+    };
+  }
+
   // Tester l'envoi d'une notification push (pour tous les utilisateurs connectés)
   @Post('test-push')
   async testPushNotification(@Req() req, @Body() body: any) {
@@ -194,5 +217,47 @@ export class NotificationsController {
     });
     
     return { success: true, message: `Notification "${body.title}" envoyée` };
+  }
+
+  // === ONESIGNAL ENDPOINTS ===
+
+  // S'abonner avec OneSignal User ID
+  @Post('onesignal-subscribe')
+  async oneSignalSubscribe(@Req() req, @Body() body: {
+    oneSignalUserId: string;
+    userAgent?: string;
+    platform?: string;
+  }) {
+    await this.oneSignalService.subscribeUser(
+      req.user.userId,
+      body.oneSignalUserId,
+      body.userAgent,
+      body.platform,
+    );
+    return { success: true, message: 'OneSignal subscription enregistrée' };
+  }
+
+  // Test notification OneSignal
+  @Post('onesignal-test')
+  async oneSignalTest(@Req() req) {
+    const success = await this.oneSignalService.sendTestNotification(req.user.userId);
+    return { 
+      success, 
+      message: success ? 'Test envoyé via OneSignal' : 'Échec test OneSignal'
+    };
+  }
+
+  // Désabonnement OneSignal
+  @Delete('onesignal-unsubscribe')
+  async oneSignalUnsubscribe(@Req() req) {
+    await this.oneSignalService.unsubscribeUser(req.user.userId);
+    return { success: true, message: 'Désabonné de OneSignal' };
+  }
+
+  // Stats OneSignal (admin/manager uniquement)
+  @Get('onesignal-stats')
+  @Roles(Role.Manager, Role.Admin)
+  async oneSignalStats() {
+    return await this.oneSignalService.getStats();
   }
 }

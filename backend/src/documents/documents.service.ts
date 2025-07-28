@@ -54,48 +54,32 @@ export class DocumentsService {
   ): Promise<Document> {
     // Gestion du tenant_id avec validation stricte
     if (user.tenant_id === null) {
-      // admin global : doit préciser
       if (!data.tenant_id) {
-        throw new ForbiddenException(
-          "L'admin global doit préciser tenant_id dans le body",
-        );
+        throw new ForbiddenException("L'admin global doit préciser tenant_id dans le body");
       }
-      // Valider que tenant_id est un nombre valide
       const tenantIdNum = parseInt(data.tenant_id.toString());
       if (isNaN(tenantIdNum)) {
         throw new ForbiddenException('tenant_id doit être un nombre valide');
       }
       data.tenant_id = tenantIdNum.toString();
     } else {
-      // manager ou admin de franchise - validation du tenant_id de l'utilisateur
-      if (user.tenant_id === null || isNaN(user.tenant_id)) {
-        throw new ForbiddenException(
-          'Token JWT invalide: tenant_id manquant ou invalide',
-        );
+      if (isNaN(user.tenant_id)) {
+        throw new ForbiddenException('Token JWT invalide: tenant_id manquant ou invalide');
       }
       data.tenant_id = user.tenant_id.toString();
     }
 
-    // Vérification que user.userId est valide
     if (!user.userId || isNaN(user.userId)) {
-      throw new ForbiddenException(
-        `userId invalide: ${user.userId}. Token JWT corrompu.`,
-      );
+      throw new ForbiddenException(`userId invalide: ${user.userId}. Token JWT corrompu.`);
     }
 
-    // Création initiale
     const doc = this.documentsRepository.create({
       ...data,
       created_by: user.userId,
     });
 
-    // Log supprimé pour éviter fuite données en production
-
-    // Liaison de la catégorie si fournie
     if (data.categoryId) {
-      const category = await this.categoriesRepository.findOne({
-        where: { id: data.categoryId },
-      });
+      const category = await this.categoriesRepository.findOne({ where: { id: data.categoryId } });
       if (!category) {
         throw new NotFoundException(`Catégorie ${data.categoryId} introuvable`);
       }
@@ -104,15 +88,12 @@ export class DocumentsService {
 
     const savedDoc = await this.documentsRepository.save(doc);
 
-    // Créer des notifications pour tous les utilisateurs du tenant (sauf l'auteur)
-    // Encapsuler dans un try-catch pour éviter que les notifications cassent l'upload
+    // Notifications
     try {
       const tenantId = parseInt(savedDoc.tenant_id);
       if (isNaN(tenantId)) {
-        console.error(
-          `tenant_id invalide pour les notifications: ${savedDoc.tenant_id}`,
-        );
-        return savedDoc; // Retourner le document même si les notifications échouent
+        console.error(`tenant_id invalide pour les notifications: ${savedDoc.tenant_id}`);
+        return savedDoc;
       }
       const message = `Nouveau document: ${savedDoc.name}`;
 
@@ -124,28 +105,17 @@ export class DocumentsService {
         user.userId,
       );
 
-      // Envoyer notifications push à tous les utilisateurs du tenant (ne pas faire échouer l'upload)
-      try {
-        await this.notificationsService.sendPushToTenant(
-          tenantId,
-          {
-            title: 'Nouveau document',
-            body: message,
-            data: {
-              type: 'DOCUMENT_UPLOADED',
-              targetId: savedDoc.id,
-              url: '/documents',
-            },
-            tag: `document-${savedDoc.id}`,
-          },
-          user.userId.toString(),
-        );
-      } catch (pushError) {
-        console.warn(
-          `Failed to send push notifications for document upload:`,
-          pushError.message,
-        );
-      }
+      // Push notifications
+      await this.notificationsService.sendPushToTenant(
+        tenantId,
+        {
+          title: 'Nouveau document',
+          body: message,
+          data: { type: 'DOCUMENT_UPLOADED', targetId: savedDoc.id, url: '/documents' },
+          tag: `document-${savedDoc.id}`,
+        },
+        user.userId.toString(),
+      ).catch(err => console.warn('Failed to send push notifications for document upload:', err.message))
 
       // Envoyer notification temps réel
       this.notificationsGateway.notifyDocumentUploaded(tenantId, {
@@ -162,6 +132,59 @@ export class DocumentsService {
     }
 
     return savedDoc;
+  }
+
+  /**
+   * Crée un document avec upload direct du fichier (évite CORS S3)
+   */
+  async createWithFile(
+    file: Express.Multer.File,
+    name: string,
+    user: JwtUser,
+    categoryId?: string,
+  ): Promise<Document> {
+    try {
+      // Upload vers S3 depuis le backend
+      const uploadedUrl = await this.uploadFileToS3(file);
+      
+      // Créer le document en base avec l'URL S3
+      const documentData = {
+        name: name.trim(),
+        url: uploadedUrl,
+        tenant_id: user.tenant_id === null ? undefined : user.tenant_id.toString(),
+        ...(categoryId ? { categoryId } : {}),
+      };
+
+      return this.create(documentData, user);
+    } catch (error) {
+      console.error('Erreur upload direct:', error);
+      throw new Error('Échec de l\'upload du fichier');
+    }
+  }
+
+  /**
+   * Upload un fichier vers S3 depuis le backend
+   */
+  private async uploadFileToS3(file: Express.Multer.File): Promise<string> {
+    const filename = `${Date.now()}-${file.originalname}`;
+    const safeName = encodeURIComponent(filename);
+    
+    try {
+      const cmd = new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET as string,
+        Key: safeName,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      });
+
+      await this.s3.send(cmd);
+
+      // Retourner l'URL publique du fichier
+      return `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${safeName}`;
+    } catch (error) {
+      console.error('Erreur upload S3:', error);
+      throw new Error('Impossible d\'uploader vers S3');
+    }
   }
 
   /**

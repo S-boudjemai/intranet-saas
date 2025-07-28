@@ -1,7 +1,8 @@
 // src/components/CategoryTree.tsx
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { ChevronRightIcon, SpinnerIcon } from "../components/icons";
+import { ChevronRightIcon } from "../components/icons";
+import { CategoryTreeSkeleton } from "./Skeleton";
 
 interface Category {
   id: string;
@@ -122,12 +123,7 @@ export default function CategoryTree({ selectedId, onSelect }: Props) {
   };
 
   if (roots === null) {
-    return (
-      <div className="flex items-center space-x-2 text-muted-foreground">
-        <SpinnerIcon className="h-5 w-5 animate-spin" />
-        <span>Chargement des rubriques...</span>
-      </div>
-    );
+    return <CategoryTreeSkeleton />;
   }
 
   return <div>{renderNodes(roots)}</div>;

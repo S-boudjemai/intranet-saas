@@ -203,7 +203,7 @@ export class TicketsService {
     // Récupérer les IDs des managers pour WebSocket
     const managerIds = managers.map((m) => m.id);
 
-    // Envoyer notification temps réel
+    // Envoyer notification temps réel WebSocket
     console.log(
       '🎫 Émission événement WebSocket ticket_created pour managers:',
       managerIds,
@@ -214,6 +214,25 @@ export class TicketsService {
       message,
     });
     console.log('✅ Événement WebSocket ticket_created émis');
+
+    // ✅ Envoyer notifications push aux managers
+    console.log('📱 Envoi push notifications aux managers:', managerIds);
+    for (const managerId of managerIds) {
+      try {
+        await this.notificationsService.sendPushToUser(managerId, {
+          title: 'Nouveau ticket support',
+          body: `${savedTicket.title} - ${data.restaurant?.name || 'Restaurant'}`,
+          data: {
+            type: 'ticket_created',
+            targetId: savedTicket.id,
+            url: `/tickets/${savedTicket.id}`,
+          },
+          tag: `ticket-${savedTicket.id}`,
+        });
+      } catch (error) {
+        console.error(`❌ Erreur push notification manager ${managerId}:`, error);
+      }
+    }
 
     return savedTicket;
   }
@@ -916,5 +935,31 @@ export class TicketsService {
       console.error('Error deleting file from S3:', error);
       throw error;
     }
+  }
+
+  private async generatePresignedUrlsForTickets(tickets: Ticket[]): Promise<void> {
+    const attachmentPromises: Promise<void>[] = [];
+    
+    for (const ticket of tickets) {
+      // Attachments du ticket
+      ticket.attachments?.forEach(attachment => {
+        attachmentPromises.push(
+          this.getPresignedUrlForAttachment(attachment.url)
+            .then(url => { attachment.url = url; })
+        );
+      });
+      
+      // Attachments des commentaires
+      ticket.comments?.forEach(comment => {
+        comment.attachments?.forEach(attachment => {
+          attachmentPromises.push(
+            this.getPresignedUrlForAttachment(attachment.url)
+              .then(url => { attachment.url = url; })
+          );
+        });
+      });
+    }
+    
+    await Promise.all(attachmentPromises);
   }
 }

@@ -34,6 +34,16 @@ export class User {
   @Column({ type: 'int', nullable: true })
   restaurant_id: number | null;
 
+  // ✅ OneSignal integration
+  @Column({ type: 'varchar', nullable: true })
+  oneSignalUserId: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  userAgent: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  platform: string | null;
+
   // Relations
   @ManyToOne(() => Tenant, (tenant) => tenant.users)
   @JoinColumn({ name: 'tenant_id' })

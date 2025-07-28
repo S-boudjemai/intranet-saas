@@ -9,8 +9,11 @@ import {
   Query,
   Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
 import { Document } from './entities/document.entity';
@@ -116,5 +119,50 @@ export class DocumentsController {
     @Query('filename') filename: string,
   ): Promise<{ url: string }> {
     return { url: await this.svc.getPresignedDownloadUrl(filename) };
+  }
+
+  /** Admin/Manager only: Upload direct qui évite CORS S3 */
+  @Post('direct-upload')
+  @Throttle({ default: { limit: 5, ttl: 10000 } }) // Max 5 uploads par 10 secondes
+  @Roles(Role.Admin, Role.Manager)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB max
+      },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype.match(/^(application\/pdf|image\/(jpeg|jpg|png))$/)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error('Seuls les PDF et images sont autorisés (PDF, JPEG, PNG)'),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  async directUpload(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('name') name: string,
+    @Req() req: Request & { user: JwtUser },
+    @Body('categoryId') categoryId?: string,
+    @Body('tenant_id') tenantId?: string,
+  ): Promise<Document> {
+    if (!file) {
+      throw new Error('Aucun fichier fourni');
+    }
+
+    if (!name?.trim()) {
+      throw new Error('Le nom du document est obligatoire');
+    }
+
+    // Validation robuste du JWT user
+    const user = req.user;
+    if (!user || !user.userId || isNaN(user.userId)) {
+      throw new Error('Token JWT invalide: userId manquant ou invalide');
+    }
+
+    return this.svc.createWithFile(file, name.trim(), user, categoryId);
   }
 }

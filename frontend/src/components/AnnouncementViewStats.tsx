@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { EyeIcon } from './icons';
+import { ViewStatsSkeleton } from './Skeleton';
 
 interface ViewStats {
   total_views: number;
@@ -50,7 +51,11 @@ export default function AnnouncementViewStats({
     fetchStats();
   }, [announcementId, canManage, token]);
 
-  if (!canManage || !stats) return null;
+  if (!canManage) return null;
+  
+  if (loading || !stats) {
+    return <ViewStatsSkeleton />;
+  }
 
   // Couleurs selon le pourcentage
   const getColorClass = (percentage: number) => {

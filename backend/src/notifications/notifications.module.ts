@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
+import { OneSignalService } from './onesignal.service';
 import { NotificationsGateway } from './notifications.gateway';
 import { Notification } from './entities/notification.entity';
 import { View } from './entities/view.entity';
@@ -20,7 +21,7 @@ import { User } from '../users/entities/user.entity';
     }),
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsService, NotificationsGateway],
-  exports: [NotificationsService, NotificationsGateway],
+  providers: [NotificationsService, OneSignalService, NotificationsGateway],
+  exports: [NotificationsService, OneSignalService, NotificationsGateway],
 })
 export class NotificationsModule {}

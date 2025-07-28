@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { Announcement } from "../types";
 import { useAuth } from "../contexts/AuthContext";
 import DocumentPreviewModal from "./DocumentPreviewModal";
-import { SpeakerphoneIcon, EyeIcon, TrashIcon } from "./icons";
+import { EyeIcon, TrashIcon } from "./icons";
 import { useAnnouncementTracking } from "../hooks/useAnnouncementTracking";
 import AnnouncementViewStats from "./AnnouncementViewStats";
 import AnnouncementViewModal from "./AnnouncementViewModal";
@@ -91,10 +91,8 @@ export default function AnnouncementCard({
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-        className="absolute left-4 top-1 transform -translate-x-1/2 bg-primary/10 rounded-full p-2"
-      >
-        <SpeakerphoneIcon className="h-4 w-4 text-primary" />
-      </motion.div>
+        className="absolute left-4 top-4 w-3 h-3 bg-primary rounded-full transform -translate-x-1/2"
+      />
 
       {/* Announcement Card */}
       <motion.div 

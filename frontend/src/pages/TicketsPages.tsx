@@ -1,20 +1,24 @@
 // src/pages/TicketsPages.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import CreateTicketForm from "../components/CreateTicketForm";
 import TicketItem from "../components/TicketItem";
 import ConfirmModal from "../components/ConfirmModal";
+import EmptyState from "../components/EmptyState";
+import { TicketItemSkeleton } from "../components/Skeleton";
 import { parseJwt, type JwtPayload } from "../utils/jwt";
 import type { TicketType } from "../types";
-import { TicketIcon, SpinnerIcon } from "../components/icons";
+import { TicketIcon, PlusIcon, FilterIcon } from "../components/icons";
 
 export default function TicketsPage() {
   const navigate = useNavigate();
   const { token } = useAuth();
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | TicketType['status']>('all');
 
   // --- ÉTATS POUR LA MODALE ---
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -23,6 +27,33 @@ export default function TicketsPage() {
   const raw = token ? parseJwt<JwtPayload>(token) : null;
   const isViewer = raw?.role === "viewer";
   const isManager = raw?.role === "manager" || raw?.role === "admin";
+
+  // Filtrage intelligent des tickets
+  const filteredTickets = useMemo(() => {
+    if (statusFilter === 'all') return tickets;
+    return tickets.filter(ticket => ticket.status === statusFilter);
+  }, [tickets, statusFilter]);
+
+  // Statistiques pour les managers
+  const ticketStats = useMemo(() => {
+    const stats = {
+      total: tickets.length,
+      non_traitee: tickets.filter(t => t.status === 'non_traitee').length,
+      en_cours: tickets.filter(t => t.status === 'en_cours').length,
+      traitee: tickets.filter(t => t.status === 'traitee').length,
+    };
+    return stats;
+  }, [tickets]);
+
+  // Helper function pour les labels de statut
+  const getStatusLabel = (status: TicketType['status']) => {
+    switch (status) {
+      case 'non_traitee': return 'non traité';
+      case 'en_cours': return 'en cours';
+      case 'traitee': return 'traité';
+      default: return '';
+    }
+  };
 
   const loadTickets = async () => {
     if (!token) return;
@@ -69,8 +100,11 @@ export default function TicketsPage() {
     setTicketToDelete(null);
   };
 
-  // --- AUTRES HANDLERS (inchangés) ---
-  const handleCreated = () => loadTickets();
+  // --- AUTRES HANDLERS ---
+  const handleCreated = () => {
+    loadTickets();
+    setShowCreateForm(false);
+  };
 
   // --- ARCHIVAGE DE TICKET ---
   const archiveTicket = async (ticketId: string) => {
@@ -87,12 +121,10 @@ export default function TicketsPage() {
       
       if (response.ok) {
         await loadTickets(); // Recharger la liste
-        console.log('✅ Ticket archivé avec succès');
       } else {
-        console.error('❌ Erreur lors de l\'archivage du ticket');
       }
     } catch (error) {
-      console.error('❌ Erreur lors de l\'archivage:', error);
+      console.error('Erreur lors de l\'archivage:', error);
     }
   };
   const changeStatus = async (
@@ -168,82 +200,174 @@ export default function TicketsPage() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8"
+      transition={{ duration: 0.3 }}
+      className="min-h-screen bg-background"
     >
-      <motion.h1 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.5 }}
-        className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3"
-      >
-        <motion.div 
-          initial={{ scale: 0, rotate: -45 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-          className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
-          style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
-        >
-          <TicketIcon className="h-6 w-6 text-primary" />
-        </motion.div>
-        <span>Gestion des Tickets</span>
-      </motion.h1>
+      {/* Header moderne avec actions */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="px-6 py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-primary/10 border border-primary/20 rounded-xl">
+                <TicketIcon className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Tickets Support</h1>
+                <p className="text-sm text-muted-foreground">
+                  {isManager 
+                    ? `${filteredTickets.length} ticket${filteredTickets.length !== 1 ? 's' : ''} ${statusFilter === 'all' ? 'au total' : getStatusLabel(statusFilter)}`
+                    : `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''} créé${tickets.length !== 1 ? 's' : ''}`
+                  }
+                </p>
+              </div>
+            </div>
+            
+            {isViewer && (
+              <button
+                onClick={() => setShowCreateForm(!showCreateForm)}
+                className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-colors"
+              >
+                <PlusIcon className="h-4 w-4" />
+                Nouveau ticket
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
-      {isViewer && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="mb-8"
-        >
-          <CreateTicketForm onSuccess={handleCreated} />
-        </motion.div>
-      )}
+      <div className="px-6 py-6 space-y-6">
+        {/* Filtres pour managers */}
+        {isManager && (
+          <div className="bg-card border border-border rounded-2xl p-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <FilterIcon className="h-4 w-4" />
+                Filtrer par statut:
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    statusFilter === 'all'
+                      ? 'bg-primary/10 text-primary border border-primary/20'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  Tous ({ticketStats.total})
+                </button>
+                
+                <button
+                  onClick={() => setStatusFilter('non_traitee')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    statusFilter === 'non_traitee'
+                      ? 'bg-red-100 text-red-700 border border-red-200'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  Non traités ({ticketStats.non_traitee})
+                </button>
+                
+                <button
+                  onClick={() => setStatusFilter('en_cours')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    statusFilter === 'en_cours'
+                      ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  En cours ({ticketStats.en_cours})
+                </button>
+                
+                <button
+                  onClick={() => setStatusFilter('traitee')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    statusFilter === 'traitee'
+                      ? 'bg-green-100 text-green-700 border border-green-200'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  Traités ({ticketStats.traitee})
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-      {loading ? (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex items-center justify-center space-x-2 text-muted-foreground p-8"
-        >
-          <SpinnerIcon className="h-6 w-6" />
-          <span>Chargement…</span>
-        </motion.div>
-      ) : tickets.length === 0 ? (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-center text-muted-foreground py-16 border-2 border-dashed border-border rounded-2xl bg-muted"
-        >
-          <p>Aucun ticket trouvé.</p>
-        </motion.div>
-      ) : (
-        <motion.ul 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-6"
-        >
-          {tickets.map((t, index) => (
-            <motion.li
-              key={t.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 + index * 0.1 }}
-            >
-              <TicketItem
-                ticket={t}
-                isManager={isManager}
-                onStatusChange={changeStatus}
-                onDeleteRequest={handleDeleteRequest}
-                onAddComment={addComment}
-                onArchive={archiveTicket}
-              />
-            </motion.li>
-          ))}
-        </motion.ul>
-      )}
+        {/* Zone de création de ticket (collapsible pour viewers) */}
+        {showCreateForm && isViewer && (
+          <div className="bg-card border border-border rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-foreground">Créer un nouveau ticket</h2>
+              <button
+                onClick={() => setShowCreateForm(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <CreateTicketForm onSuccess={handleCreated} />
+          </div>
+        )}
+
+        {/* Liste des tickets */}
+        <div className="space-y-6">
+          {loading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TicketItemSkeleton key={i} />
+              ))}
+            </div>
+          ) : filteredTickets.length === 0 ? (
+            <div className="text-center text-muted-foreground py-20 border-2 border-dashed border-border rounded-2xl bg-muted/30">
+              <div className="flex flex-col items-center gap-4">
+                <div className="p-4 bg-muted rounded-2xl">
+                  <TicketIcon className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-lg font-medium">
+                    {statusFilter === 'all' 
+                      ? (isViewer ? "Aucun ticket créé" : "Aucun ticket") 
+                      : `Aucun ticket ${getStatusLabel(statusFilter)}`
+                    }
+                  </p>
+                  <p className="text-sm">
+                    {isViewer 
+                      ? "Créez votre premier ticket pour obtenir de l'aide"
+                      : statusFilter === 'all' 
+                        ? "Les nouveaux tickets apparaîtront ici"
+                        : "Aucun ticket avec ce statut pour le moment"
+                    }
+                  </p>
+                </div>
+                {isViewer && statusFilter === 'all' && (
+                  <button
+                    onClick={() => setShowCreateForm(true)}
+                    className="mt-4 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                    Créer mon premier ticket
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {filteredTickets.map((t) => (
+                <TicketItem
+                  key={t.id}
+                  ticket={t}
+                  isManager={isManager}
+                  onStatusChange={changeStatus}
+                  onDeleteRequest={handleDeleteRequest}
+                  onAddComment={addComment}
+                  onArchive={archiveTicket}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* --- NOTRE MODALE DE CONFIRMATION --- */}
       <ConfirmModal

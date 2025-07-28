@@ -119,7 +119,77 @@ MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS
 
 ---
 
-## 🎯 Session Actuelle - Système d'Archivage (24/07/2025)
+## 📅 Session Terminée - Dashboard Intelligence Business (27/07/2025) ✅
+
+### 🎯 Objectif
+Améliorer le dashboard avec une approche Business Intelligence : transformer les données brutes en insights actionnables pour les franchiseurs.
+
+### ✅ Tâches Complétées
+
+1. **Corriger l'affichage des KPIs d'audits/actions** ✅
+   - Ajout du filtrage par tenant pour les actions correctives
+   - Jointure avec `assigned_user` pour obtenir le tenant_id
+   - Ajout de messages quand pas de données à afficher
+
+2. **Réimplémenter les alertes business** ✅
+   - Restaurants sans audit récent (30 jours)
+   - Tickets critiques non traités (>3 jours)
+   - Actions correctives en retard
+   - Relations TypeORM correctement implémentées
+
+3. **Ajouter comparaisons temporelles** ✅
+   - Documents : semaine actuelle vs précédente
+   - Audits : semaine actuelle vs précédente
+   - Tickets non traités : semaine actuelle vs précédente
+   - Calcul des tendances avec pourcentages
+
+4. **Finaliser l'approche Business Intelligence** ✅
+   - Dashboard orienté insights actionnables
+   - Alertes critiques prioritaires
+   - KPIs pertinents pour franchiseurs
+   - Tendances et comparaisons visuelles
+
+### 🏗️ Architecture Implémentée
+
+**Backend (dashboard.service.ts):**
+- Requêtes optimisées avec jointures appropriées
+- Filtrage multi-tenant sur toutes les métriques
+- Calculs de comparaisons temporelles
+- Structure de données pour alertes business
+
+**Frontend (DashboardPage.tsx):**
+- Interface `DashboardData` avec alertes et comparisons optionnelles
+- Composant `AlertsSection` pour affichage des alertes
+- Graphiques avec messages quand pas de données
+- Calcul et affichage des tendances sur KPIs
+
+### 📊 Nouvelles Fonctionnalités Dashboard
+
+1. **Section Alertes Critiques** (priorité haute)
+   - Restaurants sans audit récent avec liens d'action
+   - Tickets urgents avec temps écoulé
+   - Actions correctives en retard
+
+2. **KPIs avec Tendances**
+   - Support actif : évolution vs semaine précédente
+   - Audits : progression hebdomadaire
+   - Documents : activité comparative
+
+3. **Graphiques Intelligents**
+   - Audits par statut (camembert)
+   - Actions correctives par statut (barres)
+   - Évolution tickets sur 7 jours (courbe)
+
+### 🎯 Statut Final
+**DASHBOARD BUSINESS INTELLIGENCE COMPLET** 
+- ✅ Alertes business fonctionnelles
+- ✅ KPIs avec comparaisons temporelles
+- ✅ Graphiques orientés insights
+- ✅ Interface intuitive et actionnable
+
+---
+
+## 📅 Session Précédente - Système d'Archivage (24/07/2025)
 
 ### ✅ Tâches Complétées
 1. **Modifier l'enum TicketStatus pour ajouter 'archived'** ✅

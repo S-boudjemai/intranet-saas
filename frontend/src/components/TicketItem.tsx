@@ -1,11 +1,12 @@
 // src/components/TicketItem.tsx
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import type { TicketType, TicketAttachment } from "../types";
 import TicketBadge from "./TicketBadge";
 import ImageUpload from "./ImageUpload";
 import AttachmentGallery from "./AttachmentGallery";
 import { ChevronDownIcon, TrashIcon, ChatAlt2Icon, ArchiveIcon } from "./icons";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 
 interface TicketItemProps {
   ticket: TicketType;
@@ -18,11 +19,17 @@ interface TicketItemProps {
 }
 
 
+// Variants simplifiées pour performances
+const contentVariants = {
+  collapsed: { height: 0, opacity: 0 },
+  expanded: { height: "auto", opacity: 1 }
+};
+
 export default function TicketItem({
   ticket,
   isManager,
   onStatusChange,
-  onDeleteRequest, // <-- MODIFIÉ
+  onDeleteRequest,
   onAddComment,
   onArchive,
   defaultExpanded = false,
@@ -32,6 +39,7 @@ export default function TicketItem({
   const [commentAttachments] = useState<Record<string, TicketAttachment[]>>({});
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const commentInputRef = React.useRef<HTMLTextAreaElement>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   // Fermer la modale d'upload quand le ticket se ferme
   React.useEffect(() => {
@@ -56,189 +64,108 @@ export default function TicketItem({
   };
 
   const inputClasses =
-    "bg-input border border-border rounded-md w-full p-2 text-foreground focus:border-primary focus:ring-primary/30 focus:outline-none transition-all";
+    "bg-input border border-border rounded-md w-full p-2 text-foreground focus:border-primary focus:ring-primary/30 focus:outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary/20";
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        duration: 0.5, 
-        ease: "easeOut" 
-      }}
-      whileHover={{ 
-        y: -4,
-        transition: { type: "spring", stiffness: 300, damping: 20 }
-      }}
-      className="bg-card border border-border rounded-2xl"
-      style={{
-        boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
-      }}
+    <article className="ticket-item bg-card border border-border rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200"
     >
-      <motion.button
-        whileHover={{ backgroundColor: "rgba(59, 130, 246, 0.02)" }}
-        whileTap={{ scale: 0.995 }}
+      <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex justify-between items-center p-6 transition-all duration-300"
+        className="w-full flex justify-between items-center p-6 hover:bg-primary/5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 rounded-t-2xl"
+        aria-expanded={isExpanded}
+        aria-controls={`ticket-content-${ticket.id}`}
       >
         <div className="flex items-center gap-4">
           {isManager && ticket.restaurant && (
-            <motion.span 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20"
-            >
+            <span className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/30">
               {ticket.restaurant.name}
-            </motion.span>
+            </span>
           )}
-          <motion.h2 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="font-bold text-lg text-card-foreground"
-          >
+          <h2 className="font-bold text-lg text-card-foreground">
             {ticket.title}
-          </motion.h2>
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <TicketBadge status={ticket.status} />
-          </motion.div>
+          </h2>
+          <TicketBadge status={ticket.status} />
         </div>
         <div className="flex items-center gap-4">
-          <motion.span 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-xs text-muted-foreground"
-          >
+          <span className="text-xs text-muted-foreground">
             M.à.j {new Date(ticket.updated_at).toLocaleDateString()}
-          </motion.span>
-          <motion.div
-            whileHover={{ rotate: isExpanded ? 180 : -10 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <ChevronDownIcon
-              className={`h-6 w-6 text-muted-foreground transition-transform duration-300 ${
-                isExpanded ? "rotate-180" : ""
-              }`}
-            />
-          </motion.div>
+          </span>
+          <ChevronDownIcon
+            className={`h-6 w-6 text-muted-foreground transition-transform duration-200 ${
+              isExpanded ? "rotate-180" : ""
+            }`}
+          />
         </div>
-      </motion.button>
+      </button>
 
-      <motion.div
-        initial={false}
-        animate={{
-          height: isExpanded ? "auto" : 0,
-          opacity: isExpanded ? 1 : 0
-        }}
-        transition={{ 
-          duration: 0.5, 
-          ease: "easeInOut",
-          opacity: { delay: isExpanded ? 0.2 : 0 }
-        }}
-        className="overflow-hidden"
-      >
-        <div className="border-t border-border p-6 space-y-6">
-          {ticket.description && (
-            <motion.p 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-muted-foreground leading-relaxed"
-            >
-              {ticket.description}
-            </motion.p>
-          )}
+      {isExpanded && (
+        <div
+          id={`ticket-content-${ticket.id}`}
+          className="overflow-hidden"
+        >
+            <div className="border-t border-border p-6 space-y-6">
+              {ticket.description && (
+                <p className="text-muted-foreground leading-relaxed">
+                  {ticket.description}
+                </p>
+              )}
           
-          {/* Affichage des images du ticket */}
-          {ticketAttachments.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="space-y-3"
-            >
-              <h4 className="font-medium text-foreground text-sm flex items-center gap-2">
-                <span className="w-2 h-2 bg-primary rounded-full"></span>
-                Images du ticket :
-              </h4>
-              <AttachmentGallery attachments={ticketAttachments} />
-            </motion.div>
-          )}
+              {/* Affichage des images du ticket */}
+              {ticketAttachments.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-medium text-foreground text-sm flex items-center gap-2">
+                    <span className="w-2 h-2 bg-primary rounded-full"></span>
+                    Images du ticket :
+                  </h4>
+                  <AttachmentGallery attachments={ticketAttachments} />
+                </div>
+              )}
           
-          {isManager && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="border-2 border-dashed border-primary/20 rounded-2xl p-5 bg-gradient-to-r from-primary/5 to-primary/10"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <motion.span 
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    className="text-sm font-semibold text-primary bg-primary/10 px-4 py-2 rounded-full border border-primary/20"
-                  >
-                    Gestion du ticket
-                  </motion.span>
-                  <div className="flex items-center gap-2">
-                    {(["non_traitee", "en_cours", "traitee"] as const).map(
-                      (status, index) => (
-                        <motion.button
+              {isManager && (
+                <div className="border-2 border-dashed border-primary/20 rounded-2xl p-5 bg-gradient-to-r from-primary/5 to-primary/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-semibold text-primary bg-primary/10 px-4 py-2 rounded-full border border-primary/30">
+                      Gestion du ticket
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {(["non_traitee", "en_cours", "traitee"] as const).map((status) => (
+                        <button
                           key={status}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.6 + index * 0.1 }}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
                           onClick={() => onStatusChange(ticket.id, status)}
                           disabled={ticket.status === status}
-                          className="disabled:cursor-not-allowed transition-all duration-200"
+                          className="disabled:cursor-not-allowed hover:scale-105 active:scale-95 transition-transform duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 rounded"
                         >
                           <TicketBadge status={status} />
-                        </motion.button>
-                      )
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {/* Bouton archivage uniquement si ticket traité */}
+                    {ticket.status === "traitee" && onArchive && (
+                      <button
+                        onClick={() => onArchive(ticket.id)}
+                        className="p-2 rounded-full text-muted-foreground hover:bg-blue-100 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                        title="Archiver le ticket traité"
+                      >
+                        <ArchiveIcon className="h-5 w-5" />
+                      </button>
+                    )}
+                    {/* Bouton suppression uniquement si ticket traité */}
+                    {ticket.status === "traitee" && (
+                      <button
+                        onClick={() => onDeleteRequest(ticket)}
+                        className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-transparent hover:border-destructive/20 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/20"
+                        title="Supprimer le ticket traité"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  {/* Bouton archivage uniquement si ticket traité */}
-                  {ticket.status === "traitee" && onArchive && (
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => onArchive(ticket.id)}
-                      className="p-2 rounded-full text-muted-foreground hover:bg-blue-100 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-all duration-300"
-                      title="Archiver le ticket traité"
-                    >
-                      <ArchiveIcon className="h-5 w-5" />
-                    </motion.button>
-                  )}
-                  {/* Bouton suppression uniquement si ticket traité */}
-                  {ticket.status === "traitee" && (
-                    <motion.button
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => onDeleteRequest(ticket)}
-                      className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive border border-transparent hover:border-destructive/20 transition-all duration-300"
-                      title="Supprimer le ticket traité"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </motion.button>
-                  )}
-                </div>
               </div>
-            </motion.div>
-          )}
+              )}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-foreground flex items-center gap-2">
@@ -250,7 +177,7 @@ export default function TicketItem({
               <div className="relative">
                 <button
                   onClick={() => setIsUploadModalOpen(!isUploadModalOpen)}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors bg-accent/20 px-2 py-1 rounded"
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200 bg-accent/20 px-2 py-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
                 >
                   <span className={`inline-block w-3 h-3 border border-border rounded bg-accent/30 transition-transform ${isUploadModalOpen ? 'rotate-90' : ''}`}>
                     <svg className="w-2 h-2 ml-0.5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,7 +261,7 @@ export default function TicketItem({
                 />
                 <button
                   type="submit"
-                  className="bg-primary text-primary-foreground font-bold py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
+                  className="bg-primary text-primary-foreground font-bold py-2 px-4 rounded-md hover:bg-primary/90 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
                 >
                   Envoyer
                 </button>
@@ -347,8 +274,9 @@ export default function TicketItem({
               )}
             </div>
           )}
+            </div>
         </div>
-      </motion.div>
-    </motion.div>
+      )}
+    </article>
   );
 }

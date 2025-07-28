@@ -30,8 +30,7 @@ export const validationSchema = Joi.object({
   MAIL_PASS: Joi.string().required(),
   MAIL_FROM: Joi.string().required(),
 
-  // Firebase - optionnel (fallback vers fichier JSON)
-  FIREBASE_PROJECT_ID: Joi.string().optional(),
-  FIREBASE_PRIVATE_KEY: Joi.string().optional(),
-  FIREBASE_CLIENT_EMAIL: Joi.string().optional(),
+  // OneSignal - pour les notifications push
+  ONESIGNAL_APP_ID: Joi.string().optional(),
+  ONESIGNAL_API_KEY: Joi.string().optional(),
 });

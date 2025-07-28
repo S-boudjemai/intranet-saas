@@ -1,23 +1,29 @@
-// src/components/NavBar.tsx
+// src/components/NavBar.tsx - Version Optimisée Frontend
 
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 import { parseJwt, type JwtPayload } from "../utils/jwt";
-import Button from "./ui/Button";
 import NotificationBadge from "./NotificationBadge";
 import { useNotifications } from "../contexts/NotificationContext";
 import { useTheme } from "../contexts/ThemeContext";
 import GlobalSearch from "./GlobalSearch";
-import { ChevronDownIcon, CogIcon, ArchiveIcon, SunIcon, MoonIcon, SystemIcon, UserCircleIcon } from "./icons";
+import { 
+  ChevronDownIcon, 
+  CogIcon, 
+  ArchiveIcon, 
+  SunIcon, 
+  MoonIcon, 
+  SystemIcon, 
+  UserCircleIcon,
+  LogoutIcon
+} from "./icons";
 
 interface NavbarInfo {
   tenant_name: string;
   restaurant_city: string | null;
 }
-
-// Interface TenantInfo supprimée - plus utilisée
 
 export default function NavBar() {
   const { token, logout } = useAuth();
@@ -25,323 +31,323 @@ export default function NavBar() {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [navbarInfo, setNavbarInfo] = useState<NavbarInfo | null>(null);
-  const [isRestaurantMenuOpen, setIsRestaurantMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const raw = token ? parseJwt<JwtPayload>(token) : null;
   const canManage = raw?.role === "manager" || raw?.role === "admin";
-  
-  console.log('🔵 JWT Info:', { 
-    restaurant_id: raw?.restaurant_id, 
-    tenant_id: raw?.tenant_id,
-    role: raw?.role 
-  });
 
-  // Récupérer les informations pour la navbar
+  // Récupérer les informations navbar (optimisé)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchNavbarInfo = async () => {
       if (!token) return;
       
-      console.log('🔵 Fetching navbar data with:', { 
-        token: token?.substring(0, 20) + '...', 
-        tenant_id: raw?.tenant_id,
-        restaurant_id: raw?.restaurant_id 
-      });
-      
       try {
-        console.log('🔵 API URL:', import.meta.env.VITE_API_URL);
-        
-        // Récupérer les infos navbar (tenant name + restaurant city)
-        const navbarResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/navbar-info`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/navbar-info`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        if (navbarResponse.ok) {
-          const navbarData = await navbarResponse.json();
-          console.log('🟩 Navbar API Response:', navbarData);
-          setNavbarInfo(navbarData.data); // Accéder à la propriété 'data'
-        } else {
-          console.error('❌ Navbar API Error:', navbarResponse.status, await navbarResponse.text());
+        if (response.ok) {
+          const data = await response.json();
+          setNavbarInfo(data.data);
         }
-
-        // Plus besoin d'appel tenant séparé
       } catch (error) {
-        console.error('Erreur lors de la récupération des données:', error);
+        // Silencieux en production
+        if (import.meta.env.DEV) {
+          console.error('Erreur navbar:', error);
+        }
       }
     };
 
-    fetchData();
-  }, [token, raw?.tenant_id]);
+    fetchNavbarInfo();
+  }, [token]);
 
-  // Gestion du clic en dehors du dropdown
+  // Click outside optimisé
   useEffect(() => {
+    if (!isMenuOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsRestaurantMenuOpen(false);
+        setIsMenuOpen(false);
       }
     };
 
-    if (isRestaurantMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen]);
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isRestaurantMenuOpen]);
-
+  // Handlers optimisés
   const handleLogout = () => {
+    setIsMenuOpen(false);
     logout();
     navigate("/login", { replace: true });
   };
 
-  const handleDocumentsClick = async () => {
-    await markAllAsRead('document_uploaded');
-  };
+  const handleNotificationClick = (type: 'document_uploaded' | 'ticket_created' | 'announcement_posted') => 
+    () => markAllAsRead(type);
 
-  const handleTicketsClick = async () => {
-    await markAllAsRead('ticket_created');
-  };
+  // Classes CSS optimisées
+  const navLinkClass = ({ isActive }: { isActive: boolean }) => [
+    "relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+    "hover:bg-muted/60 hover:text-foreground",
+    isActive 
+      ? "bg-primary/10 text-primary font-semibold" 
+      : "text-muted-foreground"
+  ].join(" ");
 
-  const handleAnnouncementsClick = async () => {
-    await markAllAsRead('announcement_posted');
-  };
-
-  // Classes pour les liens de navigation - Style Waitify avec dark mode conditionnel
-  const linkClasses =
-    "px-4 py-2.5 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-primary/40 transition-all duration-300 ease-out relative";
-  const activeLinkClasses = "bg-card text-foreground font-semibold shadow-md dark:shadow-lg dark:shadow-primary/40";
+  const displayName = navbarInfo?.tenant_name 
+    ? `${navbarInfo.tenant_name}${navbarInfo.restaurant_city ? ` ${navbarInfo.restaurant_city}` : ''}`
+    : null;
 
   return (
-    <motion.nav 
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="bg-card/80 backdrop-blur-md border border-border/50 rounded-2xl shadow-sm dark:shadow-lg dark:shadow-primary/20 px-6 py-3 flex items-center space-x-2 mx-4 mt-4" 
-      style={{
-        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-      }}
-    >
-      <div className="flex items-center">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        >
-          <Link
-            to="/dashboard"
-            className="flex items-center mr-6 group"
-          >
-          <span className="text-lg sm:text-xl font-bold text-foreground tracking-wider transition-all duration-300 group-hover:text-primary">
-            <span className="hidden sm:inline">
-              {(navbarInfo?.tenant_name || 'Loading...').toUpperCase()}
-              {navbarInfo?.restaurant_city && ` ${navbarInfo.restaurant_city.toUpperCase()}`}
-            </span>
-            <span className="sm:hidden">
-              {(navbarInfo?.tenant_name?.substring(0, 4) || 'LOAD').toUpperCase()}
-              {navbarInfo?.restaurant_city && ` ${navbarInfo.restaurant_city.substring(0, 3).toUpperCase()}`}
-            </span>
-          </span>
-          </Link>
-        </motion.div>
-
-        {/* Séparateur visuel Waitify */}
-        <div className="w-px h-8 bg-border mx-2"></div>
-
-        {/* Liens de navigation standard */}
-        {canManage && (
-          <NavLink
-            to="/dashboard"
-            className={({ isActive }) =>
-              `${linkClasses} ${isActive ? activeLinkClasses : ""}`
-            }
-          >
-            Dashboard
-          </NavLink>
+    <>
+      {/* Backdrop pour mobile */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+            onClick={() => setIsMenuOpen(false)}
+          />
         )}
-        
-        <NavLink
-          to="/documents"
-          onClick={handleDocumentsClick}
-          className={({ isActive }) =>
-            `${linkClasses} ${isActive ? activeLinkClasses : ""} relative`
-          }
-        >
-          Documents
-          <NotificationBadge 
-            count={notificationCounts.documents || 0} 
-            className="absolute -top-1 -right-1"
-          />
-        </NavLink>
-        
-        <NavLink
-          to="/tickets"
-          onClick={handleTicketsClick}
-          className={({ isActive }) =>
-            `${linkClasses} ${isActive ? activeLinkClasses : ""} relative`
-          }
-        >
-          Tickets
-          <NotificationBadge 
-            count={notificationCounts.tickets || 0} 
-            className="absolute -top-1 -right-1"
-          />
-        </NavLink>
-        
-        <NavLink
-          to="/announcements"
-          onClick={handleAnnouncementsClick}
-          className={({ isActive }) =>
-            `${linkClasses} ${isActive ? activeLinkClasses : ""} relative`
-          }
-        >
-          Annonces
-          <NotificationBadge 
-            count={notificationCounts.announcements || 0} 
-            className="absolute -top-1 -right-1"
-          />
-        </NavLink>
+      </AnimatePresence>
 
-        {/* Liens réservés aux admin/manager */}
-        {canManage && (
-          <>
-            <NavLink
-              to="/audits"
-              className={({ isActive }) =>
-                `${linkClasses} ${isActive ? activeLinkClasses : ""}`
-              }
+      <motion.nav 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border"
+      >
+        <div className="w-full">
+          <div className="flex items-center justify-between h-16 pl-4 sm:pl-6 lg:pl-8 pr-4 sm:pr-6 lg:pr-8">
+            
+            {/* Logo/Brand */}
+            <Link
+              to="/dashboard"
+              className="flex items-center space-x-3 font-bold text-lg hover:text-primary transition-colors"
             >
-              Audits & Conformité
-            </NavLink>
+              <span className="hidden sm:block">
+                {displayName?.toUpperCase() || 'FRANCHISEDESK'}
+              </span>
+              <span className="sm:hidden">
+                {displayName?.substring(0, 8).toUpperCase() || 'FDESK'}
+              </span>
+            </Link>
 
-
-            <NavLink
-              to="/users"
-              className={({ isActive }) =>
-                `${linkClasses} ${isActive ? activeLinkClasses : ""}`
-              }
-            >
-              Utilisateurs
-            </NavLink>
-          </>
-        )}
-      </div>
-
-      {/* Section droite - Recherche et Actions */}
-      <div className="flex items-center space-x-4 ml-auto">
-        <GlobalSearch />
-      </div>
-      
-      {/* Restaurant Dropdown Menu - Tout à droite */}
-      <div className="relative mr-4" ref={dropdownRef}>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            onClick={() => setIsRestaurantMenuOpen(!isRestaurantMenuOpen)}
-            className="flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium text-foreground hover:bg-card hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-primary/40 transition-all duration-300 border border-border/50"
-          >
-            <UserCircleIcon className="w-4 h-4" />
-            <span className="text-sm font-semibold leading-tight">
-              Mon compte
-            </span>
-            <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isRestaurantMenuOpen ? 'rotate-180' : ''}`} />
-          </motion.button>
-          
-          {/* Dropdown Menu */}
-          {isRestaurantMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-lg dark:shadow-xl dark:shadow-primary/20 py-2 z-50"
-            >
-              {/* Theme Selector */}
-              <div className="px-3 py-2 border-b border-border">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Thème</p>
-                <div className="flex space-x-1">
-                  <button
-                    onClick={() => setTheme('light')}
-                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${
-                      theme === 'light' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'hover:bg-muted'
-                    }`}
-                    title="Mode clair"
-                  >
-                    <SunIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setTheme('dark')}
-                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${
-                      theme === 'dark' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'hover:bg-muted'
-                    }`}
-                    title="Mode sombre"
-                  >
-                    <MoonIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setTheme('system')}
-                    className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${
-                      theme === 'system' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'hover:bg-muted'
-                    }`}
-                    title="Système"
-                  >
-                    <SystemIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              
-              {/* Menu Items */}
-              {canManage && (
-                <Link
-                  to="/archives"
-                  onClick={() => setIsRestaurantMenuOpen(false)}
-                  className="flex items-center space-x-3 px-4 py-2 text-sm hover:bg-muted transition-colors"
+            {/* Navigation principale - Desktop */}
+            <div className="hidden lg:flex items-center justify-center flex-1">
+              <div className="flex items-center space-x-1">
+                {canManage && (
+                  <NavLink to="/dashboard" className={navLinkClass}>
+                    Dashboard
+                  </NavLink>
+                )}
+                
+                <NavLink 
+                  to="/documents" 
+                  onClick={handleNotificationClick('document_uploaded')}
+                  className={navLinkClass}
                 >
-                  <ArchiveIcon className="w-4 h-4" />
-                  <span>Archives</span>
-                </Link>
-              )}
-              
-              <button
-                onClick={() => {
-                  setIsRestaurantMenuOpen(false);
-                  // Placeholder pour réglages futurs
-                }}
-                className="flex items-center space-x-3 px-4 py-2 text-sm hover:bg-muted transition-colors w-full text-left opacity-50 cursor-not-allowed"
-                disabled
-              >
-                <CogIcon className="w-4 h-4" />
-                <span>Réglages (Bientôt)</span>
-              </button>
-              
-              {/* Séparateur */}
-              <div className="border-t border-border my-1"></div>
-              
-              {/* Info utilisateur */}
-              <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border">
-                {raw?.email} ({raw?.role})
+                  Documents
+                  <NotificationBadge 
+                    count={notificationCounts.documents} 
+                    className="absolute -top-1 -right-1"
+                  />
+                </NavLink>
+                
+                <NavLink 
+                  to="/tickets"
+                  onClick={handleNotificationClick('ticket_created')}
+                  className={navLinkClass}
+                >
+                  Tickets
+                  <NotificationBadge 
+                    count={notificationCounts.tickets} 
+                    className="absolute -top-1 -right-1"
+                  />
+                </NavLink>
+                
+                <NavLink 
+                  to="/announcements"
+                  onClick={handleNotificationClick('announcement_posted')}
+                  className={navLinkClass}
+                >
+                  Annonces
+                  <NotificationBadge 
+                    count={notificationCounts.announcements} 
+                    className="absolute -top-1 -right-1"
+                  />
+                </NavLink>
+
+                {canManage && (
+                  <>
+                    <NavLink to="/audits" className={navLinkClass}>
+                      Audits
+                    </NavLink>
+                    <NavLink to="/users" className={navLinkClass}>
+                      Utilisateurs
+                    </NavLink>
+                  </>
+                )}
               </div>
+            </div>
+
+            {/* Actions droite */}
+            <div className="flex items-center space-x-3">
+              <GlobalSearch />
               
-              {/* Déconnexion */}
-              <button
-                onClick={() => {
-                  setIsRestaurantMenuOpen(false);
-                  handleLogout();
-                }}
-                className="flex items-center space-x-3 px-4 py-2 text-sm hover:bg-destructive/10 hover:text-destructive transition-colors w-full text-left text-destructive"
-              >
-                <span>Déconnexion</span>
-              </button>
-            </motion.div>
-          )}
-      </div>
-    </motion.nav>
+              {/* Menu utilisateur */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <UserCircleIcon className="w-5 h-5" />
+                  <span className="hidden md:block text-sm font-medium">
+                    {raw?.email?.split('@')[0]}
+                  </span>
+                  <ChevronDownIcon 
+                    className={`w-4 h-4 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} 
+                  />
+                </button>
+
+                {/* Dropdown */}
+                <AnimatePresence>
+                  {isMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-64 bg-card border border-border rounded-xl shadow-lg z-50"
+                    >
+                      {/* Header utilisateur */}
+                      <div className="p-4 border-b border-border">
+                        <p className="font-medium text-sm">{raw?.email}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{raw?.role}</p>
+                      </div>
+
+                      {/* Navigation mobile */}
+                      <div className="lg:hidden border-b border-border">
+                        <div className="p-2 space-y-1">
+                          {canManage && (
+                            <Link
+                              to="/dashboard"
+                              className="block px-3 py-2 text-sm rounded-lg hover:bg-muted"
+                              onClick={() => setIsMenuOpen(false)}
+                            >
+                              Dashboard
+                            </Link>
+                          )}
+                          <Link
+                            to="/documents"
+                            className="block px-3 py-2 text-sm rounded-lg hover:bg-muted"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Documents
+                          </Link>
+                          <Link
+                            to="/tickets"
+                            className="block px-3 py-2 text-sm rounded-lg hover:bg-muted"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Tickets
+                          </Link>
+                          <Link
+                            to="/announcements"
+                            className="block px-3 py-2 text-sm rounded-lg hover:bg-muted"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Annonces
+                          </Link>
+                          {canManage && (
+                            <>
+                              <Link
+                                to="/audits"
+                                className="block px-3 py-2 text-sm rounded-lg hover:bg-muted"
+                                onClick={() => setIsMenuOpen(false)}
+                              >
+                                Audits
+                              </Link>
+                              <Link
+                                to="/users"
+                                className="block px-3 py-2 text-sm rounded-lg hover:bg-muted"
+                                onClick={() => setIsMenuOpen(false)}
+                              >
+                                Utilisateurs
+                              </Link>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Sélecteur de thème */}
+                      <div className="p-4 border-b border-border">
+                        <p className="text-xs font-medium text-muted-foreground mb-3">Apparence</p>
+                        <div className="flex space-x-1">
+                          {[
+                            { value: 'light', icon: SunIcon, label: 'Clair' },
+                            { value: 'dark', icon: MoonIcon, label: 'Sombre' },
+                            { value: 'system', icon: SystemIcon, label: 'Système' }
+                          ].map(({ value, icon: Icon, label }) => (
+                            <button
+                              key={value}
+                              onClick={() => setTheme(value as any)}
+                              className={`flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
+                                theme === value 
+                                  ? 'bg-primary text-primary-foreground' 
+                                  : 'hover:bg-muted'
+                              }`}
+                              title={label}
+                            >
+                              <Icon className="w-4 h-4" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="p-2 space-y-1">
+                        {canManage && (
+                          <Link
+                            to="/archives"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center space-x-3 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors"
+                          >
+                            <ArchiveIcon className="w-4 h-4" />
+                            <span>Archives</span>
+                          </Link>
+                        )}
+                        
+                        <button
+                          disabled
+                          className="flex items-center space-x-3 px-3 py-2 text-sm rounded-lg opacity-50 cursor-not-allowed w-full text-left"
+                        >
+                          <CogIcon className="w-4 h-4" />
+                          <span>Paramètres</span>
+                          <span className="ml-auto text-xs text-muted-foreground">Bientôt</span>
+                        </button>
+                        
+                        <hr className="my-2 border-border" />
+                        
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center space-x-3 px-3 py-2 text-sm rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors w-full text-left text-destructive font-medium"
+                        >
+                          <LogoutIcon className="w-4 h-4" />
+                          <span>Déconnexion</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.nav>
+    </>
   );
 }

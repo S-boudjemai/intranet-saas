@@ -10,6 +10,7 @@ import AuditTemplateDetailsModal from '../modals/AuditTemplateDetailsModal';
 import ConfirmModal from '../ConfirmModal';
 import Toast from '../Toast';
 import { HiPlus, HiPencil, HiTrash, HiEye, HiClipboardList } from 'react-icons/hi';
+import { AuditListSkeleton } from '../Skeleton';
 
 export default function TemplatesTab() {
   const { token } = useAuth();
@@ -117,12 +118,7 @@ export default function TemplatesTab() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <span className="ml-3 text-muted-foreground">Chargement des templates...</span>
-      </div>
-    );
+    return <AuditListSkeleton />;
   }
 
   return (

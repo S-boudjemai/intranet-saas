@@ -10,6 +10,7 @@ import ScheduleAuditModal from '../modals/ScheduleAuditModal';
 import ConfirmModal from '../ConfirmModal';
 import { HiPlus, HiCalendar, HiClock, HiUser, HiOfficeBuilding } from 'react-icons/hi';
 import { ArchiveIcon } from '../icons';
+import { AuditListSkeleton } from '../Skeleton';
 
 export default function PlanningTab() {
   const { token, user } = useAuth();
@@ -253,12 +254,7 @@ export default function PlanningTab() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <span className="ml-3 text-muted-foreground">Chargement du planning...</span>
-      </div>
-    );
+    return <AuditListSkeleton />;
   }
 
   return (

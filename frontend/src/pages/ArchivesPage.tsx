@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { SpinnerIcon, ExclamationCircleIcon, ArchiveIcon, FilterIcon, EyeIcon, TicketIcon, ClipboardIcon } from '../components/icons';
+import { ExclamationCircleIcon, ArchiveIcon, FilterIcon, EyeIcon, TicketIcon, ClipboardIcon } from '../components/icons';
+import { ArchivesSkeleton } from '../components/Skeleton';
 import TabNavigation from '../components/ui/TabNavigation';
 
 interface AuditArchive {
@@ -160,31 +161,13 @@ const ArchivesPage: React.FC = () => {
           };
         });
 
-        // 🧪 DEBUG: Voir la date actuelle et les dates générées
-        const now = new Date();
-        console.log('🧪 Date actuelle:', {
-          date: now.toISOString().split('T')[0],
-          mois: now.getMonth() + 1, // +1 car les mois commencent à 0
-          année: now.getFullYear()
-        });
-        console.log('🧪 Échantillon des dates archivées:', testAudits.slice(0, 5).map(a => ({
-          id: a.id,
-          archived_at: a.archived_at.split('T')[0]
-        })));
 
-        // 🧪 APPLIQUER LE FILTRE DE DATE SUR LES DONNÉES DE TEST
+        // Appliquer le filtre de date
         if (filters.date_from && filters.date_to) {
-          console.log('🧪 Filtre date:', { from: filters.date_from, to: filters.date_to });
-          const beforeFilter = testAudits.length;
           testAudits = testAudits.filter(audit => {
             const archivedDate = new Date(audit.archived_at).toISOString().split('T')[0];
-            const matches = archivedDate >= filters.date_from! && archivedDate <= filters.date_to!;
-            if (!matches && audit.id <= 5) {
-              console.log(`🧪 Audit ${audit.id} exclu: ${archivedDate} pas dans [${filters.date_from}, ${filters.date_to}]`);
-            }
-            return matches;
+            return archivedDate >= filters.date_from! && archivedDate <= filters.date_to!;
           });
-          console.log(`🧪 Filtré: ${beforeFilter} → ${testAudits.length} audits`);
         }
 
         // 🧪 APPLIQUER LE TRI SUR LES DONNÉES DE TEST
@@ -441,12 +424,10 @@ const ArchivesPage: React.FC = () => {
       if (response.ok) {
         // Recharger les données
         loadData();
-        console.log('✅ Ticket restauré avec succès');
       } else {
-        console.error('❌ Erreur lors de la restauration du ticket');
       }
     } catch (error) {
-      console.error('❌ Erreur lors de la restauration:', error);
+      console.error('Erreur lors de la restauration:', error);
     }
   };
 
@@ -463,12 +444,10 @@ const ArchivesPage: React.FC = () => {
       if (response.ok) {
         // Recharger les données
         loadData();
-        console.log('✅ Action corrective restaurée avec succès');
       } else {
-        console.error('❌ Erreur lors de la restauration de l\'action corrective');
       }
     } catch (error) {
-      console.error('❌ Erreur lors de la restauration:', error);
+      console.error('Erreur lors de la restauration:', error);
     }
   };
 
@@ -531,12 +510,7 @@ const ArchivesPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center space-x-2 text-muted-foreground">
-        <SpinnerIcon className="h-6 w-6 animate-spin" />
-        <span>Chargement des archives...</span>
-      </div>
-    );
+    return <ArchivesSkeleton />;
   }
 
   if (error) {

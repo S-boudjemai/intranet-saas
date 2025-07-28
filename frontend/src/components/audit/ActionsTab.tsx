@@ -18,6 +18,7 @@ import {
   HiEye,
   HiFilter
 } from 'react-icons/hi';
+import { AuditListSkeleton } from '../Skeleton';
 
 export default function ActionsTab() {
   const { token, user } = useAuth();
@@ -232,12 +233,7 @@ export default function ActionsTab() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <span className="ml-3 text-muted-foreground">Chargement des actions correctives...</span>
-      </div>
-    );
+    return <AuditListSkeleton />;
   }
 
   return (

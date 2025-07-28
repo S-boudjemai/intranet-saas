@@ -4,18 +4,21 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import ThemeSwitcher from "../components/ThemeSwitcher";
 import { ChartPieIcon, DocumentReportIcon, SpeakerphoneIcon, ArrowRightIcon } from "../components/icons";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 
 export default function LandingPage() {
+  const prefersReducedMotion = useReducedMotion();
+  
   const fadeInUp = {
-    initial: { opacity: 0, y: 60 },
+    initial: prefersReducedMotion ? {} : { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6, ease: "easeOut" }
+    transition: { duration: prefersReducedMotion ? 0 : 0.4, ease: "easeOut" }
   };
 
   const staggerContainer = {
     animate: {
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: prefersReducedMotion ? 0 : 0.05
       }
     }
   };
@@ -24,17 +27,14 @@ export default function LandingPage() {
     <div className="bg-background text-foreground min-h-screen">
       {/* Header */}
       <motion.header 
-        initial={{ opacity: 0, y: -20 }}
+        initial={prefersReducedMotion ? {} : { opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
         className="p-4 lg:p-6 flex justify-between items-center border-b border-border/50"
       >
-        <motion.h1 
-          whileHover={{ scale: 1.02 }}
-          className="text-xl font-bold tracking-wider cursor-pointer"
-        >
+        <h1 className="text-xl font-bold tracking-wider hover:scale-105 transition-transform duration-200">
           FRANCHISE<span className="text-primary">DESK</span>
-        </motion.h1>
+        </h1>
         <ThemeSwitcher />
       </motion.header>
 
@@ -67,16 +67,16 @@ export default function LandingPage() {
           >
             <Link
               to="/contact"
-              className="group inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-lg px-10 py-5 rounded-xl hover:bg-primary/90 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+              className="group inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-lg px-10 py-5 rounded-xl hover:bg-primary/90 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
             >
               Demander une démo
-              <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              <ArrowRightIcon className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
             <div>
               <span className="text-muted-foreground">Déjà membre ? </span>
               <Link
                 to="/login"
-                className="text-primary hover:text-primary/80 font-medium transition-colors"
+                className="text-primary hover:text-primary/80 font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 rounded"
               >
                 Connectez-vous
               </Link>
@@ -105,17 +105,17 @@ export default function LandingPage() {
 
       {/* Problem Statement */}
       <motion.section 
-        initial={{ opacity: 0 }}
+        initial={prefersReducedMotion ? {} : { opacity: 0 }}
         whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: prefersReducedMotion ? 0 : 0.5 }}
         viewport={{ once: true }}
         className="py-20 bg-muted/30"
       >
         <div className="container mx-auto px-4">
           <motion.div 
-            initial={{ opacity: 0, y: 40 }}
+            initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
             viewport={{ once: true }}
             className="max-w-4xl mx-auto text-center"
           >
@@ -133,17 +133,17 @@ export default function LandingPage() {
 
       {/* Features Section */}
       <motion.section 
-        initial={{ opacity: 0 }}
+        initial={prefersReducedMotion ? {} : { opacity: 0 }}
         whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: prefersReducedMotion ? 0 : 0.5 }}
         viewport={{ once: true }}
         className="py-20 lg:py-32"
       >
         <div className="container mx-auto px-4">
           <motion.div 
-            initial={{ opacity: 0, y: 40 }}
+            initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
             viewport={{ once: true }}
             className="text-center mb-20"
           >

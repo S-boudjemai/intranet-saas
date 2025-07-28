@@ -1,0 +1,75 @@
+/* Performance optimizations */
+
+/* CSS Containment pour isoler les re-layouts */
+.ticket-item {
+  contain: layout style;
+  will-change: transform;
+}
+
+.ticket-item:hover {
+  will-change: auto;
+}
+
+/* Optimisations pour les listes longues */
+.tickets-list {
+  contain: layout;
+}
+
+/* Smooth scrolling avec respect des préférences utilisateur */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Animations respectueuses de l'accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Garder les transitions de focus pour l'accessibilité */
+  *:focus-visible {
+    transition-duration: 0.2s !important;
+  }
+}
+
+/* Optimisation GPU pour les transformations */
+.gpu-optimized {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Lazy loading image placeholders */
+.image-placeholder {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-placeholder {
+    animation: none;
+    background: #f0f0f0;
+  }
+}
+
+/* Focus visible amélioré */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2;
+}

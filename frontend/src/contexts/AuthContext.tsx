@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { jwtDecode } from "jwt-decode";
+import { oneSignalService } from "../services/oneSignalService";
 import { validateJWTStructure, clearInvalidToken, debugToken } from "../utils/tokenValidation";
 
 interface JwtUser {
@@ -107,9 +108,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("token", access_token);
     setToken(access_token);
     // le useEffect se chargera de décoder et remplir `user`
+    
+    // Initialize OneSignal for push notifications
+    setTimeout(async () => {
+      try {
+        await oneSignalService.initialize();
+      } catch (error) {
+        console.error('[AUTH] OneSignal initialization error:', error);
+      }
+    }, 1000);
   };
 
   const logout = async () => {
+    // Unsubscribe from OneSignal
+    try {
+      await oneSignalService.unsubscribe();
+    } catch (error) {
+      console.error('[AUTH] OneSignal unsubscribe error:', error);
+    }
+    
     // Clear localStorage
     localStorage.removeItem("token");
     setToken(null);

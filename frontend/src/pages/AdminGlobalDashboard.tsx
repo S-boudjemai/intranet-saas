@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../components/ToastContainer';
 import { 
   ChartPieIcon, 
   UsersIcon, 
@@ -17,6 +17,7 @@ import {
   TicketIcon
 } from '../components/icons';
 import ConfirmModal from '../components/ConfirmModal';
+import { DashboardSkeleton } from '../components/Skeleton';
 
 // Types communs
 interface Tenant {
@@ -1044,11 +1045,8 @@ const AdminGlobalDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-          <p className="mt-4 text-muted-foreground">Chargement du dashboard admin...</p>
-        </div>
+      <div className="min-h-screen bg-background">
+        <DashboardSkeleton />
       </div>
     );
   }
