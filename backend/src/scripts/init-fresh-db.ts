@@ -9,6 +9,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
 import { UsersService } from '../users/users.service';
 import { TenantsService } from '../tenants/tenants.service';
+import { RestaurantType } from '../common/enums/restaurant-type.enum';
 
 async function initFreshDatabase() {
   console.log('🚀 Initialisation de la base de données fraîche...');
@@ -23,6 +24,7 @@ async function initFreshDatabase() {
     console.log('🏢 Création du tenant par défaut...');
     const tenant = await tenantsService.create({
       name: 'Pizzalif',
+      restaurant_type: RestaurantType.PIZZERIA,
       primaryColor: '#4F46E5',
       secondaryColor: '#10B981',
       backgroundColor: '#FFFFFF',
