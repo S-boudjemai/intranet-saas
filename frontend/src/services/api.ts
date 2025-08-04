@@ -3,7 +3,7 @@ import axios, { AxiosResponse } from 'axios';
 
 // Configuration de base d'axios
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3000', // URL du backend
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000', // URL du backend
   timeout: 10000,
 });
 
