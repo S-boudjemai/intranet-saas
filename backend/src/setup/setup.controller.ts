@@ -1,10 +1,14 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { Public } from '../auth/public.decorator';
 import { UsersService } from '../users/users.service';
+import { SetupService } from './setup.service';
 
 @Controller('setup')
 export class SetupController {
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private setupService: SetupService,
+  ) {}
 
   @Public()
   @Post('admin')
@@ -41,5 +45,12 @@ export class SetupController {
         error: error.message,
       };
     }
+  }
+
+  // ROUTE TEMPORAIRE POUR FIX PRODUCTION - À SUPPRIMER APRÈS
+  @Public()
+  @Post('fix-production-schema')
+  async fixProductionSchema() {
+    return this.setupService.fixProductionSchema();
   }
 }
