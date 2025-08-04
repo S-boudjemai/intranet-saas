@@ -99,7 +99,7 @@ import { PlanningModule } from './planning/planning.module';
             type: 'postgres',
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: false, // JAMAIS en production
+            synchronize: true, // TEMPORAIRE pour créer les tables automatiquement
             ssl: isProduction ? { rejectUnauthorized: false } : false,
             connectTimeoutMS: 30000,
             acquireTimeoutMS: 30000,
