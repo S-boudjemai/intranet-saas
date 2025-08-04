@@ -119,11 +119,8 @@ export class CreatePlanningTasksTable1754000000000 implements MigrationInterface
     // Note: Foreign key vers audit_executions sera ajoutée dans une migration ultérieure
     // quand le conflit de types sera résolu (uuid vs integer)
 
-    await queryRunner.query(`
-      ALTER TABLE "planning_tasks" 
-      ADD CONSTRAINT "FK_planning_tasks_corrective_action" 
-      FOREIGN KEY ("corrective_action_id") REFERENCES "corrective_actions"("id") ON DELETE CASCADE
-    `);
+    // Note: Foreign key vers corrective_actions sera ajoutée dans migration ultérieure
+    // quand le conflit de types sera résolu (uuid vs integer)
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
