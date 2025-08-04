@@ -116,11 +116,8 @@ export class CreatePlanningTasksTable1754000000000 implements MigrationInterface
       FOREIGN KEY ("restaurant_id") REFERENCES "restaurants"("id") ON DELETE SET NULL
     `);
 
-    await queryRunner.query(`
-      ALTER TABLE "planning_tasks" 
-      ADD CONSTRAINT "FK_planning_tasks_audit_execution_id" 
-      FOREIGN KEY ("audit_execution_id") REFERENCES "audit_executions"("id") ON DELETE SET NULL
-    `);
+    // Note: Foreign key vers audit_executions sera ajoutée dans une migration ultérieure
+    // quand le conflit de types sera résolu (uuid vs integer)
 
     await queryRunner.query(`
       ALTER TABLE "planning_tasks" 
