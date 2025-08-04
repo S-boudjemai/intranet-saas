@@ -6,10 +6,10 @@ import { JwtModule } from '@nestjs/jwt';
 // Entities
 import { User } from '../users/entities/user.entity';
 import { Tenant } from '../tenants/entities/tenant.entity';
-import { Restaurant } from '../restaurant/entites/restaurant.entity';
+import { Restaurant } from '../restaurant/entities/restaurant.entity';
 import { Category } from '../categories/entities/category.entity';
 import { Document } from '../documents/entities/document.entity';
-// import { Tag } from '../tags/entites/tag.entity'; // Disabled for now
+// import { Tag } from '../tags/entities/tag.entity'; // Disabled for now
 
 // Controllers
 import { AdminGlobalController } from './controllers/admin-global.controller';

@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Announcement } from './entities/announcement.entity';
 import { Repository, In, Brackets } from 'typeorm';
 import { Role } from 'src/auth/roles/roles.enum';
-import { Restaurant } from 'src/restaurant/entites/restaurant.entity';
+import { Restaurant } from 'src/restaurant/entities/restaurant.entity';
 import { Document } from 'src/documents/entities/document.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
@@ -173,7 +173,7 @@ export class AnnouncementsService {
 
     // ✅ Envoyer notifications push aux viewers du tenant
     try {
-      console.log('📱 Envoi push notifications pour annonce aux viewers du tenant:', data.tenant_id);
+
       await this.notificationsService.sendPushToTenant(data.tenant_id, {
         title: 'Nouvelle annonce',
         body: `${savedAnnouncement.title}`,

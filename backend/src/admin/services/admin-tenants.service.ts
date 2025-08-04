@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { Tenant } from '../../tenants/entities/tenant.entity';
 import { User } from '../../users/entities/user.entity';
-import { Restaurant } from '../../restaurant/entites/restaurant.entity';
+import { Restaurant } from '../../restaurant/entities/restaurant.entity';
 import { Document } from '../../documents/entities/document.entity';
 import {
   AdminCreateTenantDto,

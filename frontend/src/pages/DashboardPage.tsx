@@ -10,25 +10,18 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 import KpiCard from "../components/KipCard";
-import AlertsSection from "../components/AlertsSection";
 import { 
   ChartPieIcon, 
   DocumentReportIcon, 
   ExclamationCircleIcon,
   TicketIcon, 
   RestaurantIcon,
-  CalendarIcon,
-  CogIcon,
   TrendingUpIcon
 } from "../components/icons";
 import { DashboardSkeleton } from "../components/Skeleton";
+import { PageHeader, PageContent, PageCard } from "../components/ui/PageAnimations";
 
 interface Restaurant {
   id: string;
@@ -37,49 +30,20 @@ interface Restaurant {
   address?: string;
 }
 
-interface CriticalTicket {
-  id: string;
-  title: string;
-  created_at: string;
-  priority?: string;
-}
-
-interface OverdueAction {
-  id: string;
-  title: string;
-  due_date: string;
-  status: string;
-  priority?: string;
-}
-
-interface AlertsData {
-  restaurantsWithoutRecentAudit: Restaurant[];
-  criticalTickets: CriticalTicket[];
-  overdueActions: OverdueAction[];
-  auditThresholdDays: number;
-}
-
 interface ComparisonsData {
   docsPreviousWeek: number;
-  auditsPreviousWeek: number;
   ticketsNonTraiteePreviousWeek: number;
 }
 
 interface DashboardData {
-  // 🚨 ALERTES CRITIQUES (nouveau)
-  alerts?: AlertsData;
   // KPIs existants
   totalDocuments: number;
   docsThisWeek: number;
   ticketsByStatus: Record<string, number>;
   ticketsPerDay: { date: string; count: number }[];
-  // Nouveaux KPIs
+  // KPIs maintenus
   totalRestaurants: number;
-  auditsThisWeek: number;
-  activeCorrectiveActions: number;
-  auditsByStatus: Record<string, number>;
-  actionsByStatus: Record<string, number>;
-  // 📊 COMPARAISONS TEMPORELLES (nouveau)
+  // 📊 COMPARAISONS TEMPORELLES
   comparisons?: ComparisonsData;
 }
 
@@ -132,43 +96,6 @@ const DashboardPage: React.FC = () => {
     };
   };
 
-  // Préparer les données pour les graphiques
-  const auditStatusData = useMemo(() => {
-    if (!data?.auditsByStatus) return [];
-    
-    const statusLabels = {
-      'todo': 'À faire',
-      'scheduled': 'Planifié',
-      'in_progress': 'En cours', 
-      'completed': 'Terminé',
-      'reviewed': 'Vérifié',
-    };
-
-    return Object.entries(data.auditsByStatus).map(([status, count]) => ({
-      name: statusLabels[status as keyof typeof statusLabels] || status,
-      value: count,
-      color: status === 'completed' ? chartColors.secondary : 
-             status === 'in_progress' ? chartColors.warning :
-             status === 'reviewed' ? chartColors.primary : '#94a3b8'
-    }));
-  }, [data?.auditsByStatus, chartColors]);
-
-  const actionsStatusData = useMemo(() => {
-    if (!data?.actionsByStatus) return [];
-    
-    const statusLabels = {
-      'assigned': 'Assignée',
-      'in_progress': 'En cours',
-      'completed': 'Terminée', 
-      'verified': 'Vérifiée',
-    };
-
-    return Object.entries(data.actionsByStatus).map(([status, count]) => ({
-      name: statusLabels[status as keyof typeof statusLabels] || status,
-      value: count,
-    }));
-  }, [data?.actionsByStatus]);
-
   if (loading) {
     return <DashboardSkeleton />;
   }
@@ -190,52 +117,20 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="p-6 space-y-8"
-    >
+    <div className="p-6 space-y-8">
       {/* Header avec titre */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.5 }}
-        className="flex justify-between items-center"
-      >
+      <PageHeader>
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-4">
-          <motion.div 
-            initial={{ scale: 0, rotate: -45 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-            className="p-3 bg-primary/10 border border-primary/20 rounded-2xl"
-            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
-          >
-            <ChartPieIcon className="h-7 w-7 text-primary" />
-          </motion.div>
+          <div className="p-2 bg-primary/10 border border-primary/20 rounded-xl">
+            <ChartPieIcon className="h-6 w-6 text-primary" />
+          </div>
           <span>Dashboard</span>
         </h1>
-      </motion.div>
+      </PageHeader>
 
-
-      {/* 🚨 ALERTES CRITIQUES - Section prioritaire */}
-      {data.alerts && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <AlertsSection alerts={data.alerts} />
-        </motion.div>
-      )}
-
-
-      {/* KPIs Essentiels - 4 métriques critiques avec tendances */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+      {/* KPIs Essentiels - 3 métriques critiques avec tendances */}
+      <PageContent
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         <KpiCard
           title="Réseau"
@@ -257,120 +152,17 @@ const DashboardPage: React.FC = () => {
           ) : undefined}
         />
         <KpiCard
-          title="Audits cette semaine"
-          value={data.auditsThisWeek}
-          icon={<CalendarIcon />}
+          title="Documents"
+          value={data.totalDocuments}
+          icon={<DocumentReportIcon />}
           index={2}
-          subtitle="conformité"
+          subtitle="fichiers disponibles"
           trend={data.comparisons ? calculateTrend(
-            data.auditsThisWeek,
-            data.comparisons.auditsPreviousWeek
+            data.docsThisWeek,
+            data.comparisons.docsPreviousWeek
           ) : undefined}
         />
-        <KpiCard
-          title="Actions en cours"
-          value={data.activeCorrectiveActions}
-          icon={<CogIcon />}
-          index={3}
-          subtitle="améliorations"
-          // Pas de comparaison pour les actions en cours (statut global)
-        />
-      </motion.div>
-
-      {/* Graphiques - Section 1 : Audits et Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Graphique Audits par statut */}
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="bg-card rounded-2xl p-8 border border-border shadow-sm hover:shadow-md transition-all duration-300"
-        >
-          <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            Statut des audits
-          </h2>
-          {auditStatusData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={auditStatusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {auditStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: chartColors.tooltipBg,
-                    border: `1px solid ${chartColors.tooltipBorder}`,
-                    borderRadius: "8px",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-              Aucun audit à afficher
-            </div>
-          )}
-        </motion.div>
-
-        {/* Graphique Actions correctives */}
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="bg-card rounded-2xl p-8 border border-border shadow-sm hover:shadow-md transition-all duration-300"
-        >
-          <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            Actions correctives
-          </h2>
-          {actionsStatusData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={actionsStatusData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
-                <XAxis 
-                  dataKey="name"
-                  stroke={chartColors.text}
-                  tickLine={false}
-                  axisLine={{ stroke: chartColors.grid }}
-                  fontSize={12}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  stroke={chartColors.text}
-                  tickLine={false}
-                  axisLine={{ stroke: chartColors.grid }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: chartColors.tooltipBg,
-                    border: `1px solid ${chartColors.tooltipBorder}`,
-                    borderRadius: "8px",
-                  }}
-                />
-                <Bar 
-                  dataKey="value" 
-                  fill={chartColors.secondary}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-              Aucune action corrective à afficher
-            </div>
-          )}
-        </motion.div>
-      </div>
+      </PageContent>
 
       {/* Graphique Tickets - Version améliorée */}
       <motion.div 
@@ -442,7 +234,55 @@ const DashboardPage: React.FC = () => {
           </LineChart>
         </ResponsiveContainer>
       </motion.div>
-    </motion.div>
+
+      {/* Section d'actions rapides */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7, duration: 0.5 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+      >
+        {/* Quick Actions */}
+        <div className="bg-card rounded-2xl p-8 border border-border shadow-sm hover:shadow-md transition-all duration-300">
+          <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
+            <div className="w-2 h-2 bg-secondary rounded-full"></div>
+            Actions Rapides
+          </h2>
+          <div className="space-y-4">
+            <button className="w-full text-left px-6 py-4 rounded-xl border border-border hover:bg-muted/50 transition-colors">
+              <div className="font-medium text-foreground">
+                Nouveau Document
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Uploader un fichier important
+              </div>
+            </button>
+            <button className="w-full text-left px-6 py-4 rounded-xl border border-border hover:bg-muted/50 transition-colors">
+              <div className="font-medium text-foreground">
+                Nouvelle Annonce
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Communiquer avec vos équipes
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-card rounded-2xl p-8 border border-border shadow-sm hover:shadow-md transition-all duration-300">
+          <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
+            <div className="w-2 h-2 bg-warning rounded-full"></div>
+            Activité Récente
+          </h2>
+          <div className="text-center py-12">
+            <TrendingUpIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              Aucune activité récente
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 

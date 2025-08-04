@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { useToastHelpers } from '../components/ToastContainer';
+import toast from 'react-hot-toast';
 import AnnouncementComposer from '../components/AnnouncementComposer';
 import AnnouncementFeed from '../components/AnnouncementFeed';
 import ConfirmModal from '../components/ConfirmModal';
@@ -16,7 +16,7 @@ import Button from '../components/ui/Button';
 
 export default function AnnouncementsPageNew() {
   const { token } = useAuth();
-  const toast = useToastHelpers();
+  // toast importé directement
   
   const [showComposer, setShowComposer] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -74,83 +74,67 @@ export default function AnnouncementsPageNew() {
   }, [announcementToDelete, token, toast]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen bg-background"
-    >
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <motion.header
-          initial={{ opacity: 0, y: 20 }}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
           className="mb-8"
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <motion.div
-                initial={{ scale: 0, rotate: -45 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-                className="p-3 bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 rounded-2xl"
-              >
-                <SpeakerphoneIcon className="h-8 w-8 text-primary" />
-              </motion.div>
-              
-              <div>
+            <div>
+              <div className="flex items-center gap-4 mb-2">
+                <div className="p-2 bg-primary/10 border border-primary/20 rounded-xl">
+                  <SpeakerphoneIcon className="h-6 w-6 text-primary" />
+                </div>
                 <h1 className="text-3xl font-bold text-foreground">
                   Communication
                 </h1>
-                <p className="text-muted-foreground mt-1">
-                  Partagez des informations importantes avec vos restaurants
-                </p>
               </div>
+              <p className="text-muted-foreground">
+                Partagez des informations importantes avec vos restaurants
+              </p>
             </div>
 
             {canManage && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <AnimatePresence mode="wait">
-                  {!showComposer ? (
-                    <motion.div
-                      key="create-button"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
+              <AnimatePresence mode="wait">
+                {!showComposer ? (
+                  <motion.div
+                    key="create-button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <button
+                      onClick={() => setShowComposer(true)}
+                      className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-colors"
                     >
-                      <Button
-                        onClick={() => setShowComposer(true)}
-                        className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
-                      >
-                        <PlusIcon className="h-4 w-4 mr-2" />
-                        Nouvelle annonce
-                      </Button>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="cancel-button"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
+                      <PlusIcon className="h-4 w-4" />
+                      Nouvelle annonce
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="cancel-button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <button
+                      onClick={() => setShowComposer(false)}
+                      className="flex items-center gap-2 bg-muted text-muted-foreground px-4 py-2.5 rounded-xl font-medium hover:bg-muted/80 transition-colors"
                     >
-                      <Button
-                        variant="ghost"
-                        onClick={() => setShowComposer(false)}
-                      >
-                        Annuler
-                      </Button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+                      Annuler
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             )}
           </div>
-        </motion.header>
+        </motion.div>
 
         {/* Composer (si affiché) */}
         <AnimatePresence>
@@ -171,9 +155,9 @@ export default function AnnouncementsPageNew() {
 
         {/* Feed des annonces */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: showComposer ? 0 : 0.4 }}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
         >
           <AnnouncementFeed
             key={refreshKey} // Force refresh when key changes
@@ -187,15 +171,23 @@ export default function AnnouncementsPageNew() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-8 p-4 bg-primary/10 border border-primary/20 rounded-lg text-center"
+            className="mt-8"
           >
-            <SparklesIcon className="h-6 w-6 text-primary mx-auto mb-2" />
-            <p className="text-primary font-medium">
-              Vous recevez toutes les annonces importantes de votre franchiseur
-            </p>
-            <p className="text-primary/70 text-sm mt-1">
-              Les nouvelles annonces apparaîtront automatiquement ici
-            </p>
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="p-3 bg-primary/10 rounded-xl">
+                  <SparklesIcon className="h-6 w-6 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-primary font-medium">
+                    Vous recevez toutes les annonces importantes de votre franchiseur
+                  </p>
+                  <p className="text-primary/70 text-sm">
+                    Les nouvelles annonces apparaîtront automatiquement ici
+                  </p>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </div>
@@ -222,6 +214,6 @@ export default function AnnouncementsPageNew() {
           </p>
         </div>
       </ConfirmModal>
-    </motion.div>
+    </div>
   );
 }

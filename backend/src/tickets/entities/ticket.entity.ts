@@ -12,7 +12,7 @@ import {
 import { Comment } from './comment.entity';
 import { TicketAttachment } from './ticket-attachment.entity';
 import { User } from 'src/users/entities/user.entity';
-import { Restaurant } from 'src/restaurant/entites/restaurant.entity';
+import { Restaurant } from 'src/restaurant/entities/restaurant.entity';
 import { Exclude } from 'class-transformer';
 
 export enum TicketStatus {

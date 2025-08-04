@@ -1,0 +1,88 @@
+name: Tests Backend
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run linter
+      run: npm run lint
+
+    - name: Run type check
+      run: npm run build
+
+    - name: Run tests
+      run: npm test -- --config jest.config.js --passWithNoTests --coverage
+      env:
+        NODE_ENV: test
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_USER: test_user
+        DB_PASS: test_password
+        DB_NAME: test_db
+        JWT_SECRET: test_jwt_secret_key_for_testing_purposes_only_minimum_64_chars
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        directory: ./backend/coverage
+        flags: backend
+        name: backend-coverage
+
+    - name: Test specific modules (Core Auth & Tickets)
+      run: |
+        echo "🧪 Testing Auth modules..."
+        npm test -- --config jest.config.js src/auth/auth.service.spec.ts --verbose
+        npm test -- --config jest.config.js src/auth/auth.controller.spec.ts --verbose
+        npm test -- --config jest.config.js src/auth/jwt-auth.guard.spec.ts --verbose
+        
+        echo "🎫 Testing Tickets module..."
+        npm test -- --config jest.config.js src/tickets/tickets.service.spec.ts --verbose
+        
+        echo "✅ All critical modules tested successfully!"

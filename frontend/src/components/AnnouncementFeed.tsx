@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { useToastHelpers } from './ToastContainer';
+import toast from 'react-hot-toast';
 import AnnouncementCard from './AnnouncementCard';
 import EmptyState from './EmptyState';
 import { AnnouncementFeedSkeleton } from './Skeleton';
@@ -35,7 +35,7 @@ interface AnnouncementFilters {
 
 export default function AnnouncementFeed({ onDeleteRequest }: AnnouncementFeedProps) {
   const { token } = useAuth();
-  const toast = useToastHelpers();
+  // toast importé directement
   
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -261,37 +261,21 @@ export default function AnnouncementFeed({ onDeleteRequest }: AnnouncementFeedPr
         />
       ) : (
         <div className="space-y-6">
-          <AnimatePresence mode="popLayout">
-            {announcements.map((announcement, index) => (
-              <motion.div
-                key={announcement.id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ 
-                  delay: index * 0.05,
-                  layout: { duration: 0.3 }
-                }}
-              >
-                <AnnouncementCard
-                  announcement={announcement}
-                  canManage={canManage}
-                  onDeleteRequest={onDeleteRequest}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          {announcements.map((announcement, index) => (
+            <div key={announcement.id}>
+              <AnnouncementCard
+                announcement={announcement}
+                canManage={canManage}
+                onDeleteRequest={onDeleteRequest}
+              />
+            </div>
+          ))}
         </div>
       )}
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex items-center justify-between bg-card border border-border rounded-lg p-4"
-        >
+        <div className="flex items-center justify-between bg-card border border-border rounded-lg p-4">
           <div className="text-sm text-muted-foreground">
             Page {pagination.page} sur {pagination.totalPages} • {pagination.total} annonce{pagination.total > 1 ? 's' : ''} au total
           </div>
@@ -346,7 +330,7 @@ export default function AnnouncementFeed({ onDeleteRequest }: AnnouncementFeedPr
               <ChevronRightIcon className="h-4 w-4" />
             </Button>
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   );

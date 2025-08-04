@@ -76,36 +76,36 @@ export default function AnnouncementCard({
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        duration: 0.5, 
-        ease: "easeOut" 
-      }}
-      className="relative pl-12"
-    >
+    <div className="relative pl-12">
       {/* Timeline Dot & Line */}
-      <div className="absolute left-4 top-1 h-full border-l-2 border-border"></div>
       <motion.div 
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+        initial={{ scaleY: 0, opacity: 0 }}
+        animate={{ scaleY: 1, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="absolute left-4 top-1 h-full border-l-2 border-border origin-top"
+      ></motion.div>
+      <motion.div 
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
         className="absolute left-4 top-4 w-3 h-3 bg-primary rounded-full transform -translate-x-1/2"
-      />
+      ></motion.div>
 
       {/* Announcement Card */}
       <motion.div 
-        whileHover={{ 
-          y: -8,
-          transition: { type: "spring", stiffness: 300, damping: 20 }
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ 
+          duration: 0.5, 
+          ease: "easeOut" 
         }}
         whileTap={{ scale: 0.98 }}
-        className="bg-card border border-border rounded-2xl p-6 group cursor-pointer"
+        className="bg-card border border-border rounded-2xl p-6 group"
         style={{
           boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
         }}
       >
+      
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1">
             <motion.h2 
@@ -125,15 +125,17 @@ export default function AnnouncementCard({
                 transition={{ delay: 0.4 }}
                 className="mt-2"
               >
-                <button
+                <motion.button
                   onClick={() => setShowViewModal(true)}
-                  className="transition-transform hover:scale-105"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="transition-transform"
                 >
                   <AnnouncementViewStats 
                     announcementId={announcement.id} 
                     canManage={canManage} 
                   />
-                </button>
+                </motion.button>
               </motion.div>
             )}
           </div>
@@ -149,13 +151,10 @@ export default function AnnouncementCard({
             </motion.small>
             {canManage && (
               <motion.button
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 0, x: 0 }}
-                whileHover={{ opacity: 1, x: 0, scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ duration: 0.3 }}
                 onClick={() => onDeleteRequest(announcement)}
-                className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all duration-300"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="p-2 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-colors"
               >
                 <TrashIcon className="h-5 w-5" />
               </motion.button>
@@ -176,7 +175,7 @@ export default function AnnouncementCard({
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.6 }}
             className="mt-6 pt-4 border-t border-border"
           >
             <p className="text-sm font-medium text-muted-foreground mb-3">
@@ -188,27 +187,24 @@ export default function AnnouncementCard({
                   key={doc.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 + index * 0.1 }}
-                  whileHover={{ x: 4 }}
-                  className="flex items-center justify-between p-3 bg-muted rounded-xl hover:bg-primary/5 transition-all duration-300"
+                  transition={{ delay: 0.7 + index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  className="flex items-center justify-between p-3 bg-muted rounded-xl cursor-pointer"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <motion.div
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      className="p-2 bg-primary/10 rounded-lg"
-                    >
+                    <div className="p-2 bg-primary/10 rounded-lg">
                       <span className="text-primary text-sm">📄</span>
-                    </motion.div>
+                    </div>
                     <span className="text-sm font-medium text-foreground truncate">
                       {doc.name}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <motion.button
+                      onClick={() => handlePreview(doc.url, doc.name)}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => handlePreview(doc.url, doc.name)}
-                      className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-all duration-300"
+                      className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
                       title="Aperçu"
                     >
                       <EyeIcon className="h-4 w-4" />
@@ -233,6 +229,6 @@ export default function AnnouncementCard({
         announcementId={announcement.id}
         announcementTitle={announcement.title}
       />
-    </motion.div>
+    </div>
   );
 }

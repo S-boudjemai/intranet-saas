@@ -215,34 +215,35 @@ export default function DocumentsPage() {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="min-h-screen bg-background"
-    >
-      {/* Header moderne avec actions */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="px-6 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-primary/10 border border-primary/20 rounded-xl">
-                <DocumentTextIcon className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Documents</h1>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  {category && categories.length > 0 && (
-                    <>
-                      <span>📁</span>
-                      <span className="font-medium text-foreground">
-                        {categories.find(cat => cat.id === category)?.name || 'Catégorie'}
-                      </span>
-                      <span>•</span>
-                    </>
-                  )}
-                  <span>{docs.length} document{docs.length !== 1 ? 's' : ''}</span>
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-4 mb-2">
+                <div className="p-2 bg-primary/10 border border-primary/20 rounded-xl">
+                  <DocumentTextIcon className="h-6 w-6 text-primary" />
                 </div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Documents
+                </h1>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                {category && categories.length > 0 && (
+                  <>
+                    <span>📁</span>
+                    <span className="font-medium text-foreground">
+                      {categories.find(cat => cat.id === category)?.name || 'Catégorie'}
+                    </span>
+                    <span>•</span>
+                  </>
+                )}
+                <span>{docs.length} document{docs.length !== 1 ? 's' : ''}</span>
               </div>
             </div>
             
@@ -256,15 +257,18 @@ export default function DocumentsPage() {
               </button>
             )}
           </div>
-        </div>
-      </div>
+        </motion.div>
 
-      <div className="px-6 py-6 space-y-6">
-        {/* Toolbar unifiée */}
-        <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
-          {/* Ligne principale: recherche + actions */}
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="relative flex-1">
+        {/* Toolbar */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+            {/* Recherche */}
+            <div className="relative">
               <SearchIcon className="absolute top-1/2 left-4 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
                 type="text"
@@ -275,7 +279,8 @@ export default function DocumentsPage() {
               />
             </div>
             
-            <div className="flex gap-3">
+            {/* Actions */}
+            <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setShowCategoryFilter(!showCategoryFilter)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors ${
@@ -295,69 +300,74 @@ export default function DocumentsPage() {
                 </button>
               )}
             </div>
-          </div>
 
-          {/* Filtres tags */}
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <TagIcon className="h-4 w-4" />
-                Tags:
+            {/* Filtres tags */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <TagIcon className="h-4 w-4" />
+                  Tags:
+                </div>
+                {tags.map((t) => {
+                  const active = filterTags.includes(t.id);
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() =>
+                        setFilterTags((p) =>
+                          p.includes(t.id)
+                            ? p.filter((x) => x !== t.id)
+                            : [...p, t.id]
+                        )
+                      }
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                        active
+                          ? "bg-primary/10 text-primary border border-primary/20"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
+                    >
+                      {t.name}
+                    </button>
+                  );
+                })}
               </div>
-              {tags.map((t) => {
-                const active = filterTags.includes(t.id);
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() =>
-                      setFilterTags((p) =>
-                        p.includes(t.id)
-                          ? p.filter((x) => x !== t.id)
-                          : [...p, t.id]
-                      )
-                    }
-                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
-                      active
-                        ? "bg-primary/10 text-primary border border-primary/20"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    }`}
-                  >
-                    {t.name}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+            )}
 
-          {/* Panneau catégories (collapsible) */}
-          {showCategoryFilter && (
-            <div className="border-t border-border pt-4">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-medium text-foreground">Choisir un dossier</h3>
-                <button
-                  onClick={() => {
-                    setCategory(undefined);
+            {/* Panneau catégories (collapsible) */}
+            {showCategoryFilter && (
+              <div className="border-t border-border pt-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-medium text-foreground">Choisir un dossier</h3>
+                  <button
+                    onClick={() => {
+                      setCategory(undefined);
+                      setShowCategoryFilter(false);
+                    }}
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    Tous les documents
+                  </button>
+                </div>
+                <CategoryTree
+                  selectedId={category}
+                  onSelect={(id) => {
+                    setCategory(id);
                     setShowCategoryFilter(false);
                   }}
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Tous les documents
-                </button>
+                />
               </div>
-              <CategoryTree
-                selectedId={category}
-                onSelect={(id) => {
-                  setCategory(id);
-                  setShowCategoryFilter(false);
-                }}
-              />
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </motion.div>
 
         {/* Zone d'upload (collapsible) */}
         {showUploader && canManage && tenantId && (
-          <div className="bg-card border border-border rounded-2xl p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="bg-card border border-border rounded-xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-foreground">Ajouter un document</h2>
               <button
@@ -393,19 +403,24 @@ export default function DocumentsPage() {
               )}
             </div>
             
-            <DocumentUploader
-              tenant_id={tenantId}
-              categoryId={category}
-              onUploadSuccess={async (uploadedDocument) => {
-                await loadDocs();
-                setShowUploader(false);
-              }}
-            />
-          </div>
+              <DocumentUploader
+                tenant_id={tenantId}
+                categoryId={category}
+                onUploadSuccess={async (uploadedDocument) => {
+                  await loadDocs();
+                  setShowUploader(false);
+                }}
+              />
+            </div>
+          </motion.div>
         )}
 
         {/* Grid documents */}
-        <div className="space-y-6">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           {loading ? (
             <DocumentGridSkeleton />
           ) : docs.length > 0 ? (
@@ -450,9 +465,10 @@ export default function DocumentsPage() {
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
 
+      {/* Modals */}
       {preview && (
         <DocumentPreviewModal {...preview} onClose={() => setPreview(null)} />
       )}
@@ -467,8 +483,6 @@ export default function DocumentsPage() {
           isSaving={isSavingTags}
         />
       )}
-
-      {/* --- NOTRE NOUVELLE MODALE DE CONFIRMATION --- */}
       <ConfirmModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
@@ -479,6 +493,6 @@ export default function DocumentsPage() {
         <span className="font-bold">{docToDelete?.name}</span>" ? Cette action
         est irréversible.
       </ConfirmModal>
-    </motion.div>
+    </div>
   );
 }

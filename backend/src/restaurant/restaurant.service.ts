@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
-import { Restaurant } from './entites/restaurant.entity';
+import { Restaurant } from './entities/restaurant.entity';
 
 @Injectable()
 export class RestaurantsService {
@@ -22,17 +22,25 @@ export class RestaurantsService {
     return this.repo.save(restaurant);
   }
 
-  // Renvoie les restaurants pour le tenant du manager connecté
+  // Renvoie les restaurants pour le tenant de l'utilisateur connecté
   findAllForTenant(user: JwtUser): Promise<Restaurant[]> {
-    // ----- CORRECTION APPLIQUÉE ICI -----
-    // On vérifie que l'utilisateur est bien un manager ET qu'il a un tenant_id valide (non null).
-    if (user.role !== 'manager' || user.tenant_id === null) {
-      // Si ce n'est pas le cas, on renvoie une liste vide en toute sécurité.
+    // Vérifier que l'utilisateur a un tenant_id valide (non null)
+    if (user.tenant_id === null) {
       return Promise.resolve([]);
     }
 
-    // À ce stade, TypeScript est certain que user.tenant_id est un nombre.
-    // La requête est donc valide et sécurisée.
+    // Les admins et managers peuvent voir tous les restaurants de leur tenant
+    // Les viewers voient seulement leur restaurant s'ils en ont un assigné
+    if (user.role === 'viewer' && user.restaurant_id) {
+      return this.repo.find({ 
+        where: { 
+          id: user.restaurant_id,
+          tenant_id: user.tenant_id 
+        } 
+      });
+    }
+
+    // Admins et managers voient tous les restaurants du tenant
     return this.repo.find({ where: { tenant_id: user.tenant_id } });
   }
 

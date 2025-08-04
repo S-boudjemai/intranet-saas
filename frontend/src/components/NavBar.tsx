@@ -12,7 +12,6 @@ import GlobalSearch from "./GlobalSearch";
 import { 
   ChevronDownIcon, 
   CogIcon, 
-  ArchiveIcon, 
   SunIcon, 
   MoonIcon, 
   SystemIcon, 
@@ -181,11 +180,22 @@ export default function NavBar() {
                   />
                 </NavLink>
 
+                <NavLink 
+                  to="/audits" 
+                  className={navLinkClass}
+                >
+                  Audits
+                </NavLink>
+
+                <NavLink 
+                  to="/planning" 
+                  className={navLinkClass}
+                >
+                  Planning
+                </NavLink>
+
                 {canManage && (
                   <>
-                    <NavLink to="/audits" className={navLinkClass}>
-                      Audits
-                    </NavLink>
                     <NavLink to="/users" className={navLinkClass}>
                       Utilisateurs
                     </NavLink>
@@ -262,15 +272,15 @@ export default function NavBar() {
                           >
                             Annonces
                           </Link>
+                          <Link
+                            to="/audits"
+                            className="block px-3 py-2 text-sm rounded-lg hover:bg-muted"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Audits
+                          </Link>
                           {canManage && (
                             <>
-                              <Link
-                                to="/audits"
-                                className="block px-3 py-2 text-sm rounded-lg hover:bg-muted"
-                                onClick={() => setIsMenuOpen(false)}
-                              >
-                                Audits
-                              </Link>
                               <Link
                                 to="/users"
                                 className="block px-3 py-2 text-sm rounded-lg hover:bg-muted"
@@ -310,16 +320,6 @@ export default function NavBar() {
 
                       {/* Actions */}
                       <div className="p-2 space-y-1">
-                        {canManage && (
-                          <Link
-                            to="/archives"
-                            onClick={() => setIsMenuOpen(false)}
-                            className="flex items-center space-x-3 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors"
-                          >
-                            <ArchiveIcon className="w-4 h-4" />
-                            <span>Archives</span>
-                          </Link>
-                        )}
                         
                         <button
                           disabled

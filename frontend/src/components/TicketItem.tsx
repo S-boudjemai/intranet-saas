@@ -67,7 +67,16 @@ export default function TicketItem({
     "bg-input border border-border rounded-md w-full p-2 text-foreground focus:border-primary focus:ring-primary/30 focus:outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary/20";
 
   return (
-    <article className="ticket-item bg-card border border-border rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200"
+    <motion.article 
+      whileHover={{ 
+        y: -4,
+        transition: { type: "spring", stiffness: 300, damping: 20 }
+      }}
+      whileTap={{ scale: 0.98 }}
+      className="ticket-item bg-card border border-border rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
+      style={{
+        boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
+      }}
     >
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -277,6 +286,6 @@ export default function TicketItem({
             </div>
         </div>
       )}
-    </article>
+    </motion.article>
   );
 }

@@ -97,11 +97,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
       },
     };
 
-    // Log des erreurs HTTP 5xx
-    if (status >= 500) {
+    // Log des erreurs HTTP 4xx et 5xx pour debug
+    if (status >= 400) {
       this.logger.error(
-        `HTTP ${status} Error: ${message}`,
-        JSON.stringify(errorResponse),
+        `🚨 HTTP ${status} Error: ${message}`,
+        `📍 Path: ${request.url}`,
+        `📝 Details: ${JSON.stringify(details, null, 2)}`,
+        `🔍 Exception: ${JSON.stringify(exception, null, 2)}`,
         'HttpExceptionFilter',
       );
     }

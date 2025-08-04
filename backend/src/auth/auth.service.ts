@@ -13,7 +13,7 @@ import { User } from 'src/users/entities/user.entity';
 import { InvitesService } from '../invites/invites.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
-import { Restaurant } from '../restaurant/entites/restaurant.entity';
+import { Restaurant } from '../restaurant/entities/restaurant.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { NotificationType } from '../notifications/entities/notification.entity';

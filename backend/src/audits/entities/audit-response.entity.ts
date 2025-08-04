@@ -1,3 +1,4 @@
+// src/audits/entities/audit-response.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -6,43 +7,40 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { AuditTemplateItem } from './audit-template-item.entity';
 import { AuditExecution } from './audit-execution.entity';
-import { AuditItem } from './audit-item.entity';
 
 @Entity('audit_responses')
 export class AuditResponse {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column()
-  execution_id: number;
+  @Column({ type: 'text', nullable: true })
+  value?: string; // Réponse textuelle, score, ou chemin photo
 
-  @Column()
-  item_id: number;
+  @Column({ type: 'int', nullable: true })
+  numeric_value?: number; // Pour scores, températures
 
-  @Column('text', { nullable: true })
-  value: string; // Stockage flexible : 'true', '15', 'Bon état', etc.
+  @Column({ type: 'json', nullable: true })
+  metadata?: any; // Photos, coordonnées GPS, timestamp, etc.
 
-  @Column({ nullable: true })
-  score: number; // Score numérique pour type 'score'
+  @Column({ type: 'text', nullable: true }) 
+  comment?: string; // Commentaire additionnel
 
-  @Column({ nullable: true })
-  photo_url: string; // URL de la photo S3
+  @Column('uuid')
+  template_item_id: string;
 
-  @Column('text', { nullable: true })
-  notes: string; // Notes spécifiques à cette réponse
+  @Column('uuid')
+  execution_id: string;
 
-  @CreateDateColumn()
-  created_at: Date;
+  @ManyToOne(() => AuditTemplateItem, item => item.responses)
+  @JoinColumn({ name: 'template_item_id' })
+  template_item: AuditTemplateItem;
 
-  // Relations
-  @ManyToOne(() => AuditExecution, (execution) => execution.responses, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => AuditExecution, execution => execution.responses, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'execution_id' })
   execution: AuditExecution;
 
-  @ManyToOne(() => AuditItem, (item) => item.responses)
-  @JoinColumn({ name: 'item_id' })
-  item: AuditItem;
+  @CreateDateColumn()
+  created_at: Date;
 }

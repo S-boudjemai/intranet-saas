@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode, useCallback, useRef, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
-// Utilise OneSignal pour les notifications push
+import { oneSignalService } from '../services/oneSignalService';
 
 interface NotificationCounts {
   documents: number;
@@ -15,6 +15,10 @@ interface NotificationContextType {
   refreshCounts: () => Promise<void>;
   markAllAsRead: (notificationType: 'document_uploaded' | 'announcement_posted' | 'ticket_created' | 'ticket_commented' | 'ticket_status_updated') => Promise<void>;
   isProcessing: boolean;
+  // OneSignal methods
+  pushNotificationStatus: 'granted' | 'denied' | 'default' | 'unsupported';
+  requestPushPermission: () => Promise<boolean>;
+  testPushNotification: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -39,10 +43,31 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     announcements: 0,
     tickets: 0,
   });
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [pushNotificationStatus, setPushNotificationStatus] = useState<'granted' | 'denied' | 'default' | 'unsupported'>('default');
+  
+  // Refs pour éviter les re-renders et debouncing
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastRefreshRef = useRef<number>(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Récupérer les compteurs de notifications
+  // Cache des counts pour éviter les re-renders inutiles
+  const countsRef = useRef<NotificationCounts>(notificationCounts);
+
+  // Optimisation : Debounced refresh avec cache
   const refreshCounts = useCallback(async () => {
     if (!token) return;
+
+    // Debounce : éviter les appels trop fréquents
+    const now = Date.now();
+    if (now - lastRefreshRef.current < 1000) return; // Max 1 call par seconde
+    lastRefreshRef.current = now;
+
+    // Annuler la requête précédente si en cours
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications/unread-counts`, {
@@ -50,6 +75,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        signal: abortControllerRef.current.signal
       });
 
       if (response.ok) {
@@ -60,106 +86,121 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           announcements: counts.announcements || 0,
           tickets: counts.tickets || 0,
         };
-        setNotificationCounts(newCounts);
-        
-        // ✅ Badge PWA natif (plus besoin de Firebase)
-        const totalCount = newCounts.documents + newCounts.announcements + newCounts.tickets;
-        if ('setAppBadge' in navigator) {
-          try {
-            if (totalCount > 0) {
-              await (navigator as any).setAppBadge(totalCount);
-            } else {
-              await (navigator as any).clearAppBadge();
+
+        // Optimisation : ne mettre à jour que si les valeurs ont changé
+        if (JSON.stringify(newCounts) !== JSON.stringify(countsRef.current)) {
+          setNotificationCounts(newCounts);
+          countsRef.current = newCounts;
+
+          // Badge PWA avec optimisation
+          const totalCount = newCounts.documents + newCounts.announcements + newCounts.tickets;
+          if ('setAppBadge' in navigator) {
+            try {
+              if (totalCount > 0) {
+                await (navigator as any).setAppBadge(totalCount);
+              } else {
+                await (navigator as any).clearAppBadge();
+              }
+            } catch (err) {
+              // Badge PWA non supporté - ignorer silencieusement
             }
-          } catch (err) {
-            console.warn('Badge PWA non supporté:', err);
           }
         }
       }
     } catch (error) {
-      // Error fetching notification counts
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Requête annulée - normal
+        return;
+      }
+      // Autres erreurs - ne pas afficher à l'utilisateur pour éviter le spam
     }
   }, [token]);
 
-  // Établir la connexion WebSocket
+  // Optimisation WebSocket : Connection stable avec retry intelligent
   useEffect(() => {
-    if (token && user) {
-      const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      
+    if (!token || !user) {
+      if (socket) {
+        socket.close();
+        setSocket(null);
+      }
+      return;
+    }
+
+    const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
+    
+    const createSocket = () => {
       const newSocket = io(socketUrl, {
-        auth: {
-          token: token
-        },
+        auth: { token },
         autoConnect: true,
         transports: ['websocket', 'polling'],
-        reconnection: true,        // ✅ Réactiver reconnexion automatique
-        reconnectionAttempts: 5,   // ✅ Limite de tentatives
-        reconnectionDelay: 1000,   // ✅ Délai entre tentatives
+        reconnection: true,
+        reconnectionAttempts: maxReconnectAttempts,
+        reconnectionDelay: Math.min(1000 * Math.pow(2, reconnectAttempts), 5000), // Backoff exponentiel
         timeout: 20000,
         forceNew: true,
         upgrade: true
       });
 
+      // Handlers optimisés sans console.log
       newSocket.on('connect', () => {
+        reconnectAttempts = 0;
       });
 
       newSocket.on('disconnect', (reason) => {
-        if (reason === 'io server disconnect') {
-          // Server disconnected, attempt to reconnect
-          newSocket.connect();
+        if (reason === 'io server disconnect' && reconnectAttempts < maxReconnectAttempts) {
+          reconnectAttempts++;
+          setTimeout(() => newSocket.connect(), 1000 * reconnectAttempts);
         }
       });
 
-      newSocket.on('connect_error', (error) => {
-        console.error('WebSocket connection error:', error);
-      });
-
-      // Écouter les notifications en temps réel avec délai
-      newSocket.on('document_uploaded', (data) => {
-        setTimeout(refreshCounts, 500); // 0.5 seconde de délai
-      });
-
-      newSocket.on('announcement_posted', (data) => {
-        setTimeout(refreshCounts, 500);
-      });
-
-      newSocket.on('ticket_created', (data) => {
-        setTimeout(refreshCounts, 500);
-      });
-
-      newSocket.on('ticket_updated', (data) => {
-        setTimeout(refreshCounts, 500);
-      });
-
-      newSocket.on('restaurant_joined', (data) => {
-        setTimeout(refreshCounts, 500);
-      });
-
-      setSocket(newSocket);
-
-      return () => {
-        newSocket.close();
+      // Optimisation : Debounced refresh pour tous les événements
+      const debouncedRefresh = () => {
+        if (refreshTimeoutRef.current) {
+          clearTimeout(refreshTimeoutRef.current);
+        }
+        refreshTimeoutRef.current = setTimeout(refreshCounts, 300); // Réduit de 500ms à 300ms
       };
-    } else {
-      // ✅ Si pas de token/user, fermer WebSocket existant
-      if (socket) {
-        socket.close();
-        setSocket(null);
-      }
-    }
-  }, [token, user]); // ✅ RETIRER refreshCounts des dépendances
 
-  // Charger les compteurs au montage
+      // Écouteurs d'événements optimisés
+      const eventTypes = [
+        'document_uploaded',
+        'announcement_posted', 
+        'ticket_created',
+        'ticket_updated',
+        'restaurant_joined'
+      ];
+
+      eventTypes.forEach(eventType => {
+        newSocket.on(eventType, debouncedRefresh);
+      });
+
+      return newSocket;
+    };
+
+    const newSocket = createSocket();
+    setSocket(newSocket);
+
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      newSocket.close();
+    };
+  }, [token, user?.userId]); // Optimisation : dépendance sur userId uniquement
+
+  // Charger les compteurs initial avec cache
   useEffect(() => {
     if (token && user) {
       refreshCounts();
     }
-  }, [token, user, refreshCounts]);
+  }, [token, user?.userId, refreshCounts]); // Optimisation : userId au lieu de user complet
 
-
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  // Marquer toutes les notifications d'un type comme lues
+  // Optimisation : Mark as read avec cache invalidation
   const markAllAsRead = useCallback(async (notificationType: 'document_uploaded' | 'announcement_posted' | 'ticket_created' | 'ticket_commented' | 'ticket_status_updated') => {
     if (!token || isProcessing) return;
 
@@ -174,10 +215,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       };
 
       const category = categoryMapping[notificationType];
-      if (!category) {
-        // Unknown notification type
-        return;
-      }
+      if (!category) return;
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications/mark-category-read`, {
         method: 'POST',
@@ -188,30 +226,78 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         body: JSON.stringify({ category }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+      if (response.ok) {
+        // Optimisation : mise à jour optimiste du cache
+        const newCounts = { ...countsRef.current };
+        newCounts[category as keyof NotificationCounts] = 0;
+        setNotificationCounts(newCounts);
+        countsRef.current = newCounts;
+        
+        // Refresh complet en arrière-plan pour garantir la cohérence
+        setTimeout(refreshCounts, 100);
       }
-
-      // ✅ Rafraîchir les compteurs après avoir marqué comme lu
-      await refreshCounts();
     } catch (error) {
-      // Error marking notifications as read
-      // TODO: Afficher une notification d'erreur à l'utilisateur
+      // Erreur silencieuse - pas d'alerte utilisateur
     } finally {
       setIsProcessing(false);
     }
   }, [token, isProcessing, refreshCounts]);
 
-  const value = {
+  // OneSignal methods
+  const requestPushPermission = useCallback(async (): Promise<boolean> => {
+    try {
+      const granted = await oneSignalService.requestPermission();
+      setPushNotificationStatus(granted ? 'granted' : 'denied');
+      if (granted) {
+        await oneSignalService.subscribeUser();
+      }
+      return granted;
+    } catch (error) {
+      console.error('Push permission error:', error);
+      setPushNotificationStatus('denied');
+      return false;
+    }
+  }, []);
+
+  const testPushNotification = useCallback(async (): Promise<void> => {
+    try {
+      await oneSignalService.testLocalNotification();
+    } catch (error) {
+      console.error('Test notification error:', error);
+    }
+  }, []);
+
+  // Vérifier le statut des notifications push au démarrage
+  useEffect(() => {
+    const checkPushStatus = () => {
+      if (!oneSignalService.isBrowserSupported()) {
+        setPushNotificationStatus('unsupported');
+        return;
+      }
+      
+      if ('Notification' in window) {
+        setPushNotificationStatus(Notification.permission as any);
+      }
+    };
+
+    checkPushStatus();
+  }, []);
+
+  // Mémorisation de la valeur du contexte
+  const contextValue = useMemo(() => ({
     socket,
     notificationCounts,
     refreshCounts,
     markAllAsRead,
     isProcessing,
-  };
+    // OneSignal
+    pushNotificationStatus,
+    requestPushPermission,
+    testPushNotification,
+  }), [socket, notificationCounts, refreshCounts, markAllAsRead, isProcessing, pushNotificationStatus, requestPushPermission, testPushNotification]);
 
   return (
-    <NotificationContext.Provider value={value}>
+    <NotificationContext.Provider value={contextValue}>
       {children}
     </NotificationContext.Provider>
   );

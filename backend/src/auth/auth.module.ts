@@ -10,7 +10,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
 import { InvitesModule } from 'src/invites/invites.module'; // <-- IMPORT IMPORTANT
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Restaurant } from 'src/restaurant/entites/restaurant.entity';
+import { Restaurant } from 'src/restaurant/entities/restaurant.entity';
 import { Announcement } from '../announcements/entities/announcement.entity';
 import { User } from '../users/entities/user.entity';
 import { NotificationsModule } from '../notifications/notifications.module';

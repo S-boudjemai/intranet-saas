@@ -180,7 +180,7 @@ export class NotificationsController {
     const tokens = await this.notificationsService['pushSubscriptionRepository'].find({
       where: { userId: req.user.userId }
     });
-    
+
     return {
       userId: req.user.userId,
       tokensCount: tokens.length,
@@ -197,7 +197,7 @@ export class NotificationsController {
   @Post('test-push')
   async testPushNotification(@Req() req, @Body() body: any) {
     const userId = req.user.userId.toString();
-    
+
     // Si aucun data fourni, envoyer notification de test simple
     if (!body || !body.title) {
       await this.notificationsService.sendPushToUser(userId, {
@@ -215,7 +215,7 @@ export class NotificationsController {
       data: body.data || {},
       tag: body.tag,
     });
-    
+
     return { success: true, message: `Notification "${body.title}" envoyée` };
   }
 

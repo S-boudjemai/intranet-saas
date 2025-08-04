@@ -71,7 +71,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Identifiants invalides' })
   async login(@Request() req, @Res({ passthrough: true }) res: Response) {
     const user = req.user;
-    
+
     const tokens = this.tokensService.generateTokenPair({
       userId: user.id, // CORRECTION: utiliser user.id au lieu de user.userId
       email: user.email,

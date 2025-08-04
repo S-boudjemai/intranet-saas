@@ -16,7 +16,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { User } from '../users/entities/user.entity';
-import { Restaurant } from '../restaurant/entites/restaurant.entity';
+import { Restaurant } from '../restaurant/entities/restaurant.entity';
 import { UploadAttachmentDto } from './dto/upload-attachment.dto';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
 import {
@@ -213,10 +213,9 @@ export class TicketsService {
       title: savedTicket.title,
       message,
     });
-    console.log('✅ Événement WebSocket ticket_created émis');
 
     // ✅ Envoyer notifications push aux managers
-    console.log('📱 Envoi push notifications aux managers:', managerIds);
+
     for (const managerId of managerIds) {
       try {
         await this.notificationsService.sendPushToUser(managerId, {
@@ -337,7 +336,7 @@ export class TicketsService {
 
     // Compter le total
     const total = await qb.getCount();
-    
+
     // Récupérer les données avec pagination
     const tickets = await qb.skip(offset).take(limit).getMany();
 
@@ -585,7 +584,6 @@ export class TicketsService {
     ticket.status = TicketStatus.Archived;
     const archivedTicket = await this.ticketsRepo.save(ticket);
 
-    console.log(`📁 Ticket ${id} archivé par ${user.userId}`);
     return archivedTicket;
   }
 
@@ -607,7 +605,6 @@ export class TicketsService {
     ticket.status = TicketStatus.Traitee;
     const restoredTicket = await this.ticketsRepo.save(ticket);
 
-    console.log(`📤 Ticket ${id} restauré par ${user.userId}`);
     return restoredTicket;
   }
 
@@ -789,7 +786,7 @@ export class TicketsService {
             try {
               const urlParts = attachment.url.split('/');
               const key = urlParts.slice(-3).join('/');
-              
+
               await this.s3.send(new DeleteObjectCommand({
                 Bucket: process.env.AWS_S3_BUCKET,
                 Key: key,
@@ -804,7 +801,7 @@ export class TicketsService {
 
     // Supprimer tous les tickets (cascade supprimera les comments et attachments)
     await this.ticketsRepo.remove(tickets);
-    
+
     return tickets.length;
   }
 
@@ -818,7 +815,7 @@ export class TicketsService {
       tenantId,
       tenantIdType: typeof tenantId 
     });
-    
+
     // Vérifier que l'utilisateur est admin
     if (user.role !== Role.Admin) {
       console.error('Non-admin user attempted to delete all tickets:', user);
@@ -828,24 +825,22 @@ export class TicketsService {
     try {
       // Construire les conditions de recherche
       const whereConditions: any = {};
-      
+
       // Gérer le tenantId correctement selon son type
       if (tenantId) {
         // tenant_id dans ticket.entity est de type string
         whereConditions.tenant_id = tenantId.toString();
         console.log(`Filtering tickets for tenant: ${tenantId} (as string: ${tenantId.toString()})`);
       } else {
-        console.log('Fetching ALL tickets across all tenants...');
+
       }
 
       // Récupérer les tickets avec leurs relations
-      console.log('Finding tickets with conditions:', whereConditions);
+
       const tickets = await this.ticketsRepo.find({
         where: whereConditions,
         relations: ['comments', 'comments.attachments', 'attachments'],
       });
-
-      console.log(`Found ${tickets.length} tickets to delete`);
 
       if (tickets.length === 0) {
         return 0;
@@ -853,7 +848,7 @@ export class TicketsService {
 
       // Collecter tous les fichiers S3 à supprimer
       const s3FilesToDelete: string[] = [];
-      
+
       for (const ticket of tickets) {
         // Attachments directs du ticket
         if (ticket.attachments && ticket.attachments.length > 0) {
@@ -863,7 +858,7 @@ export class TicketsService {
             }
           }
         }
-        
+
         // Attachments des commentaires
         if (ticket.comments && ticket.comments.length > 0) {
           for (const comment of ticket.comments) {
@@ -878,21 +873,18 @@ export class TicketsService {
         }
       }
 
-      console.log(`Collected ${s3FilesToDelete.length} S3 files to delete`);
-
       // Supprimer les tickets - PostgreSQL gérera automatiquement les cascades grâce à onDelete: 'CASCADE'
       console.log('Deleting tickets from database (with CASCADE)...');
       await this.ticketsRepo.remove(tickets);
-      
+
       // Supprimer les fichiers S3 de manière asynchrone sans bloquer
       if (s3FilesToDelete.length > 0) {
-        console.log('Scheduling S3 cleanup in background...');
+
         this.cleanupS3Files(s3FilesToDelete).catch(error => {
           console.error('Error during S3 cleanup (non-blocking):', error);
         });
       }
-      
-      console.log(`Successfully deleted ${tickets.length} tickets`);
+
       return tickets.length;
     } catch (error) {
       console.error('Error in deleteAllGlobal:', {
@@ -902,12 +894,12 @@ export class TicketsService {
         tenantId,
         userId: user.userId
       });
-      
+
       // Lancer une erreur plus descriptive
       if (error.code === '23503') {
         throw new BadRequestException('Impossible de supprimer les tickets : contraintes de clés étrangères');
       }
-      
+
       throw new InternalServerErrorException(`Erreur lors de la suppression des tickets: ${error.message}`);
     }
   }
@@ -917,7 +909,7 @@ export class TicketsService {
       try {
         await this.deleteFileFromS3(url);
       } catch (error) {
-        console.warn(`Failed to delete S3 file ${url}:`, error.message);
+
       }
     }
   }
@@ -926,7 +918,7 @@ export class TicketsService {
     try {
       const urlParts = url.split('/');
       const key = urlParts.slice(-3).join('/');
-      
+
       await this.s3.send(new DeleteObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET,
         Key: key,
@@ -939,7 +931,7 @@ export class TicketsService {
 
   private async generatePresignedUrlsForTickets(tickets: Ticket[]): Promise<void> {
     const attachmentPromises: Promise<void>[] = [];
-    
+
     for (const ticket of tickets) {
       // Attachments du ticket
       ticket.attachments?.forEach(attachment => {
@@ -948,7 +940,7 @@ export class TicketsService {
             .then(url => { attachment.url = url; })
         );
       });
-      
+
       // Attachments des commentaires
       ticket.comments?.forEach(comment => {
         comment.attachments?.forEach(attachment => {
@@ -959,7 +951,7 @@ export class TicketsService {
         });
       });
     }
-    
+
     await Promise.all(attachmentPromises);
   }
 }

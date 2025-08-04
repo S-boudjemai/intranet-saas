@@ -320,7 +320,6 @@ export class NotificationsService {
 
   // === PUSH NOTIFICATIONS ===
 
-
   // Enregistrer une subscription push
   async subscribeToPush(
     userId: number,
@@ -376,7 +375,7 @@ export class NotificationsService {
     this.logger.log(`📱 OneSignal - Would send push notification to user ${userId}: ${notification.title}`);
     this.logger.log(`📱 OneSignal - Message: ${notification.body}`);
     this.logger.log(`📱 OneSignal - Data:`, JSON.stringify(notification.data, null, 2));
-    
+
     // TODO: Implémenter l'envoi via OneSignal API
     // Les subscriptions sont conservées pour futur usage avec OneSignal
   }

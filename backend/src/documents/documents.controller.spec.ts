@@ -1,46 +1,39 @@
-// src/documents/entities/document.entity.ts
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
-import { Category } from 'src/categories/entities/category.entity';
+import { Test, TestingModule } from '@nestjs/testing';
+import { DocumentsController } from './documents.controller';
+import { DocumentsService } from './documents.service';
 
-@Entity('document')
-export class Document {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+describe('DocumentsController', () => {
+  let controller: DocumentsController;
+  let service: DocumentsService;
 
-  @Column()
-  name: string;
+  const mockDocumentsService = {
+    findAll: jest.fn(),
+    create: jest.fn(),
+    findOne: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+  };
 
-  @Column()
-  url: string;
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [DocumentsController],
+      providers: [
+        {
+          provide: DocumentsService,
+          useValue: mockDocumentsService,
+        },
+      ],
+    }).compile();
 
-  @Column()
-  tenant_id: string;
+    controller = module.get<DocumentsController>(DocumentsController);
+    service = module.get<DocumentsService>(DocumentsService);
+  });
 
-  @CreateDateColumn({ type: 'timestamp' })
-  created_at: Date;
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
 
-  @UpdateDateColumn({ type: 'timestamp' })
-  updated_at: Date;
-
-  @Column({ default: false })
-  is_deleted: boolean;
-
-  // --- Nouvelle relation vers Category ---
-  @Column({ type: 'uuid', nullable: true })
-  categoryId: string | null;
-
-  @ManyToOne(() => Category, (cat) => cat.children, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({ name: 'categoryId' })
-  category?: Category;
-}
+  it('should have DocumentsService injected', () => {
+    expect(service).toBeDefined();
+  });
+});

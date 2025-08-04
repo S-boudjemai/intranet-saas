@@ -146,7 +146,7 @@ export class DocumentsService {
     try {
       // Upload vers S3 depuis le backend
       const uploadedUrl = await this.uploadFileToS3(file);
-      
+
       // Créer le document en base avec l'URL S3
       const documentData = {
         name: name.trim(),
@@ -168,7 +168,7 @@ export class DocumentsService {
   private async uploadFileToS3(file: Express.Multer.File): Promise<string> {
     const filename = `${Date.now()}-${file.originalname}`;
     const safeName = encodeURIComponent(filename);
-    
+
     try {
       const cmd = new PutObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET as string,

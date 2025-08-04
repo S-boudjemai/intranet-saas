@@ -1,5 +1,5 @@
 // src/announcements/entities/announcement.entity.ts
-import { Restaurant } from 'src/restaurant/entites/restaurant.entity';
+import { Restaurant } from 'src/restaurant/entities/restaurant.entity';
 import { Document } from 'src/documents/entities/document.entity';
 import {
   Column,

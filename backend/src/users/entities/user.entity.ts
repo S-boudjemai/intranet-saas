@@ -20,6 +20,9 @@ export class User {
 
   @Column() password_hash: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  name: string | null;
+
   @Column({ default: 'manager' })
   role: 'admin' | 'manager' | 'viewer';
 

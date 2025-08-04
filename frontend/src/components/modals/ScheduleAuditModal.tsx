@@ -1,651 +1,331 @@
-import { useState, useEffect, useRef } from 'react';
-import { FiX, FiCalendar, FiUser, FiFileText, FiClock, FiAlertTriangle } from 'react-icons/fi';
-
-interface Template {
-  id: number;
-  name: string;
-  category: string;
-  estimated_duration: number;
-  question_count: number;
-  last_used?: string;
-}
-
-interface Restaurant {
-  id: number;
-  name: string;
-  city: string;
-  last_audit?: string;
-  audit_score?: number;
-}
-
-interface Inspector {
-  id: number;
-  name: string;
-  role: string;
-  email: string;
-  available: boolean;
-}
+// src/components/modals/ScheduleAuditModal.tsx
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Calendar, MapPin, User, Clock, FileText } from 'lucide-react';
+import { CreateAuditExecutionDto } from '../../services/auditExecutionsService';
+import { AuditTemplate } from '../../types';
+import { useScheduleAuditData } from '../../hooks/useScheduleAuditData';
 
 interface ScheduleAuditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (audit: any) => void;
-  templates: Template[];
-  restaurants: Restaurant[];
-  inspectors: Inspector[];
+  onSubmit: (data: CreateAuditExecutionDto) => Promise<boolean>;
+  selectedTemplate?: AuditTemplate;
 }
 
-const PRIORITIES = [
-  { value: 'urgent', label: '🔴 Urgente', color: 'text-red-600', description: 'Suite à incident' },
-  { value: 'normal', label: '🟡 Normale', color: 'text-yellow-600', description: 'Planification standard' },
-  { value: 'scheduled', label: '🟢 Programmée', color: 'text-green-600', description: 'Audit de routine' }
-];
-
-const RECURRENCE_OPTIONS = [
-  { value: 'none', label: 'Unique' },
-  { value: 'weekly', label: 'Chaque semaine' },
-  { value: 'biweekly', label: 'Toutes les 2 semaines' },
-  { value: 'monthly', label: 'Chaque mois' },
-  { value: 'quarterly', label: 'Chaque trimestre' }
-];
-
-export default function ScheduleAuditModal({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  templates, 
-  restaurants, 
-  inspectors 
-}: ScheduleAuditModalProps) {
-  const [step, setStep] = useState(1);
-  const [audit, setAudit] = useState({
-    template_id: '',
-    restaurant_id: '',
-    inspector_id: '',
+const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  selectedTemplate,
+}) => {
+  const { templates, restaurants, managers, loading: dataLoading } = useScheduleAuditData();
+  
+  const [formData, setFormData] = useState<CreateAuditExecutionDto>({
+    title: '',
+    description: '',
     scheduled_date: '',
-    scheduled_time: '',
-    priority: 'normal',
-    notes: '',
-    recurrence: 'none',
-    notification_settings: {
-      notify_7_days: true,
-      notify_24_hours: true,
-      notify_1_hour: false,
-      notify_manager: true,
-      notify_team: true,
-      notify_regional: false
-    }
+    template_id: selectedTemplate?.id || '',
+    restaurant_id: 0,
+    auditor_id: undefined,
   });
 
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
-  const [selectedInspector, setSelectedInspector] = useState<Inspector | null>(null);
-  const [conflicts, setConflicts] = useState<string[]>([]);
-  
-  const dateInputRef = useRef<HTMLInputElement>(null);
-  const timeInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedTemplateData, setSelectedTemplateData] = useState<AuditTemplate | undefined>(selectedTemplate);
 
+  // Réinitialiser le formulaire quand le template sélectionné change
   useEffect(() => {
-    if (audit.template_id) {
-      const template = templates.find(t => t.id === parseInt(audit.template_id));
-      setSelectedTemplate(template || null);
+    if (selectedTemplate) {
+      setSelectedTemplateData(selectedTemplate);
+      setFormData(prev => ({
+        ...prev,
+        title: `Audit ${selectedTemplate.name}`,
+        template_id: selectedTemplate.id,
+      }));
     }
-  }, [audit.template_id, templates]);
+  }, [selectedTemplate]);
 
+  // Gérer le changement de template dans le select
+  const handleTemplateChange = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    setSelectedTemplateData(template);
+    setFormData(prev => ({
+      ...prev,
+      template_id: templateId,
+      title: template ? `Audit ${template.name}` : '',
+    }));
+  };
+
+  // Réinitialiser quand on ferme
   useEffect(() => {
-    if (audit.restaurant_id) {
-      const restaurant = restaurants.find(r => r.id === parseInt(audit.restaurant_id));
-      setSelectedRestaurant(restaurant || null);
+    if (!isOpen) {
+      setFormData({
+        title: '',
+        description: '',
+        scheduled_date: '',
+        template_id: selectedTemplate?.id || '',
+        restaurant_id: 0,
+        auditor_id: undefined,
+      });
+      setSelectedTemplateData(selectedTemplate);
     }
-  }, [audit.restaurant_id, restaurants]);
+  }, [isOpen, selectedTemplate]);
 
-  useEffect(() => {
-    if (audit.inspector_id) {
-      const inspector = inspectors.find(i => i.id === parseInt(audit.inspector_id));
-      setSelectedInspector(inspector || null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.template_id || !formData.restaurant_id || !formData.scheduled_date) {
+      return;
     }
-  }, [audit.inspector_id, inspectors]);
 
-  // Simulation de vérification des conflits
-  useEffect(() => {
-    if (audit.scheduled_date && audit.inspector_id) {
-      // Simuler des conflits d'agenda
-      const newConflicts = [];
-      if (audit.scheduled_date === new Date().toISOString().split('T')[0]) {
-        newConflicts.push("L'inspecteur a déjà 2 audits prévus ce jour");
-      }
-      setConflicts(newConflicts);
+    setLoading(true);
+    
+    const success = await onSubmit({
+      ...formData,
+      auditor_id: formData.auditor_id === 0 ? undefined : formData.auditor_id,
+    });
+    
+    if (success) {
+      onClose();
+    }
+    
+    setLoading(false);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    if (name === 'template_id') {
+      handleTemplateChange(value);
     } else {
-      setConflicts([]);
+      setFormData(prev => ({
+        ...prev,
+        [name]: name === 'restaurant_id' || name === 'auditor_id' ? Number(value) : value,
+      }));
     }
-  }, [audit.scheduled_date, audit.inspector_id]);
+  };
+
+  // Calculer la date minimale (aujourd'hui)
+  const today = new Date().toISOString().split('T')[0];
+
+  // Calculer la durée estimée en heures et minutes
+  const formatDuration = (minutes?: number) => {
+    if (!minutes) return 'Non spécifiée';
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return `${hours}h${mins > 0 ? ` ${mins}min` : ''}`;
+    }
+    return `${mins}min`;
+  };
 
   if (!isOpen) return null;
 
-  const resetForm = () => {
-    setStep(1);
-    setAudit({
-      template_id: '',
-      restaurant_id: '',
-      inspector_id: '',
-      scheduled_date: '',
-      scheduled_time: '',
-      priority: 'normal',
-      notes: '',
-      recurrence: 'none',
-      notification_settings: {
-        notify_7_days: true,
-        notify_24_hours: true,
-        notify_1_hour: false,
-        notify_manager: true,
-        notify_team: true,
-        notify_regional: false
-      }
-    });
-    setSelectedTemplate(null);
-    setSelectedRestaurant(null);
-    setSelectedInspector(null);
-    setConflicts([]);
-  };
-
-  const handleSubmit = () => {
-    const finalAudit = {
-      template_id: Number(audit.template_id),
-      restaurant_id: Number(audit.restaurant_id),
-      inspector_id: Number(audit.inspector_id),
-      scheduled_date: `${audit.scheduled_date}T${audit.scheduled_time}:00.000Z`,
-      notes: audit.notes
-    };
-    onSubmit(finalAudit);
-    resetForm();
-    onClose();
-  };
-
-  const handleClose = () => {
-    resetForm();
-    onClose();
-  };
-
-  const calculateEndTime = () => {
-    if (!audit.scheduled_date || !audit.scheduled_time || !selectedTemplate) return '';
-    
-    const startTime = new Date(`${audit.scheduled_date}T${audit.scheduled_time}`);
-    const endTime = new Date(startTime.getTime() + selectedTemplate.estimated_duration * 60000);
-    return endTime.toISOString();
-  };
-
-  const nextStep = () => setStep(step + 1);
-  const prevStep = () => setStep(step - 1);
-
-  const formatLastAudit = (dateString?: string) => {
-    if (!dateString) return 'Aucun audit';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Aujourd\'hui';
-    if (diffDays === 1) return 'Hier';
-    if (diffDays < 7) return `Il y a ${diffDays} jours`;
-    if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)} semaine(s)`;
-    return `Il y a ${Math.floor(diffDays / 30)} mois`;
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-background rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden border">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">
-              Planifier un Audit
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Étape {step} sur 4
-            </p>
-          </div>
-          <button
-            onClick={handleClose}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-          >
-            <FiX className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="px-6 py-4 border-b bg-muted">
-          <div className="flex items-center space-x-4">
-            {[1, 2, 3, 4].map((stepNumber) => (
-              <div key={stepNumber} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step >= stepNumber ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground'
-                }`}>
-                  {stepNumber}
-                </div>
-                {stepNumber < 4 && (
-                  <div className={`w-12 h-1 mx-2 ${
-                    step > stepNumber ? 'bg-blue-600' : 'bg-muted'
-                  }`} />
+    <AnimatePresence>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                  Planifier un Audit
+                </h2>
+                {selectedTemplateData && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Template: {selectedTemplateData.name}
+                  </p>
                 )}
               </div>
-            ))}
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <div className="flex items-center space-x-4 text-xs text-muted-foreground mt-2">
-            <span className="w-8 text-center">Template</span>
-            <span className="w-12"></span>
-            <span className="w-8 text-center">Restaurant</span>
-            <span className="w-12"></span>
-            <span className="w-8 text-center">Planning</span>
-            <span className="w-12"></span>
-            <span className="w-8 text-center">Notifications</span>
-          </div>
-        </div>
 
-        {/* Content */}
-        <div className="p-6 max-h-[60vh] overflow-y-auto">
-          {step === 1 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-foreground">Sélectionner un template d'audit</h3>
-              
-              <div className="grid gap-4">
-                {templates.map((template) => (
-                  <div
-                    key={template.id}
-                    onClick={() => setAudit({ ...audit, template_id: template.id.toString() })}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      audit.template_id === template.id.toString()
-                        ? 'border-primary bg-primary/10'
-                        : 'border hover:border-muted-foreground hover:bg-muted'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-foreground">{template.name}</h4>
-                        <div className="flex items-center space-x-4 mt-2 text-sm text-muted-foreground">
-                          <span className="flex items-center">
-                            <FiFileText className="w-4 h-4 mr-1" />
-                            {template.question_count} questions
-                          </span>
-                          <span className="flex items-center">
-                            <FiClock className="w-4 h-4 mr-1" />
-                            {template.estimated_duration} min
-                          </span>
-                          {template.last_used && (
-                            <span>Dernière utilisation: {formatLastAudit(template.last_used)}</span>
-                          )}
-                        </div>
-                      </div>
-                      {audit.template_id === template.id.toString() && (
-                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            {/* Chargement des données */}
+            {dataLoading && (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
+                <span className="text-gray-600 dark:text-gray-300">Chargement des données...</span>
               </div>
-
-              {selectedTemplate && (
-                <div className="mt-6 p-4 bg-primary/10 rounded-lg border">
-                  <h4 className="font-medium text-foreground mb-2">Aperçu du template sélectionné</h4>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p><strong>Nom:</strong> {selectedTemplate.name}</p>
-                    <p><strong>Catégorie:</strong> {selectedTemplate.category}</p>
-                    <p><strong>Durée estimée:</strong> {selectedTemplate.estimated_duration} minutes</p>
-                    <p><strong>Nombre de questions:</strong> {selectedTemplate.question_count}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-6">
-              {/* Sélection Restaurant */}
-              <div>
-                <h3 className="text-lg font-medium text-foreground mb-4">Restaurant à auditer</h3>
-                <div className="grid gap-3">
-                  {restaurants.map((restaurant) => (
-                    <div
-                      key={restaurant.id}
-                      onClick={() => setAudit({ ...audit, restaurant_id: restaurant.id.toString() })}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                        audit.restaurant_id === restaurant.id.toString()
-                          ? 'border-primary bg-primary/10'
-                          : 'border hover:border-muted-foreground'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium text-foreground">{restaurant.name}</h4>
-                          <p className="text-sm text-muted-foreground">{restaurant.city}</p>
-                          <div className="flex items-center space-x-4 mt-2 text-sm">
-                            <span>Dernier audit: {formatLastAudit(restaurant.last_audit)}</span>
-                            {restaurant.audit_score && (
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                restaurant.audit_score >= 80 ? 'bg-green-100 text-green-800' :
-                                restaurant.audit_score >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                Score: {restaurant.audit_score}%
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {audit.restaurant_id === restaurant.id.toString() && (
-                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Sélection Inspecteur */}
-              <div>
-                <h3 className="text-lg font-medium text-foreground mb-4">Inspecteur assigné</h3>
-                <div className="grid gap-3">
-                  {inspectors.map((inspector) => (
-                    <div
-                      key={inspector.id}
-                      onClick={() => inspector.available && setAudit({ ...audit, inspector_id: inspector.id.toString() })}
-                      className={`p-4 border-2 rounded-lg transition-all ${
-                        !inspector.available ? 'opacity-50 cursor-not-allowed border' :
-                        audit.inspector_id === inspector.id.toString()
-                          ? 'border-primary bg-primary/10 cursor-pointer'
-                          : 'border hover:border-muted-foreground cursor-pointer'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <FiUser className="w-8 h-8 text-muted-foreground" />
-                          <div>
-                            <h4 className="font-medium text-foreground">{inspector.name}</h4>
-                            <p className="text-sm text-muted-foreground">{inspector.role}</p>
-                            <p className="text-sm text-muted-foreground">{inspector.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            inspector.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {inspector.available ? 'Disponible' : 'Occupé'}
-                          </span>
-                          {audit.inspector_id === inspector.id.toString() && (
-                            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Date et heure */}
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Date prévue *
-                  </label>
-                  <div className="relative">
-                    <input
-                      ref={dateInputRef}
-                      type="date"
-                      id="audit-date"
-                      value={audit.scheduled_date}
-                      onChange={(e) => setAudit({ ...audit, scheduled_date: e.target.value })}
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-3 py-2 pr-10 border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary cursor-text hover:border-primary transition-colors [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                      required
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <FiCalendar className="text-primary w-5 h-5" />
-                    </div>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">Cliquez pour sélectionner une date</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Heure prévue *
-                  </label>
-                  <div className="relative">
-                    <input
-                      ref={timeInputRef}
-                      type="time"
-                      id="audit-time"
-                      value={audit.scheduled_time}
-                      onChange={(e) => setAudit({ ...audit, scheduled_time: e.target.value })}
-                      className="w-full px-3 py-2 pr-10 border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary cursor-text hover:border-primary transition-colors [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-3 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                      required
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <FiClock className="text-primary w-5 h-5" />
-                    </div>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">Cliquez pour sélectionner l'heure</p>
-                </div>
-              </div>
-
-              {/* Conflits détectés */}
-              {conflicts.length > 0 && (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <FiAlertTriangle className="w-5 h-5 text-yellow-600" />
-                    <h4 className="font-medium text-yellow-800">Conflits détectés</h4>
-                  </div>
-                  <ul className="text-sm text-yellow-700 space-y-1">
-                    {conflicts.map((conflict, index) => (
-                      <li key={index}>• {conflict}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Priorité */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Priorité de l'audit
-                </label>
-                <div className="grid gap-3">
-                  {PRIORITIES.map((priority) => (
-                    <div
-                      key={priority.value}
-                      onClick={() => setAudit({ ...audit, priority: priority.value })}
-                      className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                        audit.priority === priority.value
-                          ? 'border-primary bg-primary/10'
-                          : 'border hover:border-muted-foreground'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className={`font-medium ${priority.color}`}>{priority.label}</span>
-                          <p className="text-sm text-muted-foreground mt-1">{priority.description}</p>
-                        </div>
-                        {audit.priority === priority.value && (
-                          <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Récurrence */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Récurrence
-                </label>
-                <select
-                  value={audit.recurrence}
-                  onChange={(e) => setAudit({ ...audit, recurrence: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  {RECURRENCE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Notes (optionnel)
-                </label>
-                <textarea
-                  value={audit.notes}
-                  onChange={(e) => setAudit({ ...audit, notes: e.target.value })}
-                  placeholder="Instructions spéciales, contexte, points à vérifier..."
-                  rows={3}
-                  className="w-full px-3 py-2 border bg-background text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className="space-y-6">
-              {/* Rappels automatiques */}
-              <div>
-                <h3 className="text-lg font-medium text-foreground mb-4">Rappels automatiques</h3>
-                <div className="space-y-3">
-                  {[
-                    { key: 'notify_7_days', label: '7 jours avant', desc: 'Email de préparation' },
-                    { key: 'notify_24_hours', label: '24 heures avant', desc: 'Rappel email + notification' },
-                    { key: 'notify_1_hour', label: '1 heure avant', desc: 'Notification mobile (si PWA)' }
-                  ].map((option) => (
-                    <label key={option.key} className="flex items-center space-x-3 p-3 border rounded-lg">
-                      <input
-                        type="checkbox"
-                        checked={audit.notification_settings[option.key as keyof typeof audit.notification_settings] as boolean}
-                        onChange={(e) => setAudit({
-                          ...audit,
-                          notification_settings: {
-                            ...audit.notification_settings,
-                            [option.key]: e.target.checked
-                          }
-                        })}
-                        className="w-4 h-4 text-primary bg-background border rounded focus:ring-primary"
-                      />
-                      <div>
-                        <span className="font-medium text-foreground">{option.label}</span>
-                        <p className="text-sm text-muted-foreground">{option.desc}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Personnes à notifier */}
-              <div>
-                <h3 className="text-lg font-medium text-foreground mb-4">Personnes à notifier</h3>
-                <div className="space-y-3">
-                  {[
-                    { key: 'notify_manager', label: 'Manager du restaurant', desc: 'Responsable sur site' },
-                    { key: 'notify_team', label: 'Équipe franchiseur', desc: 'Tous les managers du tenant' },
-                    { key: 'notify_regional', label: 'Responsable régional', desc: 'Direction régionale' }
-                  ].map((option) => (
-                    <label key={option.key} className="flex items-center space-x-3 p-3 border rounded-lg">
-                      <input
-                        type="checkbox"
-                        checked={audit.notification_settings[option.key as keyof typeof audit.notification_settings] as boolean}
-                        onChange={(e) => setAudit({
-                          ...audit,
-                          notification_settings: {
-                            ...audit.notification_settings,
-                            [option.key]: e.target.checked
-                          }
-                        })}
-                        className="w-4 h-4 text-primary bg-background border rounded focus:ring-primary"
-                      />
-                      <div>
-                        <span className="font-medium text-foreground">{option.label}</span>
-                        <p className="text-sm text-muted-foreground">{option.desc}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Résumé final */}
-              <div className="bg-primary/10 p-4 rounded-lg border">
-                <h4 className="font-medium text-foreground mb-3">📋 Résumé de l'audit</h4>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <p><strong>Template:</strong> {selectedTemplate?.name}</p>
-                  <p><strong>Restaurant:</strong> {selectedRestaurant?.name} ({selectedRestaurant?.city})</p>
-                  <p><strong>Inspecteur:</strong> {selectedInspector?.name}</p>
-                  <p><strong>Date:</strong> {new Date(`${audit.scheduled_date}T${audit.scheduled_time}`).toLocaleDateString('fr-FR', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</p>
-                  <p><strong>Durée estimée:</strong> {selectedTemplate?.estimated_duration} minutes</p>
-                  <p><strong>Priorité:</strong> {PRIORITIES.find(p => p.value === audit.priority)?.label}</p>
-                  {audit.recurrence !== 'none' && (
-                    <p><strong>Récurrence:</strong> {RECURRENCE_OPTIONS.find(r => r.value === audit.recurrence)?.label}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t bg-muted">
-          <button
-            onClick={step === 1 ? handleClose : prevStep}
-            className="px-4 py-2 text-foreground bg-background border rounded-lg hover:bg-muted transition-colors"
-          >
-            {step === 1 ? 'Annuler' : 'Précédent'}
-          </button>
-          
-          <div className="flex space-x-3">
-            {step < 4 ? (
-              <button
-                onClick={nextStep}
-                disabled={
-                  (step === 1 && !audit.template_id) ||
-                  (step === 2 && (!audit.restaurant_id || !audit.inspector_id)) ||
-                  (step === 3 && (!audit.scheduled_date || !audit.scheduled_time))
-                }
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed transition-colors"
-              >
-                Suivant
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Planifier l'audit
-              </button>
             )}
-          </div>
-        </div>
+
+            {!dataLoading && (
+              <>
+                {/* Sélection du template */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FileText className="w-4 h-4 inline mr-1" />
+                    Template d'audit *
+                  </label>
+                  <select
+                    name="template_id"
+                    value={formData.template_id}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="">Sélectionner un template</option>
+                    {templates.map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.name} - {template.category.replace('_', ' ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Template Info */}
+                {selectedTemplateData && (
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                      Informations du Template
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Catégorie:</span>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                          {selectedTemplateData.category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Durée estimée:</span>
+                        <p className="font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                          <Clock className="w-4 h-4 mr-1" />
+                          {formatDuration(selectedTemplateData.estimated_duration)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Le titre sera automatique basé sur le template sélectionné */}
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Description (optionnelle)
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                placeholder="Description ou notes particulières pour cet audit..."
+              />
+            </div>
+
+            {/* Restaurant */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <MapPin className="w-4 h-4 inline mr-1" />
+                Restaurant *
+              </label>
+              <select
+                name="restaurant_id"
+                value={formData.restaurant_id}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              >
+                <option value={0}>Sélectionner un restaurant</option>
+                {restaurants.map((restaurant) => (
+                  <option key={restaurant.id} value={restaurant.id}>
+                    {restaurant.name} {restaurant.city && `- ${restaurant.city}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Date et heure */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                Date et heure prévues *
+              </label>
+              <input
+                type="datetime-local"
+                name="scheduled_date"
+                value={formData.scheduled_date}
+                onChange={handleChange}
+                min={`${today}T00:00`}
+                required
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              />
+            </div>
+
+            {/* Auditeur */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <User className="w-4 h-4 inline mr-1" />
+                Auditeur assigné (optionnel)
+              </label>
+              <select
+                name="auditor_id"
+                value={formData.auditor_id || 0}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              >
+                <option value={0}>Non assigné</option>
+                {managers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name 
+                      ? `${user.name} (${user.email})` 
+                      : user.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={loading || dataLoading || !formData.template_id || !formData.restaurant_id || !formData.scheduled_date}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 dark:disabled:bg-blue-800 text-white rounded-lg transition-colors disabled:cursor-not-allowed flex items-center"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Planification...
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Planifier l'Audit
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
-}
+};
+
+export default ScheduleAuditModal;

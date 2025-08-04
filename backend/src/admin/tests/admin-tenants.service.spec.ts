@@ -45,8 +45,8 @@ describe('AdminTenantsService', () => {
       skip: jest.fn().mockReturnThis(),
       take: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
-      getRawAndEntities: jest.fn(),
-      getCount: jest.fn(),
+      getRawAndEntities: jest.fn().mockResolvedValue({ entities: [], raw: [] }),
+      getCount: jest.fn().mockResolvedValue(0),
     })),
   };
 
@@ -147,11 +147,11 @@ describe('AdminTenantsService', () => {
       const options = { page: 1, limit: 10 };
       const mockQueryBuilder = tenantRepository.createQueryBuilder();
 
-      mockQueryBuilder.getRawAndEntities.mockResolvedValue({
+      (mockQueryBuilder.getRawAndEntities as any).mockResolvedValue({
         entities: [mockTenant],
         raw: [{ userCount: '5' }],
       });
-      mockQueryBuilder.getCount.mockResolvedValue(1);
+      (mockQueryBuilder.getCount as any).mockResolvedValue(1);
 
       const result = await service.findAll(options);
 
@@ -165,11 +165,11 @@ describe('AdminTenantsService', () => {
       const options = { page: 1, limit: 10, search: 'test' };
       const mockQueryBuilder = tenantRepository.createQueryBuilder();
 
-      mockQueryBuilder.getRawAndEntities.mockResolvedValue({
+      (mockQueryBuilder.getRawAndEntities as any).mockResolvedValue({
         entities: [],
         raw: [],
       });
-      mockQueryBuilder.getCount.mockResolvedValue(0);
+      (mockQueryBuilder.getCount as any).mockResolvedValue(0);
 
       await service.findAll(options);
 
@@ -238,7 +238,7 @@ describe('AdminTenantsService', () => {
       restaurantRepository.count = jest.fn().mockResolvedValue(3);
       documentRepository.count = jest.fn().mockResolvedValue(25);
 
-      userRepository.createQueryBuilder = jest.fn(() => ({
+      (userRepository.createQueryBuilder as any) = jest.fn(() => ({
         select: jest.fn().mockReturnThis(),
         addSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),

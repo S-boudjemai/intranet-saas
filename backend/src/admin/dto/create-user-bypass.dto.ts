@@ -25,6 +25,11 @@ export class CreateUserBypassDto {
   @MinLength(8)
   password: string;
 
+  @ApiProperty({ example: 'Jean Dupont', required: false })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
   @ApiProperty({
     enum: UserRole,
     example: UserRole.MANAGER,
@@ -54,6 +59,11 @@ export class UpdateUserDto {
   @IsString()
   @MinLength(8)
   password?: string;
+
+  @ApiProperty({ example: 'Jean Dupont' })
+  @IsOptional()
+  @IsString()
+  name?: string;
 
   @ApiProperty({ enum: UserRole })
   @IsOptional()

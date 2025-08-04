@@ -158,27 +158,28 @@ export default function MobileNav() {
                 </span>
               </NavLink>
 
+              <NavLink
+                to="/audits"
+                className={({ isActive }) =>
+                  `${linkClasses} ${isActive ? activeLinkClasses : ""}`
+                }
+                onClick={() => handleLinkClick()}
+              >
+                Audits
+              </NavLink>
+
+              <NavLink
+                to="/planning"
+                className={({ isActive }) =>
+                  `${linkClasses} ${isActive ? activeLinkClasses : ""}`
+                }
+                onClick={() => handleLinkClick()}
+              >
+                Planning
+              </NavLink>
+
               {canManage && (
                 <>
-                  <NavLink
-                    to="/audits"
-                    className={({ isActive }) =>
-                      `${linkClasses} ${isActive ? activeLinkClasses : ""}`
-                    }
-                    onClick={() => handleLinkClick()}
-                  >
-                    Audits & Conformité
-                  </NavLink>
-
-                  <NavLink
-                    to="/archives"
-                    className={({ isActive }) =>
-                      `${linkClasses} ${isActive ? activeLinkClasses : ""}`
-                    }
-                    onClick={() => handleLinkClick()}
-                  >
-                    Archives
-                  </NavLink>
 
                   <NavLink
                     to="/users"

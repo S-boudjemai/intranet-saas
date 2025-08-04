@@ -77,91 +77,156 @@ export interface InviteType {
   restaurant_city?: string;
 }
 
-// --- AUDIT TYPES ---
+// --- INTERFACES AUDIT SYSTEM ---
 
-export type AuditItemType = 'yes_no' | 'score' | 'text' | 'photo';
-export type AuditExecutionStatus = 'todo' | 'scheduled' | 'in_progress' | 'completed' | 'reviewed';
+export enum AuditCategory {
+  HYGIENE_SECURITY = 'hygiene_security',
+  CUSTOMER_SERVICE = 'customer_service',
+  PROCESS_COMPLIANCE = 'process_compliance',
+  EQUIPMENT_STANDARDS = 'equipment_standards',
+  FINANCIAL_MANAGEMENT = 'financial_management',
+  STAFF_MANAGEMENT = 'staff_management',
+}
 
-export interface AuditItem {
-  id: number;
-  question: string;
-  type: AuditItemType;
-  is_required: boolean;
-  order: number;
-  max_score?: number;
-  help_text?: string;
+export enum AuditFrequency {
+  DAILY = 'daily',
+  WEEKLY = 'weekly',
+  MONTHLY = 'monthly',
+  QUARTERLY = 'quarterly',
+  YEARLY = 'yearly',
+  ON_DEMAND = 'on_demand',
+}
+
+export enum QuestionType {
+  SCORE_1_5 = 'score_1_5',
+  YES_NO = 'yes_no',
+  TEXT = 'text',
+  SELECT = 'select',
+  PHOTO = 'photo',
+  TEMPERATURE = 'temperature',
+}
+
+export enum AuditStatus {
+  SCHEDULED = 'scheduled',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  OVERDUE = 'overdue',
+  ARCHIVED = 'archived',
+}
+
+export enum ActionStatus {
+  CREATED = 'created',
+  VALIDATED = 'validated',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  VERIFIED = 'verified',
+  ARCHIVED = 'archived',
+}
+
+export enum ActionCategory {
+  EQUIPMENT_REPAIR = 'equipment_repair',
+  STAFF_TRAINING = 'staff_training',
+  CLEANING_DISINFECTION = 'cleaning_disinfection',
+  PROCESS_IMPROVEMENT = 'process_improvement',
+  COMPLIANCE_ISSUE = 'compliance_issue',
+  OTHER = 'other',
+}
+
+export enum ActionPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  CRITICAL = 'critical',
 }
 
 export interface AuditTemplate {
-  id: number;
+  id: string;
   name: string;
-  description?: string;
-  category: string;
+  description: string;
+  category: AuditCategory;
+  frequency: AuditFrequency;
+  estimated_duration: number;
   is_active: boolean;
+  tenant_id: string;
   created_by: number;
   created_at: string;
-  estimated_duration?: number;
-  last_used?: string;
-  items: AuditItem[];
-  creator?: {
-    id: number;
-    email: string;
-  };
+  updated_at: string;
+}
+
+export interface AuditTemplateItem {
+  id: string;
+  question: string;
+  type: QuestionType;
+  options?: string[];
+  is_required: boolean;
+  order_index: number;
+  help_text?: string;
+  template_id: string;
+}
+
+export interface CreateAuditTemplateDto {
+  name: string;
+  description: string;
+  category: AuditCategory;
+  frequency: AuditFrequency;
+  estimated_duration: number;
+  items: {
+    question: string;
+    type: QuestionType;
+    options?: string[];
+    is_required: boolean;
+    order_index: number;
+    help_text?: string;
+  }[];
 }
 
 export interface AuditExecution {
-  id: number;
-  template_id: number;
-  restaurant_id: number;
-  inspector_id: number;
-  status: AuditExecutionStatus;
+  id: string;
+  title: string;
+  description?: string;
   scheduled_date: string;
-  completed_date?: string;
-  total_score?: number;
-  max_possible_score?: number;
-  notes?: string;
-  template: AuditTemplate;
-  restaurant: RestaurantInfo;
-  inspector: {
-    id: number;
-    email: string;
-  };
-  responses?: AuditResponse[];
+  started_at?: string;
+  completed_at?: string;
+  status: AuditStatus;
+  summary?: any;
+  tenant_id: string;
+  template_id: string;
+  restaurant_id: number;
+  assigned_by: number;
+  auditor_id?: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AuditResponse {
-  id: number;
-  item_id: number;
+  id: string;
   value?: string;
-  score?: number;
-  photo_url?: string;
-  notes?: string;
-  item: AuditItem;
+  numeric_value?: number;
+  metadata?: any;
+  comment?: string;
+  execution_id: string;
+  template_item_id: string;
 }
-
-// --- CORRECTIVE ACTIONS TYPES ---
-
-export type CorrectiveActionStatus = 'assigned' | 'in_progress' | 'completed' | 'verified';
 
 export interface CorrectiveAction {
-  id: number;
-  non_conformity_id?: number; // Nullable now since NC are removed
-  description?: string;
-  action_description: string;
-  assigned_to_id: number;
+  id: string;
+  title: string;
+  description: string;
+  category: ActionCategory;
+  status: ActionStatus;
+  priority: ActionPriority;
   due_date: string;
-  status: CorrectiveActionStatus;
-  completion_date?: string;
-  verification_notes?: string;
-  created_by?: number;
+  completed_at?: string;
+  completion_notes?: string;
+  validation_notes?: string;
+  email_sent: boolean;
+  email_content?: any;
+  tenant_id: string;
+  restaurant_id: number;
+  assigned_to: number;
+  created_by: number;
+  audit_execution_id?: string;
   created_at: string;
   updated_at: string;
-  assigned_user?: {
-    id: number;
-    email: string;
-  };
-  verifier?: {
-    id: number;
-    email: string;
-  };
 }
+

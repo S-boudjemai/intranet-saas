@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../users/entities/user.entity';
-import { Restaurant } from '../../restaurant/entites/restaurant.entity';
+import { Restaurant } from '../../restaurant/entities/restaurant.entity';
 import {
   CreateUserBypassDto,
   UpdateUserDto,
@@ -71,6 +71,7 @@ export class AdminUsersService {
     const user = this.usersRepository.create({
       email: createUserDto.email,
       password_hash: hashedPassword,
+      name: createUserDto.name || null,
       role: createUserDto.role,
       tenant_id: tenantId,
       restaurant_id: createUserDto.restaurant_id,
@@ -94,6 +95,7 @@ export class AdminUsersService {
       .select([
         'user.id',
         'user.email',
+        'user.name',
         'user.role',
         'user.is_active',
         'user.created_at',
@@ -131,6 +133,7 @@ export class AdminUsersService {
       select: [
         'id',
         'email',
+        'name',
         'role',
         'is_active',
         'created_at',

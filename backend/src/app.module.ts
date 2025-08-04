@@ -21,9 +21,10 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { validationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
-import { AuditsModule } from './audits/audits.module';
 import { AdminModule } from './admin/admin.module';
 import { SetupModule } from './setup/setup.module';
+import { AuditsModule } from './audits/audits.module';
+import { PlanningModule } from './planning/planning.module';
 
 @Module({
   imports: [
@@ -69,6 +70,20 @@ import { SetupModule } from './setup/setup.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => {
+        // Option SQLite pour développement local si PostgreSQL ne fonctionne pas
+        console.log('🔍 USE_SQLITE:', cfg.get<string>('USE_SQLITE'));
+        if (cfg.get<string>('USE_SQLITE') === 'true') {
+
+          return {
+            type: 'sqlite' as const,
+            database: 'development.db',
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: true,
+            autoLoadEntities: true,
+            logging: true,
+          };
+        }
+
         // Support pour DATABASE_URL (Render, Heroku) ou variables séparées (local)
         const databaseUrl = cfg.get<string>('DATABASE_URL');
 
@@ -92,10 +107,17 @@ import { SetupModule } from './setup/setup.module';
         }
 
         // Fallback vers variables séparées pour développement local
-        return {
-          type: 'postgres',
+        console.log('🔧 PostgreSQL config:', {
           host: cfg.get<string>('DB_HOST'),
-          port: cfg.get<number>('DB_PORT'),
+          port: cfg.get<string>('DB_PORT'),
+          username: cfg.get<string>('DB_USER'),
+          database: cfg.get<string>('DB_NAME'),
+        });
+
+        return {
+          type: 'postgres' as const,
+          host: cfg.get<string>('DB_HOST'),
+          port: parseInt(cfg.get<string>('DB_PORT') || '5432'),
           username: cfg.get<string>('DB_USER'),
           password: cfg.get<string>('DB_PASS'),
           database: cfg.get<string>('DB_NAME'),
@@ -107,7 +129,7 @@ import { SetupModule } from './setup/setup.module';
           retryAttempts: 5,
           retryDelay: 3000,
           autoLoadEntities: true,
-          logging: false,
+          logging: true, // Activer les logs pour debug
         };
       },
     }),
@@ -125,9 +147,10 @@ import { SetupModule } from './setup/setup.module';
     NotificationsModule,
     SearchModule,
     HealthModule,
-    AuditsModule,
     AdminModule,
     SetupModule,
+    AuditsModule,
+    PlanningModule,
   ],
 
   providers: [

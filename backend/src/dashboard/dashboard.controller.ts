@@ -1,21 +1,22 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/roles/roles.guard';
+import { Controller, Get, Request } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
-import { Roles } from 'src/auth/roles/roles.decorator';
-import { Role } from 'src/auth/roles/roles.enum';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-@UseGuards(JwtAuthGuard)
+@ApiTags('Dashboard')
+@ApiBearerAuth('JWT-auth')
 @Controller('dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get()
-  @Roles(Role.Manager, Role.Admin)
-  async getDashboard(@Req() req: any) {
-    const user = req.user;
-    const tenantId: string = user.tenant_id;
-
-    return this.dashboardService.getDashboard(tenantId);
+  @ApiOperation({ summary: 'Obtenir les données du dashboard' })
+  @ApiResponse({ status: 200, description: 'Données du dashboard retournées avec succès' })
+  async getDashboard(@Request() req: { user: JwtUser }) {
+    const { tenant_id } = req.user;
+    if (!tenant_id) {
+      throw new Error('Tenant ID manquant');
+    }
+    return this.dashboardService.getDashboardData(tenant_id.toString());
   }
 }

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '../components/ToastContainer';
+import toast from 'react-hot-toast';
 import { 
   ChartPieIcon, 
   UsersIcon, 
@@ -35,6 +35,7 @@ interface Tenant {
 interface User {
   id: number;
   email: string;
+  name?: string;
   role: string;
   is_active: boolean;
   tenant_id: number;
@@ -83,6 +84,7 @@ interface CreateTenantData {
 interface CreateUserData {
   email: string;
   password: string;
+  name?: string;
   role: 'admin' | 'manager' | 'viewer';
   tenant_id: number;
 }
@@ -90,7 +92,7 @@ interface CreateUserData {
 const AdminGlobalDashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  // toast est maintenant importé directement de react-hot-toast
   
   // State management
   const [activeTab, setActiveTab] = useState<'overview' | 'tenants' | 'users' | 'categories' | 'tickets'>('overview');
@@ -126,6 +128,7 @@ const AdminGlobalDashboard: React.FC = () => {
   const [newUser, setNewUser] = useState<CreateUserData>({
     email: '',
     password: '',
+    name: '',
     role: 'viewer',
     tenant_id: 0
   });
@@ -195,7 +198,7 @@ const AdminGlobalDashboard: React.FC = () => {
       }
     } catch (error) {
       // Fetch tenants error
-      showToast('Erreur lors du chargement des tenants', 'error');
+      toast.error('Erreur lors du chargement des tenants');
     }
   };
 
@@ -216,11 +219,11 @@ const AdminGlobalDashboard: React.FC = () => {
         setUsers(allUsers);
       } else {
         // API users error
-        showToast('Erreur lors du chargement des utilisateurs', 'error');
+        toast.error('Erreur lors du chargement des utilisateurs');
       }
     } catch (error) {
       // Fetch users error
-      showToast('Erreur lors du chargement des utilisateurs', 'error');
+      toast.error('Erreur lors du chargement des utilisateurs');
     }
   };
 
@@ -243,7 +246,7 @@ const AdminGlobalDashboard: React.FC = () => {
       
       const rootData = await rootResponse.json();
       const rootCategories = rootData.data || rootData || [];
-      showToast('Catégories racines:', rootCategories);
+      // Catégories racines chargées
       
       // 2. Pour chaque catégorie racine, récupérer ses enfants
       const categoriesWithChildren = [];
@@ -258,7 +261,7 @@ const AdminGlobalDashboard: React.FC = () => {
         if (childrenResponse.ok) {
           const childrenData = await childrenResponse.json();
           const children = childrenData.data || childrenData || [];
-          showToast(`Enfants de ${rootCat.name}:`, children);
+          // Enfants de la catégorie chargés
           
           categoriesWithChildren.push({
             ...rootCat,
@@ -274,17 +277,17 @@ const AdminGlobalDashboard: React.FC = () => {
       }
       
       setCategories(categoriesWithChildren);
-      showToast('Toutes les catégories avec enfants:', categoriesWithChildren);
+      // Toutes les catégories chargées avec leurs enfants
       
     } catch (error) {
       console.error('Erreur fetchCategories:', error);
-      showToast('Erreur lors du chargement des catégories', 'error');
+      toast.error('Erreur lors du chargement des catégories');
     }
   };
 
   const createCategory = async () => {
     if (!categoryForm.name.trim()) {
-      showToast('Le nom de la catégorie est requis', 'error');
+      toast.error('Le nom de la catégorie est requis');
       return;
     }
 
@@ -303,11 +306,10 @@ const AdminGlobalDashboard: React.FC = () => {
       });
       
       if (response.ok) {
-        showToast(
+        toast.success(
           categoryToEdit 
             ? 'Catégorie modifiée avec succès' 
-            : 'Catégorie créée avec succès', 
-          'success'
+            : 'Catégorie créée avec succès'
         );
         setShowCategoryModal(false);
         setCategoryForm({ name: '', parentId: '' });
@@ -315,10 +317,10 @@ const AdminGlobalDashboard: React.FC = () => {
         fetchCategories();
       } else {
         const error = await response.text();
-        showToast(`Erreur: ${error}`, 'error');
+        toast.error(`Erreur: ${error}`);
       }
     } catch (error) {
-      showToast('Erreur lors de la création de la catégorie', 'error');
+      toast.error('Erreur lors de la création de la catégorie');
     }
   };
 
@@ -340,17 +342,17 @@ const AdminGlobalDashboard: React.FC = () => {
       );
       
       if (response.ok) {
-        showToast('Catégorie modifiée avec succès', 'success');
+        toast.success('Catégorie modifiée avec succès');
         setShowCategoryModal(false);
         setCategoryForm({ name: '', parentId: '' });
         setCategoryToEdit(null);
         fetchCategories();
       } else {
         const error = await response.text();
-        showToast(`Erreur: ${error}`, 'error');
+        toast.error(`Erreur: ${error}`);
       }
     } catch (error) {
-      showToast('Erreur lors de la modification de la catégorie', 'error');
+      toast.error('Erreur lors de la modification de la catégorie');
     }
   };
 
@@ -370,16 +372,16 @@ const AdminGlobalDashboard: React.FC = () => {
       );
       
       if (response.ok) {
-        showToast('Catégorie supprimée avec succès', 'success');
+        toast.success('Catégorie supprimée avec succès');
         setShowDeleteCategoryModal(false);
         setCategoryToDelete(null);
         fetchCategories();
       } else {
         const error = await response.text();
-        showToast(`Erreur: ${error}`, 'error');
+        toast.error(`Erreur: ${error}`);
       }
     } catch (error) {
-      showToast('Erreur lors de la suppression de la catégorie', 'error');
+      toast.error('Erreur lors de la suppression de la catégorie');
     }
   };
 
@@ -412,7 +414,7 @@ const AdminGlobalDashboard: React.FC = () => {
   // ===== FONCTIONS GESTION UTILISATEURS =====
   const createUser = async () => {
     if (!newUser.email.trim() || !newUser.password.trim() || !newUser.tenant_id) {
-      showToast('Tous les champs sont requis', 'error');
+      toast.error('Tous les champs sont requis');
       return;
     }
 
@@ -427,16 +429,18 @@ const AdminGlobalDashboard: React.FC = () => {
         body: JSON.stringify({
           email: newUser.email.trim(),
           password: newUser.password,
+          name: newUser.name?.trim() || undefined,
           role: newUser.role
         }),
       });
 
       if (response.ok) {
-        showToast('Utilisateur créé avec succès', 'success');
+        toast.success('Utilisateur créé avec succès');
         setShowCreateUserModal(false);
         setNewUser({
           email: '',
           password: '',
+          name: '',
           role: 'viewer',
           tenant_id: 0
         });
@@ -444,11 +448,11 @@ const AdminGlobalDashboard: React.FC = () => {
         await fetchStats();
       } else {
         const errorData = await response.json();
-        showToast(errorData.message || 'Erreur lors de la création', 'error');
+        toast.error(errorData.message || 'Erreur lors de la création');
       }
     } catch (error) {
       console.error('Erreur createUser:', error);
-      showToast('Erreur lors de la création de l\'utilisateur', 'error');
+      toast.error('Erreur lors de la création de l\'utilisateur');
     }
   };
 
@@ -465,16 +469,16 @@ const AdminGlobalDashboard: React.FC = () => {
       });
 
       if (response.ok) {
-        showToast('Utilisateur modifié avec succès', 'success');
+        toast.success('Utilisateur modifié avec succès');
         await fetchUsers();
         await fetchStats();
       } else {
         const errorData = await response.json();
-        showToast(errorData.message || 'Erreur lors de la modification', 'error');
+        toast.error(errorData.message || 'Erreur lors de la modification');
       }
     } catch (error) {
       console.error('Erreur updateUser:', error);
-      showToast('Erreur lors de la modification de l\'utilisateur', 'error');
+      toast.error('Erreur lors de la modification de l\'utilisateur');
     }
   };
 
@@ -492,16 +496,16 @@ const AdminGlobalDashboard: React.FC = () => {
       });
 
       if (response.ok) {
-        showToast('Utilisateur supprimé avec succès', 'success');
+        toast.success('Utilisateur supprimé avec succès');
         await fetchUsers();
         await fetchStats();
       } else {
         const errorData = await response.json();
-        showToast(errorData.message || 'Erreur lors de la suppression', 'error');
+        toast.error(errorData.message || 'Erreur lors de la suppression');
       }
     } catch (error) {
       console.error('Erreur deleteUser:', error);
-      showToast('Erreur lors de la suppression de l\'utilisateur', 'error');
+      toast.error('Erreur lors de la suppression de l\'utilisateur');
     }
   };
 
@@ -530,7 +534,7 @@ const AdminGlobalDashboard: React.FC = () => {
     }
 
     if (Object.keys(updateData).length === 0) {
-      showToast('Aucune modification détectée', 'info');
+      toast.info('Aucune modification détectée');
       return;
     }
 
@@ -552,7 +556,7 @@ const AdminGlobalDashboard: React.FC = () => {
       });
 
       if (response.ok) {
-        showToast('Tenant créé avec succès', 'success');
+        toast.success('Tenant créé avec succès');
         setShowCreateTenantModal(false);
         setNewTenant({
           name: '',
@@ -566,11 +570,11 @@ const AdminGlobalDashboard: React.FC = () => {
         await fetchStats();
       } else {
         const errorData = await response.json();
-        showToast(errorData.error?.message || 'Erreur lors de la création', 'error');
+        toast.error(errorData.error?.message || 'Erreur lors de la création');
       }
     } catch (error) {
       // Create tenant error
-      showToast('Erreur lors de la création', 'error');
+      toast.error('Erreur lors de la création');
     }
   };
 
@@ -588,16 +592,16 @@ const AdminGlobalDashboard: React.FC = () => {
       });
 
       if (response.ok) {
-        showToast('Tenant supprimé avec succès', 'success');
+        toast.success('Tenant supprimé avec succès');
         await fetchTenants();
         await fetchStats();
       } else {
         const errorData = await response.json();
-        showToast(errorData.error?.message || 'Erreur lors de la suppression', 'error');
+        toast.error(errorData.error?.message || 'Erreur lors de la suppression');
       }
     } catch (error) {
       // Delete tenant error
-      showToast('Erreur lors de la suppression', 'error');
+      toast.error('Erreur lors de la suppression');
     }
   };
 
@@ -851,14 +855,14 @@ const AdminGlobalDashboard: React.FC = () => {
         const tenantName = selectedTenantForDeletion 
           ? tenants.find(t => t.id.toString() === selectedTenantForDeletion)?.name || 'tenant sélectionné'
           : 'tous les tenants';
-        showToast('success', 'Tickets supprimés', `${result.deleted} tickets ont été supprimés avec succès pour ${tenantName}.`);
+        toast.success(`${result.deleted} tickets ont été supprimés avec succès pour ${tenantName}.`);
         setShowDeleteAllTicketsModal(false);
         setSelectedTenantForDeletion('');
       } else {
-        showToast('error', 'Erreur', 'Impossible de supprimer les tickets.');
+        toast.error('Impossible de supprimer les tickets.');
       }
     } catch (error) {
-      showToast('error', 'Erreur', 'Une erreur est survenue lors de la suppression.');
+      toast.error('Une erreur est survenue lors de la suppression.');
     }
   };
 
@@ -1216,6 +1220,21 @@ const AdminGlobalDashboard: React.FC = () => {
                   />
                 </div>
 
+                {(newUser.role === 'manager' || newUser.role === 'admin') && (
+                  <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                      Nom complet
+                    </label>
+                    <input
+                      type="text"
+                      value={newUser.name || ''}
+                      onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                      className="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                      placeholder="Jean Dupont"
+                    />
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Mot de passe
@@ -1267,7 +1286,7 @@ const AdminGlobalDashboard: React.FC = () => {
                 <button
                   onClick={() => {
                     setShowCreateUserModal(false);
-                    setNewUser({ email: '', password: '', role: 'viewer', tenant_id: 0 });
+                    setNewUser({ email: '', password: '', name: '', role: 'viewer', tenant_id: 0 });
                   }}
                   className="px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
                 >

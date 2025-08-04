@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { TagsService } from './tags.service';
-import { Tag } from './entites/tag.entity';
+import { Tag } from './entities/tag.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles/roles.guard';
 

@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeftIcon, SpinnerIcon, CheckIcon, LockClosedIcon, EnvelopeIcon, KeyIcon } from '../components/icons';
-import { useToast } from '../contexts/ToastContext';
+import toast from 'react-hot-toast';
 
 type Step = 'email' | 'code' | 'password' | 'success';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  // toast importé directement
   const [currentStep, setCurrentStep] = useState<Step>('email');
   const [formData, setFormData] = useState({
     email: '',
@@ -82,14 +82,14 @@ export default function ForgotPassword() {
 
       if (response.ok) {
         setCurrentStep('code');
-        showToast('Code envoyé à votre email !', 'success');
+        toast.success('Code envoyé à votre email !');
         setResendCooldown(60);
       } else {
         const data = await response.json();
-        showToast(data.message || 'Email non trouvé', 'error');
+        toast.error(data.message || 'Email non trouvé');
       }
     } catch (err) {
-      showToast('Erreur de connexion', 'error');
+      toast.error('Erreur de connexion');
     } finally {
       setLoading(false);
     }
@@ -107,11 +107,11 @@ export default function ForgotPassword() {
       });
 
       if (response.ok) {
-        showToast('Nouveau code envoyé !', 'success');
+        toast.success('Nouveau code envoyé !');
         setResendCooldown(60);
       }
     } catch (err) {
-      showToast('Erreur lors de l\'envoi', 'error');
+      toast.error('Erreur lors de l\'envoi');
     } finally {
       setLoading(false);
     }
@@ -134,10 +134,10 @@ export default function ForgotPassword() {
       if (response.ok) {
         setCurrentStep('password');
       } else {
-        showToast('Code invalide ou expiré', 'error');
+        toast.error('Code invalide ou expiré');
       }
     } catch (err) {
-      showToast('Erreur de connexion', 'error');
+      toast.error('Erreur de connexion');
     } finally {
       setLoading(false);
     }
@@ -147,7 +147,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     
     if (formData.newPassword !== formData.confirmPassword) {
-      showToast('Les mots de passe ne correspondent pas', 'error');
+      toast.error('Les mots de passe ne correspondent pas');
       return;
     }
 
@@ -168,10 +168,10 @@ export default function ForgotPassword() {
         setCurrentStep('success');
         setTimeout(() => navigate('/login'), 3000);
       } else {
-        showToast('Erreur lors de la réinitialisation', 'error');
+        toast.error('Erreur lors de la réinitialisation');
       }
     } catch (err) {
-      showToast('Erreur de connexion', 'error');
+      toast.error('Erreur de connexion');
     } finally {
       setLoading(false);
     }

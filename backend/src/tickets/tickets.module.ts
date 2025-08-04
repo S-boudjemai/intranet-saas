@@ -6,7 +6,7 @@ import { Ticket } from './entities/ticket.entity';
 import { Comment } from './entities/comment.entity';
 import { TicketAttachment } from './entities/ticket-attachment.entity';
 import { User } from '../users/entities/user.entity';
-import { Restaurant } from '../restaurant/entites/restaurant.entity';
+import { Restaurant } from '../restaurant/entities/restaurant.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({

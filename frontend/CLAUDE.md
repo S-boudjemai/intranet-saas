@@ -7,12 +7,12 @@ Application React SPA pour la plateforme de gestion franchiseur-franchisé. Inte
 ## 🛠️ Stack Technique
 
 - **React 19** + TypeScript + Vite
-- **Styling:** Tailwind CSS + Dark Mode
+- **Styling:** Tailwind CSS + Dark Mode + Framer Motion
 - **Routing:** React Router DOM v7
 - **State:** Context API (Auth + Theme + Notifications)
-- **WebSocket:** Socket.io-client
+- **WebSocket:** Socket.io-client + OneSignal Push
 - **Charts:** Recharts
-- **PWA:** Installable mobile/desktop
+- **PWA:** Installable mobile/desktop + Push Notifications
 
 ## 📁 Structure
 
@@ -40,14 +40,16 @@ src/
 5. **Annonces** - Communication franchiseur → franchisés
 6. **Audits** - Templates + planning + actions correctives
 7. **Admin Global** - Dashboard super-admin
+8. **Push Notifications** - OneSignal mobile/desktop avec prompts élégants
 
 ### UX/UI
 - **Design System** - Composants Button, Badge, Card standardisés
+- **Animations** - Framer Motion avec pattern unifié sur toutes les pages
 - **Dark Mode** - Complet avec transitions
-- **PWA** - Installation native mobile/desktop
-- **Notifications** - Toast + WebSocket temps réel
-- **Modales** - ConfirmModal + DetailsModal élégantes
-- **Responsive** - Mobile-first
+- **PWA** - Installation native mobile/desktop + push notifications
+- **Notifications** - Toast + WebSocket + OneSignal Push temps réel
+- **Modales** - ConfirmModal + DetailsModal avec animations élégantes
+- **Responsive** - Mobile-first avec hover effects harmonisés
 
 ### Pages Principales
 - **Landing** - Page d'accueil franchiseurs avec animations

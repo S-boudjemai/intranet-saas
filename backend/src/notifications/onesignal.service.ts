@@ -21,7 +21,7 @@ export class OneSignalService {
       this.logger.error('❌ Variables OneSignal manquantes (ONESIGNAL_APP_ID, ONESIGNAL_API_KEY)');
       throw new Error('OneSignal configuration missing');
     }
-    
+
     // Initialiser client OneSignal
     this.client = new OneSignal.Client(this.APP_ID, this.API_KEY);
     this.logger.log('✅ OneSignal service initialisé');
@@ -47,9 +47,9 @@ export class OneSignalService {
       user.oneSignalUserId = oneSignalUserId;
       user.userAgent = userAgent || null;
       user.platform = platform || null;
-      
+
       await this.userRepository.save(user);
-      
+
       this.logger.log(`✅ User ${userId} associé à OneSignal ID: ${oneSignalUserId}`);
 
     } catch (error) {
@@ -68,7 +68,7 @@ export class OneSignalService {
   ): Promise<boolean> {
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } });
-      
+
       if (!user?.oneSignalUserId) {
         this.logger.warn(`⚠️ User ${userId} n'a pas de OneSignal ID`);
         return false;
@@ -88,7 +88,7 @@ export class OneSignalService {
       this.logger.debug('📋 Notification data:', JSON.stringify(notification, null, 2));
 
       const response = await this.client.createNotification(notification);
-      
+
       if (response.body?.id) {
         this.logger.log(`✅ Notification envoyée - ID: ${response.body.id}`);
         return true;
@@ -143,7 +143,7 @@ export class OneSignalService {
       this.logger.log(`📤 Envoi notification à ${targetUsers.length} users du tenant ${tenantId}`);
 
       const response = await this.client.createNotification(notification);
-      
+
       if (response.body?.id) {
         this.logger.log(`✅ Notification tenant envoyée - ID: ${response.body.id}`);
         return targetUsers.length;
@@ -185,7 +185,7 @@ export class OneSignalService {
         user.userAgent = null;
         user.platform = null;
         await this.userRepository.save(user);
-        
+
         this.logger.log(`✅ User ${userId} désabonné de OneSignal`);
       }
     } catch (error) {

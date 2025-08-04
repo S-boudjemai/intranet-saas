@@ -1,3 +1,4 @@
+// src/audits/entities/audit-execution.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -5,65 +6,69 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
-  OneToMany,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
-import { AuditTemplate } from './audit-template.entity';
-import { Restaurant } from '../../restaurant/entites/restaurant.entity';
 import { User } from '../../users/entities/user.entity';
+import { Restaurant } from '../../restaurant/entities/restaurant.entity';
+import { AuditTemplate } from './audit-template.entity';
 import { AuditResponse } from './audit-response.entity';
+import { CorrectiveAction } from './corrective-action.entity';
 
-export type AuditExecutionStatus =
-  | 'todo'
-  | 'scheduled'
-  | 'in_progress'
-  | 'completed'
-  | 'reviewed';
+export enum AuditStatus {
+  SCHEDULED = 'scheduled',
+  IN_PROGRESS = 'in_progress', 
+  COMPLETED = 'completed',
+  OVERDUE = 'overdue',
+  ARCHIVED = 'archived'
+}
 
 @Entity('audit_executions')
 export class AuditExecution {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column()
-  template_id: number;
+  @Column({ length: 255 })
+  title: string;
 
-  @Column()
-  restaurant_id: number;
-
-  @Column()
-  inspector_id: number;
+  @Column({ type: 'text', nullable: true })
+  notes?: string;
 
   @Column({
     type: 'enum',
-    enum: ['todo', 'scheduled', 'in_progress', 'completed', 'reviewed'],
-    default: 'todo',
+    enum: AuditStatus,
+    default: AuditStatus.SCHEDULED
   })
-  status: AuditExecutionStatus;
+  status: AuditStatus;
 
-  @Column()
+  @Column({ type: 'timestamp' })
   scheduled_date: Date;
 
-  @Column({ nullable: true })
-  completed_date: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  started_at?: Date;
 
-  @Column('decimal', { precision: 5, scale: 2, nullable: true })
-  total_score: number;
+  @Column({ type: 'timestamp', nullable: true })
+  completed_at?: Date;
 
-  @Column('decimal', { precision: 5, scale: 2, nullable: true })
-  max_possible_score: number;
+  @Column({ type: 'json', nullable: true })
+  summary?: any; // Score global, points critiques, etc.
 
-  @Column('text', { nullable: true })
-  notes: string; // Notes générales de l'auditeur
+  @Column()
+  tenant_id: string;
 
-  @CreateDateColumn()
-  created_at: Date;
+  @Column('uuid')
+  template_id: string;
 
-  @UpdateDateColumn()
-  updated_at: Date;
+  @Column({ type: 'int' })
+  restaurant_id: number;
 
-  // Relations
-  @ManyToOne(() => AuditTemplate, (template) => template.executions)
+  @Column({ type: 'int' })
+  auditor_id: number;
+
+  @Column({ type: 'int', nullable: true })
+  assigned_by?: number; // Qui a planifié l'audit
+
+  @ManyToOne(() => AuditTemplate, template => template.executions, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'template_id' })
   template: AuditTemplate;
 
@@ -72,11 +77,22 @@ export class AuditExecution {
   restaurant: Restaurant;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'inspector_id' })
-  inspector: User;
+  @JoinColumn({ name: 'auditor_id' })
+  auditor: User;
 
-  @OneToMany(() => AuditResponse, (response) => response.execution, {
-    cascade: true,
-  })
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'assigned_by' })
+  assigner?: User;
+
+  @OneToMany(() => AuditResponse, response => response.execution, { cascade: true })
   responses: AuditResponse[];
+
+  @OneToMany(() => CorrectiveAction, action => action.audit_execution)
+  corrective_actions: CorrectiveAction[];
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 }

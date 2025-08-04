@@ -6,7 +6,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { RestaurantType } from '../../common/enums/restaurant-type.enum';
-import { Restaurant } from '../../restaurant/entites/restaurant.entity';
+import { Restaurant } from '../../restaurant/entities/restaurant.entity';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('tenants')

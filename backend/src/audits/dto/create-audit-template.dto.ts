@@ -1,64 +1,72 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  IsArray,
-  ValidateNested,
-  IsEnum,
-  IsBoolean,
-  IsNumber,
-  Min,
-} from 'class-validator';
+// src/audits/dto/create-audit-template.dto.ts
+import { IsString, IsEnum, IsBoolean, IsOptional, IsArray, ValidateNested, MaxLength, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { AuditCategory, AuditFrequency } from '../entities/audit-template.entity';
+import { QuestionType } from '../entities/audit-template-item.entity';
 
-export class CreateAuditItemDto {
+export class CreateAuditTemplateItemDto {
+  @ApiProperty({ description: 'Question à poser lors de l\'audit' })
   @IsString()
-  @IsOptional()
-  id?: string; // ID temporaire généré côté frontend
-
-  @IsString()
-  @IsNotEmpty()
+  @MaxLength(500)
   question: string;
 
-  @IsEnum(['yes_no', 'score', 'text', 'photo'])
-  type: 'yes_no' | 'score' | 'text' | 'photo';
+  @ApiProperty({ enum: QuestionType, description: 'Type de réponse attendue' })
+  @IsEnum(QuestionType)
+  type: QuestionType;
 
-  @IsBoolean()
+  @ApiPropertyOptional({ description: 'Options pour les questions select ou configuration' })
   @IsOptional()
+  options?: any;
+
+  @ApiPropertyOptional({ description: 'Question obligatoire ou optionnelle', default: false })
+  @IsOptional()
+  @IsBoolean()
   is_required?: boolean;
 
-  @IsNumber()
-  @Min(1)
-  order: number;
-
-  @IsNumber()
+  @ApiPropertyOptional({ description: 'Index d\'ordre pour l\'affichage', default: 0 })
   @IsOptional()
-  max_score?: number;
+  order_index?: number;
 
+  @ApiPropertyOptional({ description: 'Texte d\'aide pour la question' })
+  @IsOptional()
   @IsString()
-  @IsOptional()
+  @MaxLength(255)
   help_text?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  critical?: boolean;
 }
 
 export class CreateAuditTemplateDto {
+  @ApiProperty({ description: 'Nom du template d\'audit' })
   @IsString()
-  @IsNotEmpty()
+  @MaxLength(255)
   name: string;
 
-  @IsString()
+  @ApiPropertyOptional({ description: 'Description détaillée du template' })
   @IsOptional()
+  @IsString()
   description?: string;
 
-  @IsString()
-  @IsNotEmpty()
-  category: string;
+  @ApiProperty({ enum: AuditCategory, description: 'Catégorie de l\'audit' })
+  @IsEnum(AuditCategory)
+  category: AuditCategory;
 
+  @ApiProperty({ enum: AuditFrequency, description: 'Fréquence recommandée' })
+  @IsEnum(AuditFrequency)
+  frequency: AuditFrequency;
+
+  @ApiProperty({ description: 'Durée estimée en minutes' })
+  @IsOptional()
+  @IsNumber()
+  estimated_duration?: number;
+
+  @ApiPropertyOptional({ description: 'Audit obligatoire ou recommandé', default: false })
+  @IsOptional()
+  @IsBoolean()
+  is_mandatory?: boolean;
+
+  @ApiProperty({ type: [CreateAuditTemplateItemDto], description: 'Questions du template' })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateAuditItemDto)
-  items: CreateAuditItemDto[];
+  @Type(() => CreateAuditTemplateItemDto)
+  items: CreateAuditTemplateItemDto[];
 }

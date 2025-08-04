@@ -15,10 +15,10 @@ export default defineConfig({
       },
       includeManifestIcons: true,
       manifest: {
-        name: 'FranchiseHUB - Gestion Franchise',
-        short_name: 'FranchiseHUB',
+        name: 'FranchiseDesk',
+        short_name: 'FDesk',
         description: 'Plateforme de gestion franchiseur-franchisé',
-        theme_color: '#4F46E5',
+        theme_color: '#2563eb',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait-primary',
@@ -93,6 +93,41 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Dépendances lourdes séparées
+          'vendor-charts': ['recharts'],
+          'vendor-animations': ['framer-motion'],
+          'vendor-icons': ['react-icons', 'lucide-react'],
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-router': ['react-router-dom'],
+          'vendor-socket': ['socket.io-client'],
+          'vendor-utils': ['jwt-decode', 'dompurify', 'axios'],
+          
+          // Pages principales
+          'page-documents': ['./src/pages/DocumentsPage.tsx'],
+          'page-tickets': ['./src/pages/TicketsPages.tsx'],
+          'page-admin': ['./src/pages/AdminGlobalDashboard.tsx']
+        }
+      }
+    },
+    target: 'esnext',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.warn']
+      }
+    },
+    chunkSizeWarningLimit: 500
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom'],
+    exclude: ['@vitejs/plugin-react']
+  },
   server: {
     host: '0.0.0.0', // Permet l'accès depuis d'autres appareils du réseau
     port: 5174,

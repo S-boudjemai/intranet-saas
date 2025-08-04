@@ -1,48 +1,54 @@
+// src/audits/audits.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
+// Entities
 import { AuditTemplate } from './entities/audit-template.entity';
-import { AuditItem } from './entities/audit-item.entity';
+import { AuditTemplateItem } from './entities/audit-template-item.entity';
 import { AuditExecution } from './entities/audit-execution.entity';
 import { AuditResponse } from './entities/audit-response.entity';
 import { CorrectiveAction } from './entities/corrective-action.entity';
-import { AuditArchive } from './entities/audit-archive.entity';
-import { User } from '../users/entities/user.entity';
-import { AuditTemplatesController } from './audit-templates.controller';
-import { AuditExecutionsController } from './audit-executions.controller';
-import { CorrectiveActionsController } from './corrective-actions.controller';
-import { AuditArchivesController } from './audit-archives.controller';
-import { AuditTemplatesService } from './audit-templates.service';
-import { AuditExecutionsService } from './audit-executions.service';
-import { CorrectiveActionsService } from './corrective-actions.service';
-import { AuditArchivesService } from './audit-archives.service';
-import { AuditCleanupService } from './audit-cleanup.service';
-import { AuditCleanupController } from './audit-cleanup.controller';
+
+// Services
+import { AuditTemplatesService } from './services/audit-templates.service';
+import { AuditExecutionsService } from './services/audit-executions.service';
+import { CorrectiveActionsService } from './services/corrective-actions.service';
+
+// Controllers
+import { AuditTemplatesController } from './controllers/audit-templates.controller';
+import { AuditExecutionsController } from './controllers/audit-executions.controller';
+import { CorrectiveActionsController } from './controllers/corrective-actions.controller';
+
+// External modules
+// import { NotificationsModule } from '../notifications/notifications.module';
+import { PlanningModule } from '../planning/planning.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       AuditTemplate,
-      AuditItem,
+      AuditTemplateItem,
       AuditExecution,
       AuditResponse,
       CorrectiveAction,
-      AuditArchive,
-      User,
     ]),
+    PlanningModule, // Import du module planning pour le service
+    // NotificationsModule, // Commenté temporairement jusqu'à implémentation OneSignal
   ],
   controllers: [
     AuditTemplatesController,
     AuditExecutionsController,
     CorrectiveActionsController,
-    AuditArchivesController,
-    AuditCleanupController,
   ],
   providers: [
     AuditTemplatesService,
     AuditExecutionsService,
     CorrectiveActionsService,
-    AuditArchivesService,
-    AuditCleanupService,
+  ],
+  exports: [
+    AuditTemplatesService,
+    AuditExecutionsService,
+    CorrectiveActionsService,
   ],
 })
 export class AuditsModule {}

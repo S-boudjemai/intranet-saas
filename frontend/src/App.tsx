@@ -9,14 +9,15 @@ import {
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
-import { ToastProvider } from "./components/ToastContainer";
+import { Toaster } from 'react-hot-toast';
 // DEV ONLY - import { ToastTest } from "./components/ToastTest";
 import { useState, useEffect } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ServiceWorkerUI from "./components/ServiceWorkerUI";
-import { PushNotificationPrompt } from "./components/notifications/PushNotificationPrompt";
+import { PushNotificationPrompt } from "./components/PushNotificationPrompt";
+import { PageTransition } from "./components/ui/PageTransition";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -32,9 +33,8 @@ import Announcements from "./pages/AnnouncementsPage";
 import AnnouncementsNew from "./pages/AnnouncementsPageNew";
 import LandingPage from "./pages/LandingPage";
 import UsersPage from "./pages/UsersPage"; // <-- Import de la page Utilisateurs
-import AuditsPage from "./pages/AuditsPage";
-import AuditExecutionPage from "./pages/AuditExecutionPage";
-import ArchivesPage from "./pages/ArchivesPage";
+import AuditsPage from "./pages/AuditsPage"; // <-- Import de la page Audits
+import PlanningPage from "./pages/PlanningPage"; // <-- Import de la page Planning
 // DEV ONLY - import PushTestPage from "./pages/PushTestPage";
 
 
@@ -65,9 +65,9 @@ const AppContent = () => {
       )}
 
       {/* Le conteneur principal pour le contenu de la page */}
-      <div className={showNav ? "p-4" : ""}>
+      <div className={`${showNav ? "p-4" : ""} animate-fade-in`}>
         <ServiceWorkerUI />
-        {/* {user && <PushNotificationPrompt />} */}
+        {user && <PushNotificationPrompt />}
         <Routes>
           {/* Routes publiques */}
           <Route path="/" element={<LandingPage />} />
@@ -96,6 +96,8 @@ const AppContent = () => {
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/tickets" element={<TicketsPage />} />
             <Route path="/announcements" element={<AnnouncementsNew />} />
+            <Route path="/audits" element={<AuditsPage />} />
+            <Route path="/planning" element={<PlanningPage />} />
             {/* <Route path="/announcements-old" element={<Announcements />} /> */}
             
             {/* Users - adaptatif selon le mode */}
@@ -108,44 +110,13 @@ const AppContent = () => {
               } 
             />
             
-            {/* Audits unifié - réservé aux admin/manager */}
-            <Route 
-              path="/audits" 
-              element={
-                <RoleProtectedRoute allowedRoles={['admin', 'manager']}>
-                  <AuditsPage />
-                </RoleProtectedRoute>
-              } 
-            />
-            
-            {/* Audit Execution - Accessible à tous les rôles */}
-            <Route path="/audit/:id" element={<AuditExecutionPage />} />
-            
-            {/* Archives - réservé aux admin/manager */}
-            <Route 
-              path="/archives" 
-              element={
-                <RoleProtectedRoute allowedRoles={['admin', 'manager']}>
-                  <ArchivesPage />
-                </RoleProtectedRoute>
-              } 
-            />
-            
             {/* Test Push Notifications - dev only */}
             <Route 
               path="/push-test" 
               element={
-                <ProtectedRoute>
-                  {/* DEV ONLY - <PushTestPage /> */}
-                  <div>Page de test push disponible seulement en développement</div>
-                </ProtectedRoute>
+                <div>Page de test push disponible seulement en développement</div>
               } 
             />
-            
-            {/* Redirections pour compatibilité avec anciennes URLs */}
-            <Route path="/audit-templates" element={<Navigate to="/audits?tab=templates" replace />} />
-            <Route path="/audit-planning" element={<Navigate to="/audits?tab=planning" replace />} />
-            <Route path="/corrective-actions" element={<Navigate to="/audits?tab=actions" replace />} />
             
             {/* Redirection vers dashboard par défaut */}
             <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
@@ -165,16 +136,39 @@ export default function App() {
       <AuthProvider>
           <ThemeProvider>
             <NotificationProvider>
-              <ToastProvider>
                 <BrowserRouter>
                   <div className="bg-background text-foreground min-h-screen">
                     <AppContent />
                   </div>
                 </BrowserRouter>
-              </ToastProvider>
             </NotificationProvider>
           </ThemeProvider>
       </AuthProvider>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: 'var(--background)',
+            color: 'var(--foreground)',
+            border: '1px solid var(--border)',
+          },
+          success: {
+            style: {
+              background: 'var(--background)',
+              color: 'var(--foreground)',
+              border: '1px solid #22c55e',
+            },
+          },
+          error: {
+            style: {
+              background: 'var(--background)',
+              color: 'var(--foreground)',
+              border: '1px solid #ef4444',
+            },
+          },
+        }}
+      />
     </ErrorBoundary>
   );
 }

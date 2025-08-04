@@ -197,29 +197,31 @@ export default function TicketsPage() {
 
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="min-h-screen bg-background"
-    >
-      {/* Header moderne avec actions */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="px-6 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-primary/10 border border-primary/20 rounded-xl">
-                <TicketIcon className="h-6 w-6 text-primary" />
+    <>
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-4 mb-2">
+                <div className="p-2 bg-primary/10 border border-primary/20 rounded-xl">
+                  <TicketIcon className="h-6 w-6 text-primary" />
+                </div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Tickets Support
+                </h1>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Tickets Support</h1>
-                <p className="text-sm text-muted-foreground">
-                  {isManager 
-                    ? `${filteredTickets.length} ticket${filteredTickets.length !== 1 ? 's' : ''} ${statusFilter === 'all' ? 'au total' : getStatusLabel(statusFilter)}`
-                    : `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''} créé${tickets.length !== 1 ? 's' : ''}`
-                  }
-                </p>
-              </div>
+              <p className="text-muted-foreground">
+                {isManager 
+                  ? `${filteredTickets.length} ticket${filteredTickets.length !== 1 ? 's' : ''} ${statusFilter === 'all' ? 'au total' : getStatusLabel(statusFilter)}`
+                  : `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''} créé${tickets.length !== 1 ? 's' : ''}`
+                }
+              </p>
             </div>
             
             {isViewer && (
@@ -232,71 +234,81 @@ export default function TicketsPage() {
               </button>
             )}
           </div>
-        </div>
-      </div>
+        </motion.div>
 
-      <div className="px-6 py-6 space-y-6">
         {/* Filtres pour managers */}
         {isManager && (
-          <div className="bg-card border border-border rounded-2xl p-6">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <FilterIcon className="h-4 w-4" />
-                Filtrer par statut:
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setStatusFilter('all')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    statusFilter === 'all'
-                      ? 'bg-primary/10 text-primary border border-primary/20'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  Tous ({ticketStats.total})
-                </button>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="mb-8"
+          >
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <FilterIcon className="h-4 w-4" />
+                  Filtrer par statut:
+                </div>
                 
-                <button
-                  onClick={() => setStatusFilter('non_traitee')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    statusFilter === 'non_traitee'
-                      ? 'bg-red-100 text-red-700 border border-red-200'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  Non traités ({ticketStats.non_traitee})
-                </button>
-                
-                <button
-                  onClick={() => setStatusFilter('en_cours')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    statusFilter === 'en_cours'
-                      ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  En cours ({ticketStats.en_cours})
-                </button>
-                
-                <button
-                  onClick={() => setStatusFilter('traitee')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    statusFilter === 'traitee'
-                      ? 'bg-green-100 text-green-700 border border-green-200'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  Traités ({ticketStats.traitee})
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setStatusFilter('all')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      statusFilter === 'all'
+                        ? 'bg-primary/10 text-primary border border-primary/20'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    Tous ({ticketStats.total})
+                  </button>
+                  
+                  <button
+                    onClick={() => setStatusFilter('non_traitee')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      statusFilter === 'non_traitee'
+                        ? 'bg-red-100 text-red-700 border border-red-200'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    Non traités ({ticketStats.non_traitee})
+                  </button>
+                  
+                  <button
+                    onClick={() => setStatusFilter('en_cours')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      statusFilter === 'en_cours'
+                        ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    En cours ({ticketStats.en_cours})
+                  </button>
+                  
+                  <button
+                    onClick={() => setStatusFilter('traitee')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      statusFilter === 'traitee'
+                        ? 'bg-green-100 text-green-700 border border-green-200'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    Traités ({ticketStats.traitee})
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Zone de création de ticket (collapsible pour viewers) */}
         {showCreateForm && isViewer && (
-          <div className="bg-card border border-border rounded-2xl p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="bg-card border border-border rounded-xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-foreground">Créer un nouveau ticket</h2>
               <button
@@ -306,12 +318,17 @@ export default function TicketsPage() {
                 ✕
               </button>
             </div>
-            <CreateTicketForm onSuccess={handleCreated} />
-          </div>
+              <CreateTicketForm onSuccess={handleCreated} />
+            </div>
+          </motion.div>
         )}
 
         {/* Liste des tickets */}
-        <div className="space-y-6">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           {loading ? (
             <div className="space-y-4">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -366,20 +383,21 @@ export default function TicketsPage() {
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
+    </div>
 
-      {/* --- NOTRE MODALE DE CONFIRMATION --- */}
-      <ConfirmModal
-        isOpen={isConfirmModalOpen}
-        onClose={() => setIsConfirmModalOpen(false)}
-        onConfirm={confirmDelete}
-        title="Supprimer le ticket"
-      >
-        Êtes-vous sûr de vouloir supprimer définitivement le ticket "
-        <span className="font-bold">{ticketToDelete?.title}</span>" ? Cette
-        action est irréversible.
-      </ConfirmModal>
-    </motion.div>
+    {/* --- NOTRE MODALE DE CONFIRMATION --- */}
+    <ConfirmModal
+      isOpen={isConfirmModalOpen}
+      onClose={() => setIsConfirmModalOpen(false)}
+      onConfirm={confirmDelete}
+      title="Supprimer le ticket"
+    >
+      Êtes-vous sûr de vouloir supprimer définitivement le ticket "
+      <span className="font-bold">{ticketToDelete?.title}</span>" ? Cette
+      action est irréversible.
+    </ConfirmModal>
+    </>
   );
 }

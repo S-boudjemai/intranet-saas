@@ -8,7 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Document } from '../../documents/entities/document.entity';
-// import { Tag } from '../../tags/entites/tag.entity'; // Disabled for now
+// import { Tag } from '../../tags/entities/tag.entity'; // Disabled for now
 import { Category } from '../../categories/entities/category.entity';
 import { UpdateDocumentDto } from '../dto/create-document.dto';
 

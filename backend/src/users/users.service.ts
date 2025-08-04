@@ -49,6 +49,7 @@ export class UsersService {
         'user.id',
         'user.tenant_id',
         'user.email',
+        'user.name',
         'user.password_hash',
         'user.role',
         'user.is_active',
@@ -70,7 +71,7 @@ export class UsersService {
   findByTenant(tenant_id: number) {
     return this.repo.find({ 
       where: { tenant_id },
-      select: ['id', 'email', 'role', 'tenant_id', 'restaurant_id']
+      select: ['id', 'email', 'name', 'role', 'tenant_id', 'restaurant_id']
     });
   }
 

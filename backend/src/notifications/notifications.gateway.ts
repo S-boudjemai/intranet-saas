@@ -45,7 +45,6 @@ export class NotificationsGateway
 
   async handleConnection(client: AuthenticatedSocket) {
     try {
-      console.log('🔌 Nouvelle connexion WebSocket:', client.id);
 
       // Extraire le token du handshake
       const token =
@@ -53,7 +52,7 @@ export class NotificationsGateway
         client.handshake.headers?.authorization?.replace('Bearer ', '');
 
       if (!token) {
-        console.log('❌ Pas de token fourni, déconnexion');
+
         client.disconnect();
         return;
       }
@@ -61,11 +60,11 @@ export class NotificationsGateway
       // Vérifier le token JWT
       const payload = this.jwtService.verify(token);
       console.log('🔍 JWT Payload reçu:', JSON.stringify(payload, null, 2));
-      
+
       // Normaliser le userId (maintenant toujours présent grâce à auth.service.ts)
       const userId = payload.userId || payload.id;
       if (!userId) {
-        console.log('❌ userId manquant dans JWT payload, déconnexion');
+
         client.disconnect();
         return;
       }
@@ -87,7 +86,7 @@ export class NotificationsGateway
       console.log(
         `📍 User ${client.userId} rejoint la room tenant_${client.tenantId}`,
       );
-      console.log(`👥 Utilisateurs connectés: ${this.connectedUsers.size}`);
+
     } catch (error) {
       console.error('🚨 Erreur connexion WebSocket:', error);
       client.disconnect();
@@ -103,17 +102,17 @@ export class NotificationsGateway
   // Envoyer une notification à un utilisateur spécifique
   sendToUser(userId: number, event: string, data: any) {
     const socketId = this.connectedUsers.get(userId);
-    
+
     console.log(
       `🔍 sendToUser - userId: ${userId}, event: ${event}, socketId: ${socketId}`,
     );
 
     if (socketId) {
-      console.log(`📡 Émission événement ${event} vers socket ${socketId}`);
+
       this.server.to(socketId).emit(event, data);
-      console.log(`✅ Événement ${event} émis avec succès`);
+
     } else {
-      console.log(`❌ User ${userId} pas connecté, événement ${event} ignoré`);
+
     }
   }
 
@@ -144,11 +143,9 @@ export class NotificationsGateway
   }
 
   notifyTicketCreated(managerIds: number[], data: any) {
-    console.log('📩 notifyTicketCreated appelée pour managers:', managerIds);
-    console.log('📝 Données ticket:', data);
 
     managerIds.forEach((managerId) => {
-      console.log(`📤 Envoi ticket_created à user ${managerId}`);
+
       this.sendToUser(managerId, 'ticket_created', data);
     });
   }

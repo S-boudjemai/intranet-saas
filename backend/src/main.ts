@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { createWinstonLogger } from './common/logger/logger.config';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
@@ -77,7 +78,7 @@ async function bootstrap() {
 
   // Global filters et interceptors
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new TransformInterceptor());
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -113,8 +114,7 @@ async function bootstrap() {
     .addTag('Tickets', 'Système de tickets de support')
     .addTag('Announcements', 'Annonces franchiseur → franchisé')
     .addTag('Users', 'Gestion des utilisateurs et invitations')
-    .addTag('Audits', "Module d'audit et conformité")
-    .addTag('Corrective Actions', 'Actions correctives')
+    .addTag('Dashboard', 'Métriques et statistiques')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
