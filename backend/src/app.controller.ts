@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Head } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Public } from './auth/public.decorator';
 
@@ -6,8 +6,15 @@ import { Public } from './auth/public.decorator';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  @Public()
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @Public()
+  @Head()
+  getHead(): void {
+    // Render health check
   }
 }

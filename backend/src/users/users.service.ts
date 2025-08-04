@@ -49,7 +49,6 @@ export class UsersService {
         'user.id',
         'user.tenant_id',
         'user.email',
-        'user.name',
         'user.password_hash',
         'user.role',
         'user.is_active',
