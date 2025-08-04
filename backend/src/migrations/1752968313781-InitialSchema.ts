@@ -312,13 +312,14 @@ export class InitialSchema1752968313781 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "ticket_attachments" (
-        "id" SERIAL NOT NULL,
-        "ticket_id" integer NOT NULL,
-        "file_name" character varying NOT NULL,
-        "file_path" character varying NOT NULL,
-        "file_size" integer,
-        "mime_type" character varying,
-        "created_by" integer NOT NULL,
+        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+        "filename" character varying NOT NULL,
+        "url" character varying NOT NULL,
+        "mime_type" character varying NOT NULL,
+        "file_size" integer NOT NULL,
+        "ticket_id" character varying,
+        "comment_id" character varying,
+        "uploaded_by" integer NOT NULL,
         "created_at" TIMESTAMP NOT NULL DEFAULT now(),
         CONSTRAINT "PK_ticket_attachments" PRIMARY KEY ("id")
       )
@@ -362,7 +363,8 @@ export class InitialSchema1752968313781 implements MigrationInterface {
     await queryRunner.query(`ALTER TABLE "non_conformities" ADD CONSTRAINT "FK_non_conformities_execution" FOREIGN KEY ("execution_id") REFERENCES "audit_executions"("id") ON DELETE CASCADE`);
     await queryRunner.query(`ALTER TABLE "non_conformities" ADD CONSTRAINT "FK_non_conformities_responsible" FOREIGN KEY ("responsible_user_id") REFERENCES "users"("id") ON DELETE SET NULL`);
     await queryRunner.query(`ALTER TABLE "ticket_attachments" ADD CONSTRAINT "FK_ticket_attachments_ticket" FOREIGN KEY ("ticket_id") REFERENCES "tickets"("id") ON DELETE CASCADE`);
-    await queryRunner.query(`ALTER TABLE "ticket_attachments" ADD CONSTRAINT "FK_ticket_attachments_created_by" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE CASCADE`);
+    await queryRunner.query(`ALTER TABLE "ticket_attachments" ADD CONSTRAINT "FK_ticket_attachments_comment" FOREIGN KEY ("comment_id") REFERENCES "comment"("id") ON DELETE CASCADE`);
+    await queryRunner.query(`ALTER TABLE "ticket_attachments" ADD CONSTRAINT "FK_ticket_attachments_uploaded_by" FOREIGN KEY ("uploaded_by") REFERENCES "users"("id") ON DELETE CASCADE`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

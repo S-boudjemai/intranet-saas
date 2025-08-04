@@ -4,72 +4,13 @@ export class AddCascadeDeleteToTickets1753308000000 implements MigrationInterfac
   name = 'AddCascadeDeleteToTickets1753308000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Supprimer les contraintes existantes
-    await queryRunner.query(`ALTER TABLE "comment" DROP CONSTRAINT IF EXISTS "FK_9bf3c241d95fc8493047444f5ff"`);
-    await queryRunner.query(`ALTER TABLE "ticket_attachments" DROP CONSTRAINT IF EXISTS "FK_e0f8a06ef056fd08c74e7fb8173"`);
-    await queryRunner.query(`ALTER TABLE "ticket_attachments" DROP CONSTRAINT IF EXISTS "FK_9fc134e9d6e0b2b9e8e9c14e1e1"`);
-
-    // Recréer les contraintes avec CASCADE
-    await queryRunner.query(`
-      ALTER TABLE "comment" 
-      ADD CONSTRAINT "FK_9bf3c241d95fc8493047444f5ff" 
-      FOREIGN KEY ("ticket_id") 
-      REFERENCES "tickets"("id") 
-      ON DELETE CASCADE 
-      ON UPDATE NO ACTION
-    `);
-
-    await queryRunner.query(`
-      ALTER TABLE "ticket_attachments" 
-      ADD CONSTRAINT "FK_e0f8a06ef056fd08c74e7fb8173" 
-      FOREIGN KEY ("ticket_id") 
-      REFERENCES "tickets"("id") 
-      ON DELETE CASCADE 
-      ON UPDATE NO ACTION
-    `);
-
-    await queryRunner.query(`
-      ALTER TABLE "ticket_attachments" 
-      ADD CONSTRAINT "FK_9fc134e9d6e0b2b9e8e9c14e1e1" 
-      FOREIGN KEY ("comment_id") 
-      REFERENCES "comment"("id") 
-      ON DELETE CASCADE 
-      ON UPDATE NO ACTION
-    `);
+    // Cette migration est maintenant vide car InitialSchema crée déjà les FK avec CASCADE
+    // Les contraintes FK sont déjà correctement configurées dans InitialSchema
+    console.log('⚙️  AddCascadeDeleteToTickets: Les contraintes CASCADE sont déjà présentes dans InitialSchema');
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // Supprimer les contraintes CASCADE
-    await queryRunner.query(`ALTER TABLE "ticket_attachments" DROP CONSTRAINT IF EXISTS "FK_9fc134e9d6e0b2b9e8e9c14e1e1"`);
-    await queryRunner.query(`ALTER TABLE "ticket_attachments" DROP CONSTRAINT IF EXISTS "FK_e0f8a06ef056fd08c74e7fb8173"`);
-    await queryRunner.query(`ALTER TABLE "comment" DROP CONSTRAINT IF EXISTS "FK_9bf3c241d95fc8493047444f5ff"`);
-
-    // Recréer les contraintes sans CASCADE
-    await queryRunner.query(`
-      ALTER TABLE "comment" 
-      ADD CONSTRAINT "FK_9bf3c241d95fc8493047444f5ff" 
-      FOREIGN KEY ("ticket_id") 
-      REFERENCES "tickets"("id") 
-      ON DELETE NO ACTION 
-      ON UPDATE NO ACTION
-    `);
-
-    await queryRunner.query(`
-      ALTER TABLE "ticket_attachments" 
-      ADD CONSTRAINT "FK_e0f8a06ef056fd08c74e7fb8173" 
-      FOREIGN KEY ("ticket_id") 
-      REFERENCES "tickets"("id") 
-      ON DELETE NO ACTION 
-      ON UPDATE NO ACTION
-    `);
-
-    await queryRunner.query(`
-      ALTER TABLE "ticket_attachments" 
-      ADD CONSTRAINT "FK_9fc134e9d6e0b2b9e8e9c14e1e1" 
-      FOREIGN KEY ("comment_id") 
-      REFERENCES "comment"("id") 
-      ON DELETE NO ACTION 
-      ON UPDATE NO ACTION
-    `);
+    // Rien à faire car cette migration est maintenant vide
+    console.log('⚙️  AddCascadeDeleteToTickets rollback: Rien à faire');
   }
 }
