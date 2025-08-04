@@ -7,9 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'pwa-192x192.svg', 'pwa-512x512.svg'],
+      includeAssets: ['favicon.ico', 'pwa-192x192.svg', 'pwa-512x512.svg', 'apple-touch-icon.png', '*.png'],
       strategies: 'generateSW',
-      injectRegister: false,
+      injectRegister: 'auto',
       devOptions: {
         enabled: true
       },
@@ -25,7 +25,45 @@ export default defineConfig({
         scope: '/',
         start_url: '/',
         categories: ['business', 'productivity'],
+        // Configuration iOS spécifique
+        prefer_related_applications: false,
+        lang: 'fr-FR',
         icons: [
+          // Icônes PNG pour iOS (obligatoires)
+          {
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: '/apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          // Icônes iOS spécifiques
+          {
+            src: '/apple-touch-icon-152x152.png',
+            sizes: '152x152',
+            type: 'image/png'
+          },
+          {
+            src: '/apple-touch-icon-120x120.png',
+            sizes: '120x120',
+            type: 'image/png'
+          },
+          // Fallback SVG
           {
             src: '/pwa-192x192.svg',
             sizes: '192x192',
@@ -35,36 +73,14 @@ export default defineConfig({
             src: '/pwa-512x512.svg',
             sizes: '512x512',
             type: 'image/svg+xml'
-          },
-          {
-            src: '/pwa-192x192.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml',
-            purpose: 'maskable'
-          },
-          {
-            src: '/pwa-192x192.svg',
-            sizes: '180x180',
-            type: 'image/svg+xml',
-            purpose: 'any'
-          },
-          {
-            src: '/pwa-192x192.svg',
-            sizes: '152x152',
-            type: 'image/svg+xml',
-            purpose: 'any'
-          },
-          {
-            src: '/pwa-192x192.svg',
-            sizes: '120x120',
-            type: 'image/svg+xml',
-            purpose: 'any'
           }
         ]
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         globDirectory: 'dist',
+        // Import OneSignal dans le service worker généré
+        importScripts: ['https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -87,9 +103,19 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24 // 24 hours
               }
             }
+          },
+          {
+            urlPattern: /^https:\/\/cdn\.onesignal\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'onesignal-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 1 week
+              }
+            }
           }
-        ],
-        // Service worker pour PWA uniquement (Firebase supprimé)
+        ]
       }
     })
   ],

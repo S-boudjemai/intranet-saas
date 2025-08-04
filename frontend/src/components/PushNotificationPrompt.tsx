@@ -21,14 +21,27 @@ export const PushNotificationPrompt = ({ onDismiss, onAccept }: PushNotification
       const permission = Notification.permission;
       const hasShownPrompt = localStorage.getItem('push-prompt-shown');
       
+      // Détection iOS/PWA
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+      
+      // Sur iOS, attendre que la PWA soit installée
+      if (isIOS && !isPWA) {
+        console.log('[Push Prompt] iOS détecté sans PWA - attente installation');
+        return;
+      }
+      
       // Afficher seulement si pas encore demandé et supporté
       if (permission === 'default' && !hasShownPrompt) {
         setIsVisible(true);
       }
     };
 
-    // Délai pour ne pas être trop intrusif
-    setTimeout(checkPermission, 3000);
+    // Délai plus long sur iOS pour laisser temps d'installer la PWA
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const delay = isIOS ? 10000 : 3000; // 10s sur iOS, 3s ailleurs
+    
+    setTimeout(checkPermission, delay);
   }, []);
 
   const handleAccept = async () => {
@@ -82,6 +95,11 @@ export const PushNotificationPrompt = ({ onDismiss, onAccept }: PushNotification
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Recevez des notifications pour les nouvelles annonces, documents et tickets
+                {/iPad|iPhone|iPod/.test(navigator.userAgent) && (
+                  <span className="block mt-1 text-xs text-amber-600 dark:text-amber-400">
+                    💡 Sur iOS, installez d'abord l'app depuis Safari
+                  </span>
+                )}
               </p>
               
               <div className="flex gap-2">
