@@ -35,7 +35,7 @@ export class CreatePlanningTasksTable1754000000000 implements MigrationInterface
           {
             name: 'type',
             type: 'enum',
-            enum: ['audit', 'custom'],
+            enum: ['audit', 'custom', 'corrective_action'],
             default: "'custom'",
           },
           {
@@ -64,6 +64,11 @@ export class CreatePlanningTasksTable1754000000000 implements MigrationInterface
           },
           {
             name: 'audit_execution_id',
+            type: 'uuid',
+            isNullable: true,
+          },
+          {
+            name: 'corrective_action_id',
             type: 'uuid',
             isNullable: true,
           },
@@ -115,6 +120,12 @@ export class CreatePlanningTasksTable1754000000000 implements MigrationInterface
       ALTER TABLE "planning_tasks" 
       ADD CONSTRAINT "FK_planning_tasks_audit_execution_id" 
       FOREIGN KEY ("audit_execution_id") REFERENCES "audit_executions"("id") ON DELETE SET NULL
+    `);
+
+    await queryRunner.query(`
+      ALTER TABLE "planning_tasks" 
+      ADD CONSTRAINT "FK_planning_tasks_corrective_action" 
+      FOREIGN KEY ("corrective_action_id") REFERENCES "corrective_actions"("id") ON DELETE CASCADE
     `);
   }
 
