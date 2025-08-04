@@ -8,6 +8,7 @@
   "scripts": {
     "build": "nest build",
     "seed:admin": "ts-node src/seed-admin.ts",
+    "init:fresh-db": "ts-node src/scripts/init-fresh-db.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
