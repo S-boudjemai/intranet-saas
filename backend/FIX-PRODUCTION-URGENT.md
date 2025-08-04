@@ -9,7 +9,22 @@
 
 ## Solution Immédiate
 
-### Option 1: Via Migration (Recommandé)
+### ⚠️ ATTENTION: Problème de type détecté
+La table `audit_templates` utilise un ID de type INTEGER au lieu de UUID en production.
+Cela cause une incompatibilité avec le code qui attend des UUID.
+
+### Option 1: Script SQL Direct (RECOMMANDÉ)
+
+1. Se connecter à la base PostgreSQL Render :
+   - Dashboard Render → PostgreSQL → Connect → PSQL Command
+   
+2. Exécuter le script :
+```bash
+# Copier et exécuter le contenu de:
+scripts/fix-production-manual.sql
+```
+
+### Option 2: Via Migration (peut échouer)
 
 1. Se connecter au shell Render :
 ```bash
@@ -20,39 +35,15 @@ cd /opt/render/project/src/backend
 npm run migration:run
 ```
 
-### Option 2: Correction Manuelle SQL
+### Option 3: Solution Temporaire (Si urgent)
 
-Si la migration échoue, exécuter directement dans PostgreSQL :
-
-```sql
--- 1. Ajouter extension UUID si nécessaire
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- 2. Ajouter colonne name à users
-ALTER TABLE users 
-ADD COLUMN IF NOT EXISTS name character varying DEFAULT NULL;
-
--- 3. Créer table audit_template_items
-CREATE TABLE IF NOT EXISTS audit_template_items (
-  id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-  template_id uuid NOT NULL,
-  question text NOT NULL,
-  category varchar(100) NOT NULL,
-  response_type varchar(20) NOT NULL DEFAULT 'boolean',
-  "order" integer NOT NULL DEFAULT 0,
-  is_required boolean NOT NULL DEFAULT true,
-  created_at TIMESTAMP NOT NULL DEFAULT now(),
-  updated_at TIMESTAMP NOT NULL DEFAULT now(),
-  CONSTRAINT FK_audit_template_items_template 
-    FOREIGN KEY (template_id) 
-    REFERENCES audit_templates(id) 
-    ON DELETE CASCADE
-);
-
--- 4. Créer index pour performances
-CREATE INDEX IF NOT EXISTS IDX_audit_template_items_template 
-ON audit_template_items (template_id);
+Commenter temporairement les modules problématiques dans `app.module.ts` :
+```typescript
+// AuditsModule,  // Commenter temporairement
+// PlanningModule, // Commenter temporairement
 ```
+
+Puis redéployer pour avoir au moins le reste de l'app fonctionnel.
 
 ### Option 3: Désactiver Temporairement le Module Audits
 
