@@ -86,17 +86,21 @@ import { PlanningModule } from './planning/planning.module';
 
         // Support pour DATABASE_URL (Render, Heroku) ou variables séparées (local)
         const databaseUrl = cfg.get<string>('DATABASE_URL');
+        const isProduction = cfg.get<string>('NODE_ENV') === 'production';
+
+        // En production, DATABASE_URL est OBLIGATOIRE
+        if (isProduction && !databaseUrl) {
+          throw new Error('DATABASE_URL is required in production environment');
+        }
 
         if (databaseUrl) {
+          console.log('🚀 Using DATABASE_URL for connection');
           return {
             type: 'postgres',
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: cfg.get<string>('NODE_ENV') !== 'production',
-            ssl:
-              cfg.get<string>('NODE_ENV') === 'production'
-                ? { rejectUnauthorized: false }
-                : false,
+            synchronize: false, // JAMAIS en production
+            ssl: isProduction ? { rejectUnauthorized: false } : false,
             connectTimeoutMS: 30000,
             acquireTimeoutMS: 30000,
             retryAttempts: 5,
@@ -106,8 +110,12 @@ import { PlanningModule } from './planning/planning.module';
           };
         }
 
-        // Fallback vers variables séparées pour développement local
-        console.log('🔧 PostgreSQL config:', {
+        // Fallback vers variables séparées UNIQUEMENT pour développement local
+        if (isProduction) {
+          throw new Error('DATABASE_URL must be set in production. Individual DB_* variables are not supported in production.');
+        }
+
+        console.log('🔧 Using local PostgreSQL config (dev only):', {
           host: cfg.get<string>('DB_HOST'),
           port: cfg.get<string>('DB_PORT'),
           username: cfg.get<string>('DB_USER'),
@@ -122,7 +130,7 @@ import { PlanningModule } from './planning/planning.module';
           password: cfg.get<string>('DB_PASS'),
           database: cfg.get<string>('DB_NAME'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          synchronize: cfg.get<string>('NODE_ENV') !== 'production',
+          synchronize: true, // OK en dev local
           ssl: false,
           connectTimeoutMS: 30000,
           acquireTimeoutMS: 30000,

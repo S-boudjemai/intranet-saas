@@ -7,13 +7,18 @@
 const { Client } = require('pg');
 
 // Configuration de la base de données
-const dbConfig = {
-  host: process.env.DB_HOST || '192.168.1.77',
-  port: process.env.DB_PORT || 5432,
-  user: process.env.DB_USER || 'postgres', 
-  password: process.env.DB_PASS || '',
-  database: process.env.DB_NAME || 'internet_saas',
-};
+const dbConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    }
+  : {
+      host: process.env.DB_HOST || '192.168.1.77',
+      port: process.env.DB_PORT || 5432,
+      user: process.env.DB_USER || 'postgres', 
+      password: process.env.DB_PASS || '',
+      database: process.env.DB_NAME || 'internet_saas',
+    };
 
 async function cleanNullNotifications() {
   const client = new Client(dbConfig);
