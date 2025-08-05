@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  base: '/', // Explicitement défini pour éviter les problèmes de déploiement
   plugins: [
     react(),
     VitePWA({
@@ -81,6 +82,10 @@ export default defineConfig({
         globDirectory: 'dist',
         // Import OneSignal dans le service worker généré
         importScripts: ['https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'],
+        // Configuration navigation fallback pour éviter 404
+        navigateFallback: '/index.html',
+        navigateFallbackAllowlist: [/.*/], // Autoriser TOUTES les routes SPA
+        navigateFallbackDenylist: [/^\/api\//, /\/__/, /\.(?:css|js|ico|png|svg|jpg|jpeg|gif|webp)$/], // Exclure API et assets
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

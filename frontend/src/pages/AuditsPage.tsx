@@ -44,6 +44,9 @@ const AuditsPage: React.FC = () => {
   const [isAuditDetailsModalOpen, setIsAuditDetailsModalOpen] = useState(false);
   const [selectedAuditForExecution, setSelectedAuditForExecution] = useState<AuditExecutionWithTemplate | undefined>();
   const [isExecuteAuditModalOpen, setIsExecuteAuditModalOpen] = useState(false);
+  
+  // Hooks au niveau page pour partager les données
+  const auditTemplatesHook = useAuditTemplates();
   const auditExecutionsHook = useAuditExecutions();
 
   const handleScheduleAudit = (template: AuditTemplate) => {
@@ -168,7 +171,7 @@ const AuditsPage: React.FC = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {activeTab === 'templates' && <TemplatesModule onScheduleAudit={handleScheduleAudit} />}
+          {activeTab === 'templates' && <TemplatesModule onScheduleAudit={handleScheduleAudit} auditTemplatesHook={auditTemplatesHook} />}
           {activeTab === 'executions' && (
             <ExecutionsModule 
               onScheduleAudit={() => setIsScheduleModalOpen(true)}
@@ -196,6 +199,7 @@ const AuditsPage: React.FC = () => {
           onClose={handleCloseScheduleModal}
           onSubmit={auditExecutionsHook.createExecution}
           selectedTemplate={selectedTemplateForSchedule}
+          availableTemplates={auditTemplatesHook.templates}
         />
 
         {/* Modal de détails d'audit */}
@@ -223,10 +227,11 @@ const AuditsPage: React.FC = () => {
 // Module 1: Templates
 interface TemplatesModuleProps {
   onScheduleAudit: (template: AuditTemplate) => void;
+  auditTemplatesHook: ReturnType<typeof useAuditTemplates>;
 }
 
-const TemplatesModule: React.FC<TemplatesModuleProps> = ({ onScheduleAudit }) => {
-  const { templates, loading, createTemplate, updateTemplate, deleteTemplate } = useAuditTemplates();
+const TemplatesModule: React.FC<TemplatesModuleProps> = ({ onScheduleAudit, auditTemplatesHook }) => {
+  const { templates, loading, createTemplate, updateTemplate, deleteTemplate } = auditTemplatesHook;
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<AuditTemplateWithItems | undefined>();
   const [filterCategory, setFilterCategory] = useState<string>('');
@@ -256,19 +261,33 @@ const TemplatesModule: React.FC<TemplatesModuleProps> = ({ onScheduleAudit }) =>
   };
 
   const handleCreateTemplate = async (templateData: CreateAuditTemplateDto) => {
-    return await createTemplate(templateData);
+    const success = await createTemplate(templateData);
+    if (success) {
+      // Forcer le rafraîchissement des templates pour éviter le cache stale en PWA
+      await auditTemplatesHook.refetch();
+    }
+    return success;
   };
 
   const handleUpdateTemplate = async (templateData: CreateAuditTemplateDto) => {
     if (editingTemplate) {
-      return await updateTemplate(editingTemplate.id, templateData);
+      const success = await updateTemplate(editingTemplate.id, templateData);
+      if (success) {
+        // Forcer le rafraîchissement des templates après modification
+        await auditTemplatesHook.refetch();
+      }
+      return success;
     }
     return false;
   };
 
   const handleDeleteTemplate = async (template: AuditTemplateWithItems) => {
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer le template "${template.name}" ?`)) {
-      await deleteTemplate(template.id);
+      const success = await deleteTemplate(template.id);
+      if (success) {
+        // Forcer le rafraîchissement des templates après suppression
+        await auditTemplatesHook.refetch();
+      }
     }
   };
 

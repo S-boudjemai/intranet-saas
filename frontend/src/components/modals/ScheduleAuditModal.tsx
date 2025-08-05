@@ -11,6 +11,8 @@ interface ScheduleAuditModalProps {
   onClose: () => void;
   onSubmit: (data: CreateAuditExecutionDto) => Promise<boolean>;
   selectedTemplate?: AuditTemplate;
+  /** Templates disponibles (fournis par la page parent pour éviter le cache stale) */
+  availableTemplates?: AuditTemplate[];
 }
 
 const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
@@ -18,8 +20,12 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
   onClose,
   onSubmit,
   selectedTemplate,
+  availableTemplates,
 }) => {
-  const { templates, restaurants, managers, loading: dataLoading } = useScheduleAuditData();
+  const { templates: hookTemplates, restaurants, managers, loading: dataLoading } = useScheduleAuditData();
+  
+  // Utiliser les templates fournis par le parent, sinon fallback sur ceux du hook
+  const templates = availableTemplates || hookTemplates;
   
   const [formData, setFormData] = useState<CreateAuditExecutionDto>({
     title: '',

@@ -94,5 +94,6 @@ export const useAuditTemplates = () => {
     createTemplate,
     updateTemplate,
     deleteTemplate,
+    refetch: fetchTemplates, // Alias pour forcer le rechargement
   };
 };
