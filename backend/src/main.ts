@@ -132,10 +132,11 @@ async function bootstrap() {
     },
   });
 
-  await app.listen(3000);
-  logger.log('🚀 Backend sur http://localhost:3000', 'Bootstrap');
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  logger.log(`🚀 Backend sur http://localhost:${port}`, 'Bootstrap');
   logger.log(
-    '📚 Documentation Swagger sur http://localhost:3000/api',
+    `📚 Documentation Swagger sur http://localhost:${port}/api`,
     'Bootstrap',
   );
 }
