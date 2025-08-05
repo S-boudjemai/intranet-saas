@@ -8,13 +8,14 @@ export class AppController {
 
   @Public()
   @Get()
-  getHello(): string {
+  getHello(): any {
     return this.appService.getHello();
   }
 
   @Public()
   @Head()
-  getHead(): void {
-    // Render health check
+  getHead(): any {
+    // Health check for monitoring services (Render, etc.)
+    return this.appService.getHello();
   }
 }
