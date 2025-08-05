@@ -18,6 +18,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import ServiceWorkerUI from "./components/ServiceWorkerUI";
 import { PushNotificationPrompt } from "./components/PushNotificationPrompt";
 import { PageTransition } from "./components/ui/PageTransition";
+import useIOSStatusBar from "./hooks/useIOSStatusBar";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -42,6 +43,9 @@ import PlanningPage from "./pages/PlanningPage"; // <-- Import de la page Planni
 const AppContent = () => {
   const { user } = useAuth();
   const location = useLocation();
+  
+  // Hook pour gérer la status bar iOS automatiquement
+  useIOSStatusBar();
 
   // Pages où la NavBar ne doit PAS être affichée
   const noNavPages = ["/login", "/signup", "/", "/contact", "/forgot-password", "/reset-password"];
@@ -137,7 +141,7 @@ export default function App() {
           <ThemeProvider>
             <NotificationProvider>
                 <BrowserRouter>
-                  <div className="bg-background text-foreground min-h-screen">
+                  <div className="bg-background text-foreground min-h-screen pwa-safe-all scroll-momentum">
                     <AppContent />
                   </div>
                 </BrowserRouter>

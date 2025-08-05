@@ -292,8 +292,99 @@
   }
 }
 
-/* Nouvelles classes utilitaires */
+/* 📱 PWA iOS SAFE AREAS - Évite la notch/Dynamic Island */
 @layer utilities {
+  /* Safe areas pour iOS PWA */
+  .pwa-safe-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .pwa-safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .pwa-safe-left {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+  
+  .pwa-safe-right {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  
+  .pwa-safe-all {
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  
+  /* Version margin pour layouts spéciaux */
+  .pwa-margin-safe-top {
+    margin-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .pwa-margin-safe-bottom {
+    margin-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  /* 📱 TAILLES TACTILES MOBILES (min 44px iOS guidelines) */
+  .touch-44 {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .touch-48 {
+    min-width: 48px;
+    min-height: 48px;
+  }
+  
+  /* 📱 MOMENTUM SCROLLING iOS */
+  .scroll-smooth-ios {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+  }
+  
+  .scroll-momentum {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+  
+  /* 📱 ANIMATIONS OPTIMISÉES PWA */
+  .pwa-animation-reduced {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+  
+  .pwa-animation-fast {
+    animation-duration: 0.15s !important;
+    transition-duration: 0.15s !important;
+  }
+  
+  .pwa-no-animation {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Optimisations performance mobile */
+  .mobile-optimized {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* Touch optimizations */
+  .touch-optimized {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
+
+/* Nouvelles classes utilitaires */
   .text-success { color: hsl(var(--success)); }
   .text-warning { color: hsl(var(--warning)); }
   .text-error { color: hsl(var(--error)); }

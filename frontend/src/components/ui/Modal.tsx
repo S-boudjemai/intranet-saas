@@ -119,7 +119,7 @@ const Modal: React.FC<ModalProps> = ({
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center pwa-safe-all">
           {/* Backdrop */}
           <motion.div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -184,7 +184,7 @@ const Modal: React.FC<ModalProps> = ({
 
             {/* Content */}
             <div className={`
-              ${size === 'full' ? 'flex-1 overflow-auto' : ''} 
+              ${size === 'full' ? 'flex-1 overflow-auto scroll-smooth-ios' : ''} 
               ${(title || showCloseButton) ? 'p-6' : 'p-6'}
             `}>
               {children}

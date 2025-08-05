@@ -1,17 +1,55 @@
 // src/components/ui/Button.tsx
 import React from 'react';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { useButtonHaptic } from '../../hooks/useHaptic';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'destructive' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   icon?: React.ReactNode;
+  /** Activer le haptic feedback */
+  haptic?: boolean | 'submit' | 'delete' | 'save' | 'cancel' | 'toggle';
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className = '', variant = 'primary', size = 'md', loading = false, icon, children, disabled, ...props }, ref) => {
+  ({ className = '', variant = 'primary', size = 'md', loading = false, icon, children, disabled, haptic = false, onClick, ...props }, ref) => {
     const prefersReducedMotion = useReducedMotion();
+    const { onTap, onSubmit, onDelete, onSave, onCancel, onToggle } = useButtonHaptic();
+    
+    // Gérer le click avec haptic feedback
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (disabled || loading) return;
+      
+      // Vibration haptic selon le type
+      if (haptic) {
+        if (haptic === true) {
+          onTap(onClick ? () => onClick(e) : undefined)();
+        } else {
+          switch (haptic) {
+            case 'submit':
+              onSubmit(onClick ? () => onClick(e) : undefined)();
+              break;
+            case 'delete':
+              onDelete(onClick ? () => onClick(e) : undefined)();
+              break;
+            case 'save':
+              onSave(onClick ? () => onClick(e) : undefined)();
+              break;
+            case 'cancel':
+              onCancel(onClick ? () => onClick(e) : undefined)();
+              break;
+            case 'toggle':
+              onToggle(onClick ? () => onClick(e) : undefined)();
+              break;
+            default:
+              onTap(onClick ? () => onClick(e) : undefined)();
+          }
+        }
+      } else {
+        onClick?.(e);
+      }
+    };
     const baseClasses = 'inline-flex items-center justify-center font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden';
     
     const variants = {
@@ -58,8 +96,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <button
-        className={buttonClasses}
+        className={`${buttonClasses} touch-44 touch-optimized`}
         disabled={disabled || loading}
+        onClick={handleClick}
         ref={ref}
         {...props}
       >

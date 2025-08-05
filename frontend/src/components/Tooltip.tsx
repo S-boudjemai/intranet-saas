@@ -135,7 +135,7 @@ const Tooltip: React.FC<TooltipProps> = ({
           transform: 'translateX(-50%)',
           borderLeft: `${arrowSize}px solid transparent`,
           borderRight: `${arrowSize}px solid transparent`,
-          borderTop: `${arrowSize}px solid rgb(31 41 55)` // gray-800
+          borderTop: `${arrowSize}px solid hsl(var(--popover))` // gray-800
         };
       case 'bottom':
         return {
@@ -144,7 +144,7 @@ const Tooltip: React.FC<TooltipProps> = ({
           transform: 'translateX(-50%)',
           borderLeft: `${arrowSize}px solid transparent`,
           borderRight: `${arrowSize}px solid transparent`,
-          borderBottom: `${arrowSize}px solid rgb(31 41 55)`
+          borderBottom: `${arrowSize}px solid hsl(var(--popover))`
         };
       case 'left':
         return {
@@ -153,7 +153,7 @@ const Tooltip: React.FC<TooltipProps> = ({
           transform: 'translateY(-50%)',
           borderTop: `${arrowSize}px solid transparent`,
           borderBottom: `${arrowSize}px solid transparent`,
-          borderLeft: `${arrowSize}px solid rgb(31 41 55)`
+          borderLeft: `${arrowSize}px solid hsl(var(--popover))`
         };
       case 'right':
         return {
@@ -162,7 +162,7 @@ const Tooltip: React.FC<TooltipProps> = ({
           transform: 'translateY(-50%)',
           borderTop: `${arrowSize}px solid transparent`,
           borderBottom: `${arrowSize}px solid transparent`,
-          borderRight: `${arrowSize}px solid rgb(31 41 55)`
+          borderRight: `${arrowSize}px solid hsl(var(--popover))`
         };
       default:
         return {};
@@ -229,7 +229,7 @@ const Tooltip: React.FC<TooltipProps> = ({
             animate="visible"
             exit="exit"
             className={`
-              bg-gray-800 text-white text-sm px-3 py-2 rounded-lg shadow-lg
+              bg-popover text-popover-foreground border border-border text-sm px-3 py-2 rounded-lg shadow-lg
               max-w-xs break-words relative
               ${className}
             `}
