@@ -134,16 +134,16 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+          className="bg-background border border-border rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between p-6 border-b border-border">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
                 <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                <h2 className="text-xl font-semibold text-foreground">
                   Planifier un Audit
                 </h2>
                 {selectedTemplateData && (
@@ -175,7 +175,7 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
               <>
                 {/* Sélection du template */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     <FileText className="w-4 h-4 inline mr-1" />
                     Template d'audit *
                   </label>
@@ -184,7 +184,7 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
                     value={formData.template_id}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-background text-foreground"
                   >
                     <option value="">Sélectionner un template</option>
                     {templates.map((template) => (
@@ -198,19 +198,19 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
                 {/* Template Info */}
                 {selectedTemplateData && (
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                    <h3 className="font-medium text-foreground mb-2">
                       Informations du Template
                     </h3>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-gray-500 dark:text-gray-400">Catégorie:</span>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                        <p className="font-medium text-foreground">
                           {selectedTemplateData.category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                         </p>
                       </div>
                       <div>
                         <span className="text-gray-500 dark:text-gray-400">Durée estimée:</span>
-                        <p className="font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                        <p className="font-medium text-foreground flex items-center">
                           <Clock className="w-4 h-4 mr-1" />
                           {formatDuration(selectedTemplateData.estimated_duration)}
                         </p>
@@ -225,7 +225,7 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Description (optionnelle)
               </label>
               <textarea
@@ -233,14 +233,14 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
                 value={formData.description}
                 onChange={handleChange}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-background text-foreground"
                 placeholder="Description ou notes particulières pour cet audit..."
               />
             </div>
 
             {/* Restaurant */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 <MapPin className="w-4 h-4 inline mr-1" />
                 Restaurant *
               </label>
@@ -249,7 +249,7 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
                 value={formData.restaurant_id}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-background text-foreground"
               >
                 <option value={0}>Sélectionner un restaurant</option>
                 {restaurants.map((restaurant) => (
@@ -262,7 +262,7 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
 
             {/* Date et heure */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 <Calendar className="w-4 h-4 inline mr-1" />
                 Date et heure prévues *
               </label>
@@ -273,13 +273,13 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
                 onChange={handleChange}
                 min={`${today}T00:00`}
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-background text-foreground"
               />
             </div>
 
             {/* Auditeur */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 <User className="w-4 h-4 inline mr-1" />
                 Auditeur assigné (optionnel)
               </label>
@@ -287,7 +287,7 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
                 name="auditor_id"
                 value={formData.auditor_id || 0}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-background text-foreground"
               >
                 <option value={0}>Non assigné</option>
                 {managers.map((user) => (
@@ -301,11 +301,11 @@ const ScheduleAuditModal: React.FC<ScheduleAuditModalProps> = ({
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex justify-end space-x-3 pt-4 border-t border-border">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
+                className="px-4 py-2 text-foreground bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
               >
                 Annuler
               </button>

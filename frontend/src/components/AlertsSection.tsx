@@ -118,7 +118,7 @@ const AlertsSection: React.FC<AlertsSectionProps> = ({ alerts }) => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-red-200 dark:border-red-800"
+            className="bg-background rounded-xl p-4 border border-red-200 dark:border-red-800"
           >
             <div className="flex items-center gap-2 mb-3">
               <RestaurantIcon className="w-5 h-5 text-red-600" />
@@ -161,7 +161,7 @@ const AlertsSection: React.FC<AlertsSectionProps> = ({ alerts }) => {
             initial={{ opacity: 0, x: 0 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-red-200 dark:border-red-800"
+            className="bg-background rounded-xl p-4 border border-red-200 dark:border-red-800"
           >
             <div className="flex items-center gap-2 mb-3">
               <TicketIcon className="w-5 h-5 text-red-600" />
@@ -200,7 +200,7 @@ const AlertsSection: React.FC<AlertsSectionProps> = ({ alerts }) => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-red-200 dark:border-red-800"
+            className="bg-background rounded-xl p-4 border border-red-200 dark:border-red-800"
           >
             <div className="flex items-center gap-2 mb-3">
               <CogIcon className="w-5 h-5 text-red-600" />

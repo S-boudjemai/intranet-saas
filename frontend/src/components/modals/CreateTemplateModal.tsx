@@ -173,10 +173,10 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+            className="bg-background border border-border rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-6 border-b border-border">
               <div className="flex items-center gap-3">
                 <DocumentReportIcon className="w-6 h-6 text-primary" />
                 <h2 className="text-xl font-semibold text-foreground">
@@ -185,7 +185,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
               </div>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -205,7 +205,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                       placeholder="Ex: Audit Hygiène Restaurant"
                     />
                   </div>
@@ -218,7 +218,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
                       required
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value as AuditCategory })}
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                     >
                       {CATEGORIES.map(cat => (
                         <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -234,7 +234,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
                       required
                       value={formData.frequency}
                       onChange={(e) => setFormData({ ...formData, frequency: e.target.value as AuditFrequency })}
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                     >
                       {FREQUENCIES.map(freq => (
                         <option key={freq.value} value={freq.value}>{freq.label}</option>
@@ -253,7 +253,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
                       max="480"
                       value={formData.estimated_duration}
                       onChange={(e) => setFormData({ ...formData, estimated_duration: parseInt(e.target.value) })}
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                     />
                   </div>
                 </div>
@@ -311,7 +311,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
                               required
                               value={item.question}
                               onChange={(e) => updateItem(itemIndex, 'question', e.target.value)}
-                              className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                              className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                               placeholder="Posez votre question..."
                             />
                           </div>
@@ -324,7 +324,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
                               required
                               value={item.type}
                               onChange={(e) => updateItem(itemIndex, 'type', e.target.value as QuestionType)}
-                              className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                              className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                             >
                               {QUESTION_TYPES.map(type => (
                                 <option key={type.value} value={type.value}>{type.label}</option>
@@ -366,7 +366,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
                                     type="text"
                                     value={option}
                                     onChange={(e) => updateOption(itemIndex, optionIndex, e.target.value)}
-                                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                                     placeholder="Option..."
                                   />
                                   <button
@@ -390,7 +390,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
                             type="text"
                             value={item.help_text || ''}
                             onChange={(e) => updateItem(itemIndex, 'help_text', e.target.value)}
-                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
                             placeholder="Instructions ou aide pour cette question..."
                           />
                         </div>
@@ -412,7 +412,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-6 py-2 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                    className="px-6 py-2 border border-border rounded-lg hover:bg-muted/50 transition-colors bg-background text-foreground"
                   >
                     Annuler
                   </button>
