@@ -13,9 +13,8 @@ export const validationSchema = Joi.object({
   DB_PASS: Joi.string().optional(),
   DB_NAME: Joi.string().optional(),
 
-  // JWT
+  // JWT (simplifié sans refresh tokens)
   JWT_SECRET: Joi.string().required(),
-  JWT_REFRESH_SECRET: Joi.string().required(),
 
   // AWS S3 - optionnel pour les tests
   AWS_ACCESS_KEY_ID: Joi.string().optional(),
@@ -23,12 +22,19 @@ export const validationSchema = Joi.object({
   AWS_REGION: Joi.string().default('us-east-1'),
   AWS_S3_BUCKET: Joi.string().optional(),
 
-  // Email
-  MAIL_HOST: Joi.string().required(),
+  // Email Legacy (Mailtrap fallback) - optionnel
+  MAIL_HOST: Joi.string().optional(),
   MAIL_PORT: Joi.number().default(587),
-  MAIL_USER: Joi.string().required(),
-  MAIL_PASS: Joi.string().required(),
-  MAIL_FROM: Joi.string().required(),
+  MAIL_USER: Joi.string().optional(),
+  MAIL_PASS: Joi.string().optional(),
+  MAIL_FROM: Joi.string().default('noreply@franchisedesk.fr'),
+  MAIL_FROM_NAME: Joi.string().default('FranchiseDesk'),
+
+  // Email Moderne (Resend) - requis en production
+  RESEND_API_KEY: Joi.string().optional(),
+
+  // Frontend URL pour les liens d'emails
+  FRONTEND_URL: Joi.string().default('http://localhost:5174'),
 
   // OneSignal - pour les notifications push
   ONESIGNAL_APP_ID: Joi.string().optional(),
