@@ -24,7 +24,7 @@ export class NotificationsService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
   ) {
-    this.logger.log('📱 Notifications service initialized - Using OneSignal for push notifications');
+    // this.logger.log('📱 Notifications service initialized - Using OneSignal for push notifications');
   }
 
   // Créer une notification pour un utilisateur spécifique
@@ -372,9 +372,9 @@ export class NotificationsService {
     userId: number,
     notification: SendPushNotificationDto,
   ): Promise<void> {
-    this.logger.log(`📱 OneSignal - Would send push notification to user ${userId}: ${notification.title}`);
-    this.logger.log(`📱 OneSignal - Message: ${notification.body}`);
-    this.logger.log(`📱 OneSignal - Data:`, JSON.stringify(notification.data, null, 2));
+    // this.logger.log(`📱 OneSignal - Would send push notification to user ${userId}: ${notification.title}`);
+    // this.logger.log(`📱 OneSignal - Message: ${notification.body}`);
+    // this.logger.log(`📱 OneSignal - Data:`, JSON.stringify(notification.data, null, 2));
 
     // TODO: Implémenter l'envoi via OneSignal API
     // Les subscriptions sont conservées pour futur usage avec OneSignal
@@ -462,7 +462,7 @@ export class NotificationsService {
 
   // Récupérer la clé publique pour le frontend (OneSignal)
   getVapidPublicKey(): string {
-    this.logger.log('📱 OneSignal - VAPID key requested - Using OneSignal app ID instead');
+    // this.logger.log('📱 OneSignal - VAPID key requested - Using OneSignal app ID instead');
     // TODO: Retourner l'App ID OneSignal ou autre configuration nécessaire
     return 'onesignal-app-id-placeholder';
   }

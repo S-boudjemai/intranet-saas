@@ -19,9 +19,9 @@ export class AuditTemplatesService {
 
   async create(createDto: CreateAuditTemplateDto, userId: number, tenantId: string): Promise<AuditTemplate> {
     try {
-      this.logger.log(`🎯 [SERVICE] Création template audit: ${createDto.name} pour tenant ${tenantId}`);
-      this.logger.log(`🔍 [SERVICE] DTO reçu:`, JSON.stringify(createDto, null, 2));
-      this.logger.log(`👤 [SERVICE] userId: ${userId}, tenantId: ${tenantId}`);
+      // this.logger.log(`🎯 [SERVICE] Création template audit: ${createDto.name} pour tenant ${tenantId}`);
+      // this.logger.log(`🔍 [SERVICE] DTO reçu:`, JSON.stringify(createDto, null, 2));
+      // this.logger.log(`👤 [SERVICE] userId: ${userId}, tenantId: ${tenantId}`);
 
       const template = this.templatesRepository.create({
         ...createDto,
@@ -33,10 +33,10 @@ export class AuditTemplatesService {
         })),
       });
 
-      this.logger.log(`💾 [SERVICE] Template créé en mémoire:`, JSON.stringify(template, null, 2));
+      // this.logger.log(`💾 [SERVICE] Template créé en mémoire:`, JSON.stringify(template, null, 2));
 
       const savedTemplate = await this.templatesRepository.save(template);
-      this.logger.log(`✅ [SERVICE] Template sauvegardé avec ID: ${savedTemplate.id}`);
+      // this.logger.log(`✅ [SERVICE] Template sauvegardé avec ID: ${savedTemplate.id}`);
 
       return this.findOne(savedTemplate.id, tenantId);
 
@@ -48,7 +48,7 @@ export class AuditTemplatesService {
   }
 
   async findAll(tenantId: string): Promise<AuditTemplate[]> {
-    this.logger.log(`🔍 [FINDALL] Recherche templates pour tenant: ${tenantId}`);
+    // this.logger.log(`🔍 [FINDALL] Recherche templates pour tenant: ${tenantId}`);
 
     const templates = await this.templatesRepository.find({
       where: { tenant_id: tenantId, is_active: true },
@@ -56,9 +56,9 @@ export class AuditTemplatesService {
       order: { created_at: 'DESC' },
     });
 
-    this.logger.log(`✅ [FINDALL] ${templates.length} templates trouvés pour tenant ${tenantId}`);
+    // this.logger.log(`✅ [FINDALL] ${templates.length} templates trouvés pour tenant ${tenantId}`);
     templates.forEach(t => {
-      this.logger.log(`📋 Template: ${t.name} (${t.id}) avec ${t.items?.length || 0} items`);
+      // this.logger.log(`📋 Template: ${t.name} (${t.id}) avec ${t.items?.length || 0} items`);
     });
 
     return templates;
@@ -105,7 +105,7 @@ export class AuditTemplatesService {
       await this.templateItemsRepository.save(newItems);
     }
 
-    this.logger.log(`✅ Template mis à jour: ${id}`);
+    // this.logger.log(`✅ Template mis à jour: ${id}`);
     return this.findOne(id, tenantId);
   }
 
@@ -114,7 +114,7 @@ export class AuditTemplatesService {
 
     // Soft delete - marquer comme inactif
     await this.templatesRepository.update(id, { is_active: false });
-    this.logger.log(`🗑️ Template désactivé: ${id}`);
+    // this.logger.log(`🗑️ Template désactivé: ${id}`);
   }
 
   async getByCategory(category: string, tenantId: string): Promise<AuditTemplate[]> {

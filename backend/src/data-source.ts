@@ -14,7 +14,7 @@ const config: any = databaseUrl
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
       synchronize: false,
-      logging: true,
+      logging: false, // Désactivé pour éviter le spam
       ssl: isProduction ? { rejectUnauthorized: false } : false,
     }
   : {
@@ -27,7 +27,7 @@ const config: any = databaseUrl
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
       synchronize: false,
-      logging: true,
+      logging: false, // Désactivé pour éviter le spam
     };
 
 export const AppDataSource = new DataSource(config);

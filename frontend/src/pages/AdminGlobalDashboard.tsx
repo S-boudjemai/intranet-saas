@@ -1066,7 +1066,10 @@ const AdminGlobalDashboard: React.FC = () => {
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={logout}
+                onClick={async () => {
+                  await logout();
+                  navigate("/login", { replace: true });
+                }}
                 className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 Déconnexion

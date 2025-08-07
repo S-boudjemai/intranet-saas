@@ -23,7 +23,7 @@ interface AuthContextType {
   token: string | null;
   user: JwtUser | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   setAuthFromSignup: (accessToken: string) => void;
 }
 
@@ -139,10 +139,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         credentials: 'include',
       });
     } catch (error) {
+      console.error('[AUTH] Logout API call failed:', error);
     }
     
-    // Rediriger vers login après déconnexion
-    window.location.href = '/login';
+    // Ne pas rediriger ici - laisser les composants gérer la navigation
+    // La redirection sera gérée par les composants appelants via React Router
   };
 
   const setAuthFromSignup = (accessToken: string) => {

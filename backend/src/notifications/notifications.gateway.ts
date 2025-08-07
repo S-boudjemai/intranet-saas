@@ -87,9 +87,18 @@ export class NotificationsGateway
         `📍 User ${client.userId} rejoint la room tenant_${client.tenantId}`,
       );
 
-    } catch (error) {
-      console.error('🚨 Erreur connexion WebSocket:', error);
-      client.disconnect();
+    } catch (error: any) {
+      // Gestion spécifique des erreurs JWT
+      if (error.name === 'TokenExpiredError') {
+        // Ne pas spammer les logs pour les tokens expirés
+        client.disconnect();
+      } else if (error.name === 'JsonWebTokenError') {
+        // Token malformé
+        client.disconnect();
+      } else {
+        console.error('🚨 Erreur connexion WebSocket:', error);
+        client.disconnect();
+      }
     }
   }
 

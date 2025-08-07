@@ -20,7 +20,7 @@ export class AuditExecutionsService {
   ) {}
 
   async create(createDto: CreateAuditExecutionDto, userId: number, tenantId: string): Promise<AuditExecution> {
-    this.logger.log(`📅 Planification audit: ${createDto.title} pour ${createDto.scheduled_date}`);
+    // this.logger.log(`📅 Planification audit: ${createDto.title} pour ${createDto.scheduled_date}`);
 
     const execution = this.executionsRepository.create({
       ...createDto,
@@ -33,7 +33,7 @@ export class AuditExecutionsService {
     // Programmer les notifications de rappel
     await this.scheduleReminders(savedExecution);
 
-    this.logger.log(`✅ Audit planifié: ${savedExecution.id}`);
+    // this.logger.log(`✅ Audit planifié: ${savedExecution.id}`);
     return this.findOne(savedExecution.id, tenantId);
   }
 
@@ -75,7 +75,7 @@ export class AuditExecutionsService {
       started_at: new Date(),
     });
 
-    this.logger.log(`▶️ Audit démarré: ${id}`);
+    // this.logger.log(`▶️ Audit démarré: ${id}`);
     return this.findOne(id, tenantId);
   }
 
@@ -85,8 +85,8 @@ export class AuditExecutionsService {
       throw new Error('executionId et templateItemId sont obligatoires');
     }
 
-    this.logger.log(`🔍 [SAVE RESPONSE] Paramètres - executionId: ${executionId}, templateItemId: ${templateItemId}`);
-    this.logger.log(`🔍 [SAVE RESPONSE] responseData reçu:`, JSON.stringify(responseData, null, 2));
+    // this.logger.log(`🔍 [SAVE RESPONSE] Paramètres - executionId: ${executionId}, templateItemId: ${templateItemId}`);
+    // this.logger.log(`🔍 [SAVE RESPONSE] responseData reçu:`, JSON.stringify(responseData, null, 2));
 
     const execution = await this.findOne(executionId, tenantId);
 
@@ -109,8 +109,8 @@ export class AuditExecutionsService {
       // Créer une nouvelle réponse - exclure les champs qui pourraient écraser
       const { execution_id, template_item_id, ...cleanResponseData } = responseData;
 
-      this.logger.log(`🔍 [CREATE RESPONSE] templateItemId param: ${templateItemId}`);
-      this.logger.log(`🔍 [CREATE RESPONSE] cleanResponseData:`, JSON.stringify(cleanResponseData, null, 2));
+      // this.logger.log(`🔍 [CREATE RESPONSE] templateItemId param: ${templateItemId}`);
+      // this.logger.log(`🔍 [CREATE RESPONSE] cleanResponseData:`, JSON.stringify(cleanResponseData, null, 2));
 
       const newResponse = this.responsesRepository.create({
         ...cleanResponseData,
@@ -118,7 +118,7 @@ export class AuditExecutionsService {
         template_item_id: templateItemId, // ← Utiliser le paramètre (sûr)
       });
 
-      this.logger.log(`🔍 [CREATE RESPONSE] newResponse avant save:`, JSON.stringify(newResponse, null, 2));
+      // this.logger.log(`🔍 [CREATE RESPONSE] newResponse avant save:`, JSON.stringify(newResponse, null, 2));
       const savedResponse = await this.responsesRepository.save(newResponse);
       response = Array.isArray(savedResponse) ? savedResponse[0] : savedResponse;
     }
@@ -127,7 +127,7 @@ export class AuditExecutionsService {
       throw new Error('Erreur lors de la sauvegarde de la réponse');
     }
 
-    this.logger.log(`💾 Réponse sauvegardée: ${response.id}`);
+    // this.logger.log(`💾 Réponse sauvegardée: ${response.id}`);
     return response;
   }
 
@@ -147,7 +147,7 @@ export class AuditExecutionsService {
     // Programmer l'archivage automatique dans 7 jours
     await this.scheduleArchival(execution);
 
-    this.logger.log(`✅ Audit terminé: ${id}`);
+    // this.logger.log(`✅ Audit terminé: ${id}`);
     return this.findOne(id, tenantId);
   }
 
@@ -193,7 +193,7 @@ export class AuditExecutionsService {
     }
 
     if (completedAudits.length > 0) {
-      this.logger.log(`📦 ${completedAudits.length} audits archivés automatiquement`);
+      // this.logger.log(`📦 ${completedAudits.length} audits archivés automatiquement`);
     }
   }
 
@@ -204,12 +204,12 @@ export class AuditExecutionsService {
 
     // Programmer les notifications (implémentation avec un système de jobs)
     // TODO: Intégrer avec bull.js ou agenda.js pour programmer les notifications
-    this.logger.log(`📋 Rappels programmés pour l'audit ${execution.id}`);
+    // this.logger.log(`📋 Rappels programmés pour l'audit ${execution.id}`);
   }
 
   private async scheduleArchival(execution: AuditExecution): Promise<void> {
     // Programmer l'archivage automatique dans 7 jours
     // TODO: Intégrer avec système de jobs
-    this.logger.log(`📦 Archivage programmé pour l'audit ${execution.id}`);
+    // this.logger.log(`📦 Archivage programmé pour l'audit ${execution.id}`);
   }
 }

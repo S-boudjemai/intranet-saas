@@ -17,7 +17,7 @@ export class CorrectiveActionsService {
   ) {}
 
   async create(createDto: CreateCorrectiveActionDto, userId: number, tenantId: string): Promise<CorrectiveAction> {
-    this.logger.log(`🛠️ Création action corrective: ${createDto.title}`);
+    // this.logger.log(`🛠️ Création action corrective: ${createDto.title}`);
 
     const action = this.correctiveActionsRepository.create({
       ...createDto,
@@ -38,16 +38,16 @@ export class CorrectiveActionsService {
       );
 
       if (verificationTask) {
-        this.logger.log(`📅 Tâche de vérification créée: ${verificationTask.id} pour l'action ${savedAction.id}`);
+        // this.logger.log(`📅 Tâche de vérification créée: ${verificationTask.id} pour l'action ${savedAction.id}`);
       } else {
-        this.logger.log(`⏰ Date limite trop lointaine, pas de tâche de vérification créée pour l'action ${savedAction.id}`);
+        // this.logger.log(`⏰ Date limite trop lointaine, pas de tâche de vérification créée pour l'action ${savedAction.id}`);
       }
     } catch (error) {
       this.logger.warn(`⚠️ Impossible de créer la tâche de vérification pour l'action ${savedAction.id}:`, error.message);
       // Ne pas faire échouer la création de l'action corrective si la tâche de planning échoue
     }
 
-    this.logger.log(`✅ Action corrective créée: ${savedAction.id}`);
+    // this.logger.log(`✅ Action corrective créée: ${savedAction.id}`);
     return this.findOne(savedAction.id, tenantId);
   }
 
@@ -87,7 +87,7 @@ export class CorrectiveActionsService {
 
     await this.correctiveActionsRepository.update(id, updateDto);
 
-    this.logger.log(`📝 Action corrective mise à jour: ${id}`);
+    // this.logger.log(`📝 Action corrective mise à jour: ${id}`);
     return this.findOne(id, tenantId);
   }
 
@@ -99,7 +99,7 @@ export class CorrectiveActionsService {
       deleted_at: new Date(),
     });
 
-    this.logger.log(`🗑️ Action corrective supprimée (soft delete): ${id}`);
+    // this.logger.log(`🗑️ Action corrective supprimée (soft delete): ${id}`);
   }
 
   async complete(id: string, tenantId: string, completion_notes?: string): Promise<CorrectiveAction> {
@@ -115,7 +115,7 @@ export class CorrectiveActionsService {
       completion_notes,
     });
 
-    this.logger.log(`✅ Action corrective terminée: ${id}`);
+    // this.logger.log(`✅ Action corrective terminée: ${id}`);
     return this.findOne(id, tenantId);
   }
 
@@ -135,7 +135,7 @@ export class CorrectiveActionsService {
       validation_notes,
     });
 
-    this.logger.log(`🔍 Action corrective validée: ${id}`);
+    // this.logger.log(`🔍 Action corrective validée: ${id}`);
     return this.findOne(id, tenantId);
   }
 
@@ -159,7 +159,7 @@ export class CorrectiveActionsService {
       status: ActionStatus.IN_PROGRESS,
     });
 
-    this.logger.log(`🚀 Action corrective démarrée: ${id}`);
+    // this.logger.log(`🚀 Action corrective démarrée: ${id}`);
     return this.findOne(id, tenantId);
   }
 
@@ -174,7 +174,7 @@ export class CorrectiveActionsService {
       status: ActionStatus.VERIFIED,
     });
 
-    this.logger.log(`🔄 Action corrective restaurée: ${id}`);
+    // this.logger.log(`🔄 Action corrective restaurée: ${id}`);
     return this.findOne(id, tenantId);
   }
 }

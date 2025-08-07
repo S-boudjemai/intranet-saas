@@ -149,9 +149,20 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       });
 
       newSocket.on('disconnect', (reason) => {
+        // Si déconnecté par le serveur (token expiré par exemple)
         if (reason === 'io server disconnect' && reconnectAttempts < maxReconnectAttempts) {
           reconnectAttempts++;
           setTimeout(() => newSocket.connect(), 1000 * reconnectAttempts);
+        }
+      });
+
+      // Gérer les erreurs de connexion (token expiré, etc.)
+      newSocket.on('connect_error', (error: any) => {
+        // Socket.io génère cette erreur automatiquement en cas d'échec d'auth
+        // On arrête les tentatives de reconnexion si c'est un problème d'auth
+        if (error?.message?.includes('Unauthorized') || error?.type === 'TransportError') {
+          newSocket.disconnect();
+          reconnectAttempts = maxReconnectAttempts; // Empêcher les reconnexions
         }
       });
 

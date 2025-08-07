@@ -33,8 +33,8 @@ export default function MobileNav() {
   const raw = token ? parseJwt<JwtPayload>(token) : null;
   const canManage = raw?.role === "manager" || raw?.role === "admin";
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/login", { replace: true });
   };
 

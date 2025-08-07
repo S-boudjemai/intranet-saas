@@ -32,9 +32,9 @@ export class AuditTemplatesController {
     @Request() req: { user: JwtUser },
   ) {
     try {
-      this.logger.log('🚀 [CREATE TEMPLATE] Début de la création');
-      this.logger.log('📝 [CREATE TEMPLATE] Body reçu:', JSON.stringify(createDto, null, 2));
-      this.logger.log('👤 [CREATE TEMPLATE] User info:', JSON.stringify(req.user, null, 2));
+      // this.logger.log('🚀 [CREATE TEMPLATE] Début de la création');
+      // this.logger.log('📝 [CREATE TEMPLATE] Body reçu:', JSON.stringify(createDto, null, 2));
+      // this.logger.log('👤 [CREATE TEMPLATE] User info:', JSON.stringify(req.user, null, 2));
 
       const { userId, tenant_id } = req.user;
 
@@ -43,11 +43,11 @@ export class AuditTemplatesController {
         throw new Error('Tenant ID manquant');
       }
 
-      this.logger.log(`✅ [CREATE TEMPLATE] Validation OK - User: ${userId}, Tenant: ${tenant_id}`);
+      // this.logger.log(`✅ [CREATE TEMPLATE] Validation OK - User: ${userId}, Tenant: ${tenant_id}`);
 
       const result = await this.templatesService.create(createDto, userId, tenant_id.toString());
 
-      this.logger.log('🎉 [CREATE TEMPLATE] Template créé avec succès:', result.id);
+      // this.logger.log('🎉 [CREATE TEMPLATE] Template créé avec succès:', result.id);
       return result;
 
     } catch (error) {
@@ -64,9 +64,9 @@ export class AuditTemplatesController {
     @Request() req: { user: JwtUser },
     @Query('category') category?: string,
   ) {
-    this.logger.log('🔍 [GET TEMPLATES] Appel endpoint GET /audit-templates');
-    this.logger.log('👤 [GET TEMPLATES] User:', JSON.stringify(req.user));
-    this.logger.log('📂 [GET TEMPLATES] Category:', category || 'all');
+    // this.logger.log('🔍 [GET TEMPLATES] Appel endpoint GET /audit-templates');
+    // this.logger.log('👤 [GET TEMPLATES] User:', JSON.stringify(req.user));
+    // this.logger.log('📂 [GET TEMPLATES] Category:', category || 'all');
 
     const { tenant_id } = req.user;
     if (!tenant_id) {
@@ -74,16 +74,16 @@ export class AuditTemplatesController {
       throw new Error('Tenant ID manquant');
     }
 
-    this.logger.log(`✅ [GET TEMPLATES] Tenant ID: ${tenant_id}`);
+    // this.logger.log(`✅ [GET TEMPLATES] Tenant ID: ${tenant_id}`);
 
     if (category) {
-      this.logger.log(`📁 [GET TEMPLATES] Recherche par catégorie: ${category}`);
+      // this.logger.log(`📁 [GET TEMPLATES] Recherche par catégorie: ${category}`);
       return this.templatesService.getByCategory(category, tenant_id.toString());
     }
 
-    this.logger.log('📋 [GET TEMPLATES] Récupération de tous les templates');
+    // this.logger.log('📋 [GET TEMPLATES] Récupération de tous les templates');
     const result = await this.templatesService.findAll(tenant_id.toString());
-    this.logger.log(`✅ [GET TEMPLATES] Retour de ${result.length} templates`);
+    // this.logger.log(`✅ [GET TEMPLATES] Retour de ${result.length} templates`);
     return result;
   }
 

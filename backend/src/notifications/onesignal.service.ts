@@ -24,7 +24,7 @@ export class OneSignalService {
 
     // Initialiser client OneSignal
     this.client = new OneSignal.Client(this.APP_ID, this.API_KEY);
-    this.logger.log('✅ OneSignal service initialisé');
+    // this.logger.log('✅ OneSignal service initialisé');
   }
 
   /**
@@ -50,7 +50,7 @@ export class OneSignalService {
 
       await this.userRepository.save(user);
 
-      this.logger.log(`✅ User ${userId} associé à OneSignal ID: ${oneSignalUserId}`);
+      // this.logger.log(`✅ User ${userId} associé à OneSignal ID: ${oneSignalUserId}`);
 
     } catch (error) {
       this.logger.error(`❌ Erreur subscribe user ${userId}:`, error.message);
@@ -84,13 +84,13 @@ export class OneSignalService {
         chrome_web_badge: '/pwa-192x192.svg',
       };
 
-      this.logger.log(`📤 Envoi notification à user ${userId} (${user.oneSignalUserId})`);
+      // this.logger.log(`📤 Envoi notification à user ${userId} (${user.oneSignalUserId})`);
       this.logger.debug('📋 Notification data:', JSON.stringify(notification, null, 2));
 
       const response = await this.client.createNotification(notification);
 
       if (response.body?.id) {
-        this.logger.log(`✅ Notification envoyée - ID: ${response.body.id}`);
+        // this.logger.log(`✅ Notification envoyée - ID: ${response.body.id}`);
         return true;
       } else {
         this.logger.error('❌ Réponse OneSignal invalide:', response.body);
@@ -140,12 +140,12 @@ export class OneSignalService {
         chrome_web_badge: '/pwa-192x192.svg',
       };
 
-      this.logger.log(`📤 Envoi notification à ${targetUsers.length} users du tenant ${tenantId}`);
+      // this.logger.log(`📤 Envoi notification à ${targetUsers.length} users du tenant ${tenantId}`);
 
       const response = await this.client.createNotification(notification);
 
       if (response.body?.id) {
-        this.logger.log(`✅ Notification tenant envoyée - ID: ${response.body.id}`);
+        // this.logger.log(`✅ Notification tenant envoyée - ID: ${response.body.id}`);
         return targetUsers.length;
       } else {
         this.logger.error('❌ Réponse OneSignal tenant invalid:', response.body);
@@ -186,7 +186,7 @@ export class OneSignalService {
         user.platform = null;
         await this.userRepository.save(user);
 
-        this.logger.log(`✅ User ${userId} désabonné de OneSignal`);
+        // this.logger.log(`✅ User ${userId} désabonné de OneSignal`);
       }
     } catch (error) {
       this.logger.error(`❌ Erreur désabonnement user ${userId}:`, error.message);

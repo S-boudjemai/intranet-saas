@@ -82,7 +82,7 @@ import { PlanningModule } from './planning/planning.module';
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
             synchronize: true,
             autoLoadEntities: true,
-            logging: true,
+            logging: false, // Désactivé pour éviter le spam
           };
         }
 
@@ -139,7 +139,7 @@ import { PlanningModule } from './planning/planning.module';
           retryAttempts: 5,
           retryDelay: 3000,
           autoLoadEntities: true,
-          logging: true, // Activer les logs pour debug
+          logging: false, // Désactivé pour éviter le spam en dev
         };
       },
     }),

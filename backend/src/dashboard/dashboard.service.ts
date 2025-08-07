@@ -21,7 +21,7 @@ export class DashboardService {
   ) {}
 
   async getDashboardData(tenantId: string) {
-    this.logger.log(`📊 Génération dashboard pour tenant ${tenantId}`);
+    // this.logger.log(`📊 Génération dashboard pour tenant ${tenantId}`);
 
     try {
       // Calculer les dates pour les comparaisons
@@ -112,7 +112,7 @@ export class DashboardService {
         }
       };
 
-      this.logger.log(`✅ Dashboard généré: ${totalDocuments} docs, ${totalRestaurants} restaurants`);
+      // this.logger.log(`✅ Dashboard généré: ${totalDocuments} docs, ${totalRestaurants} restaurants`);
       return result;
 
     } catch (error) {
