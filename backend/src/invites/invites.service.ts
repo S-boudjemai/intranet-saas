@@ -10,15 +10,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Invite } from './entities/invite.entity';
+import { Tenant } from '../tenants/entities/tenant.entity';
 import { randomBytes } from 'crypto';
-import { MailerService } from '@nestjs-modules/mailer';
+import { EmailService } from '../common/email/email.service';
 
 @Injectable()
 export class InvitesService {
   constructor(
     @InjectRepository(Invite)
     private repo: Repository<Invite>,
-    private readonly mailerService: MailerService,
+    @InjectRepository(Tenant)
+    private tenantRepo: Repository<Tenant>,
+    private readonly emailService: EmailService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -28,8 +31,19 @@ export class InvitesService {
     restaurant_name?: string,
     restaurant_city?: string,
   ) {
+    // Récupérer le nom du tenant pour personnaliser l'email
+    const tenant = await this.tenantRepo.findOne({
+      where: { id: tenant_id },
+      select: ['name']
+    });
+    
+    if (!tenant) {
+      throw new NotFoundException('Tenant non trouvé');
+    }
+
     const token = randomBytes(16).toString('hex');
     const expires_at = new Date(Date.now() + 7 * 24 * 3600 * 1000);
+    
     const invite = this.repo.create({
       tenant_id,
       invite_email,
@@ -38,25 +52,22 @@ export class InvitesService {
       restaurant_name,
       restaurant_city,
     });
+    
     const savedInvite = await this.repo.save(invite);
-    const frontendUrl =
-      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5174';
-    const invitationLink = `${frontendUrl}/signup?invite=${token}`;
 
-    // Email personnalisé selon si un restaurant est spécifié
-    const restaurantInfo = restaurant_name
-      ? `<p><strong>Restaurant:</strong> ${restaurant_name}${restaurant_city ? ` - ${restaurant_city}` : ''}</p>`
-      : '';
+    // Envoyer l'email d'invitation via notre EmailService
+    const emailResult = await this.emailService.sendInvitationEmail(
+      invite_email,
+      token,
+      tenant.name,
+      restaurant_name
+    );
 
-    await this.mailerService.sendMail({
-      to: invite_email,
-      subject: 'Vous êtes invité(e) à rejoindre FranchiseHUB !',
-      html: `
-        <p>Pour finaliser votre inscription, veuillez cliquer sur le lien ci-dessous :</p>
-        ${restaurantInfo}
-        <a href="${invitationLink}">Créer mon compte</a>
-      `,
-    });
+    if (!emailResult.success) {
+      // Log l'erreur mais ne pas faire échouer la création de l'invitation
+      console.error('❌ Erreur envoi email invitation:', emailResult.error);
+    }
+
     return savedInvite;
   }
 

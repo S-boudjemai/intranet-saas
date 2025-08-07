@@ -55,6 +55,7 @@
     "joi": "^17.13.3",
     "multer": "^2.0.1",
     "nest-winston": "^1.10.2",
+    "nestjs-resend": "^1.0.3",
     "nodemailer": "^7.0.5",
     "onesignal-node": "^3.4.0",
     "passport": "^0.7.0",

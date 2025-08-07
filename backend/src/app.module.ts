@@ -20,6 +20,7 @@ import { RestaurantsModule } from './restaurant/restaurant.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SearchModule } from './search/search.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { ResendModule } from 'nestjs-resend';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { validationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
@@ -27,6 +28,7 @@ import { AdminModule } from './admin/admin.module';
 import { SetupModule } from './setup/setup.module';
 import { AuditsModule } from './audits/audits.module';
 import { PlanningModule } from './planning/planning.module';
+import { EmailModule } from './common/email/email.module';
 
 @Module({
   imports: [
@@ -47,8 +49,20 @@ import { PlanningModule } from './planning/planning.module';
         limit: 100, // 100 requêtes max
       },
     ]),
-    // --- CONFIGURATION DU MAILER PLACÉE ICI ---
-    // Il est important de configurer les modules fournisseurs avant les modules qui les consomment.
+    // --- CONFIGURATION RESEND EMAIL ---
+    // Remplace MailerModule par ResendModule pour un email service moderne
+    ResendModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (cfg: ConfigService) => {
+        const apiKey = cfg.get<string>('RESEND_API_KEY');
+        if (!apiKey) {
+          throw new Error('RESEND_API_KEY is required for email service');
+        }
+        return { apiKey };
+      },
+    }),
+    // Garder MailerModule en fallback pour la transition
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -161,6 +175,7 @@ import { PlanningModule } from './planning/planning.module';
     SetupModule,
     AuditsModule,
     PlanningModule,
+    EmailModule,
   ],
 
   controllers: [AppController],
