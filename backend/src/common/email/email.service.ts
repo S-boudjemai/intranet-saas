@@ -22,16 +22,24 @@ export class EmailService {
   ) {
     this.defaultFromEmail = this.configService.get<string>('MAIL_FROM') || 'noreply@franchisedesk.fr';
     this.defaultFromName = this.configService.get<string>('MAIL_FROM_NAME') || 'FranchiseDesk';
+    
+    // Debug configuration au démarrage
+    const resendApiKey = this.configService.get<string>('RESEND_API_KEY');
+    this.logger.log(`🔧 EmailService initialisé:`);
+    this.logger.log(`🔧 From: ${this.defaultFromName} <${this.defaultFromEmail}>`);
+    this.logger.log(`🔧 Resend API Key: ${resendApiKey ? `${resendApiKey.substring(0, 10)}...` : 'NON DÉFINIE'}`);
+    this.logger.log(`🔧 Frontend URL: ${this.configService.get<string>('FRONTEND_URL')}`);
   }
 
   /**
    * Envoie un email via Resend
    */
-  async sendEmail(options: SendEmailOptions): Promise<{ success: boolean; error?: string }> {
+  async sendEmail(options: SendEmailOptions): Promise<{ success: boolean; error?: string; result?: any }> {
     try {
       const fromAddress = options.from || `${this.defaultFromName} <${this.defaultFromEmail}>`;
       
-      this.logger.log(`📧 Envoi email à ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`);
+      this.logger.log(`📧 Tentative envoi email depuis ${fromAddress} vers ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`);
+      this.logger.log(`📧 Sujet: ${options.subject}`);
       
       // Construire l'objet email avec les propriétés requises
       const emailData: any = {
@@ -53,12 +61,37 @@ export class EmailService {
         throw new Error('Au moins un contenu HTML ou texte doit être fourni');
       }
 
+      this.logger.log(`📧 Configuration email: ${JSON.stringify({
+        from: emailData.from,
+        to: emailData.to,
+        subject: emailData.subject,
+        hasHtml: !!emailData.html,
+        hasText: !!emailData.text
+      })}`);
+
       const result = await this.resendService.send(emailData);
 
-      this.logger.log(`✅ Email envoyé avec succès: ${JSON.stringify(result)}`);
-      return { success: true };
+      this.logger.log(`✅ Email envoyé avec succès!`);
+      this.logger.log(`✅ Résultat Resend: ${JSON.stringify(result, null, 2)}`);
+      
+      return { 
+        success: true, 
+        result 
+      };
     } catch (error) {
-      this.logger.error(`❌ Erreur envoi email:`, error);
+      this.logger.error(`❌ Erreur détaillée envoi email:`);
+      this.logger.error(`❌ Type d'erreur: ${error.constructor?.name}`);
+      this.logger.error(`❌ Message: ${error.message}`);
+      this.logger.error(`❌ Stack: ${error.stack}`);
+      
+      // Log les détails spécifiques à Resend
+      if (error.response) {
+        this.logger.error(`❌ Resend Response: ${JSON.stringify(error.response, null, 2)}`);
+      }
+      if (error.status) {
+        this.logger.error(`❌ Status HTTP: ${error.status}`);
+      }
+      
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Erreur inconnue'
