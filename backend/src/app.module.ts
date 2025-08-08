@@ -20,7 +20,6 @@ import { RestaurantsModule } from './restaurant/restaurant.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SearchModule } from './search/search.module';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { ResendModule } from 'nestjs-resend';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { validationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
@@ -49,20 +48,8 @@ import { EmailModule } from './common/email/email.module';
         limit: 100, // 100 requêtes max
       },
     ]),
-    // --- CONFIGURATION RESEND EMAIL ---
-    // Remplace MailerModule par ResendModule pour un email service moderne
-    ResendModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (cfg: ConfigService) => {
-        const apiKey = cfg.get<string>('RESEND_API_KEY');
-        if (!apiKey) {
-          throw new Error('RESEND_API_KEY is required for email service');
-        }
-        return { apiKey };
-      },
-    }),
-    // Garder MailerModule en fallback pour la transition
+    // --- CONFIGURATION EMAIL ---
+    // Garder MailerModule temporairement pour la transition
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

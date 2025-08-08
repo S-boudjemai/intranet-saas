@@ -216,39 +216,9 @@ export class AuthService {
 
     await this.passwordResetRepo.save(passwordReset);
 
-    // Envoyer l'email avec le code via Resend
+    // Envoyer l'email avec le code via SendGrid
     try {
-      const emailResult = await this.emailService.sendEmail({
-        to: email,
-        subject: 'Code de réinitialisation - FranchiseDesk',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #4F46E5;">Réinitialisation de mot de passe</h2>
-            <p>Vous avez demandé une réinitialisation de votre mot de passe.</p>
-            <p>Voici votre code de validation :</p>
-            <div style="background-color: #f3f4f6; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
-              <h1 style="color: #4F46E5; margin: 0; letter-spacing: 5px; font-size: 32px;">${code}</h1>
-            </div>
-            <p style="color: #E53E3E; font-weight: bold;">⚠️ Ce code expire dans 15 minutes.</p>
-            <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-            <p style="color: #6b7280; font-size: 12px;">
-              Cet email a été envoyé par FranchiseDesk. Ne répondez pas à cet email.
-            </p>
-          </div>
-        `,
-        text: `
-          Réinitialisation de mot de passe - FranchiseDesk
-          
-          Vous avez demandé une réinitialisation de votre mot de passe.
-          
-          Voici votre code de validation : ${code}
-          
-          ⚠️ Ce code expire dans 15 minutes.
-          
-          Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
-        `,
-      });
+      const emailResult = await this.emailService.sendPasswordResetCode(email, code);
 
       if (!emailResult.success) {
         throw new Error(emailResult.error || 'Erreur inconnue lors de l\'envoi');

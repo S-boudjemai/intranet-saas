@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ResendService } from 'nestjs-resend';
+import * as sgMail from '@sendgrid/mail';
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -17,22 +17,27 @@ export class EmailService {
   private readonly defaultFromName: string;
 
   constructor(
-    private readonly resendService: ResendService,
     private readonly configService: ConfigService,
   ) {
     this.defaultFromEmail = this.configService.get<string>('MAIL_FROM') || 'noreply@franchisedesk.fr';
     this.defaultFromName = this.configService.get<string>('MAIL_FROM_NAME') || 'FranchiseDesk';
     
-    // Debug configuration au démarrage
-    const resendApiKey = this.configService.get<string>('RESEND_API_KEY');
-    this.logger.log(`🔧 EmailService initialisé:`);
-    this.logger.log(`🔧 From: ${this.defaultFromName} <${this.defaultFromEmail}>`);
-    this.logger.log(`🔧 Resend API Key: ${resendApiKey ? `${resendApiKey.substring(0, 10)}...` : 'NON DÉFINIE'}`);
+    // Configuration SendGrid
+    const sendgridApiKey = this.configService.get<string>('SENDGRID_API_KEY');
+    if (sendgridApiKey) {
+      sgMail.setApiKey(sendgridApiKey);
+      this.logger.log(`🔧 EmailService initialisé avec SendGrid`);
+      this.logger.log(`🔧 From: ${this.defaultFromName} <${this.defaultFromEmail}>`);
+      this.logger.log(`🔧 SendGrid API Key: ${sendgridApiKey.substring(0, 10)}...`);
+    } else {
+      this.logger.error(`❌ SENDGRID_API_KEY non définie !`);
+    }
+    
     this.logger.log(`🔧 Frontend URL: ${this.configService.get<string>('FRONTEND_URL')}`);
   }
 
   /**
-   * Envoie un email via Resend
+   * Envoie un email via SendGrid
    */
   async sendEmail(options: SendEmailOptions): Promise<{ success: boolean; error?: string; result?: any }> {
     try {
@@ -41,19 +46,19 @@ export class EmailService {
       this.logger.log(`📧 Tentative envoi email depuis ${fromAddress} vers ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`);
       this.logger.log(`📧 Sujet: ${options.subject}`);
       
-      // Construire l'objet email avec les propriétés requises
-      const emailData: any = {
+      // Construire l'objet email pour SendGrid
+      const msg: any = {
+        to: options.to,
         from: fromAddress,
-        to: Array.isArray(options.to) ? options.to : [options.to],
         subject: options.subject,
       };
 
-      // Ajouter html ou text seulement s'ils sont définis
+      // Ajouter html et/ou text
       if (options.html) {
-        emailData.html = options.html;
+        msg.html = options.html;
       }
       if (options.text) {
-        emailData.text = options.text;
+        msg.text = options.text;
       }
 
       // Au moins une des deux propriétés (html ou text) doit être présente
@@ -62,39 +67,51 @@ export class EmailService {
       }
 
       this.logger.log(`📧 Configuration email: ${JSON.stringify({
-        from: emailData.from,
-        to: emailData.to,
-        subject: emailData.subject,
-        hasHtml: !!emailData.html,
-        hasText: !!emailData.text
+        from: msg.from,
+        to: msg.to,
+        subject: msg.subject,
+        hasHtml: !!msg.html,
+        hasText: !!msg.text
       })}`);
 
-      const result = await this.resendService.send(emailData);
+      // Envoyer avec SendGrid
+      const [response] = await sgMail.send(msg);
 
-      this.logger.log(`✅ Email envoyé avec succès!`);
-      this.logger.log(`✅ Résultat Resend: ${JSON.stringify(result, null, 2)}`);
+      this.logger.log(`✅ Email envoyé avec succès via SendGrid!`);
+      this.logger.log(`✅ Status: ${response.statusCode}`);
+      this.logger.log(`✅ Headers: ${JSON.stringify(response.headers)}`);
       
       return { 
         success: true, 
-        result 
+        result: {
+          statusCode: response.statusCode,
+          headers: response.headers,
+        }
       };
-    } catch (error) {
-      this.logger.error(`❌ Erreur détaillée envoi email:`);
+    } catch (error: any) {
+      this.logger.error(`❌ Erreur détaillée envoi email SendGrid:`);
       this.logger.error(`❌ Type d'erreur: ${error.constructor?.name}`);
       this.logger.error(`❌ Message: ${error.message}`);
-      this.logger.error(`❌ Stack: ${error.stack}`);
       
-      // Log les détails spécifiques à Resend
+      // Gestion spécifique des erreurs SendGrid
       if (error.response) {
-        this.logger.error(`❌ Resend Response: ${JSON.stringify(error.response, null, 2)}`);
-      }
-      if (error.status) {
-        this.logger.error(`❌ Status HTTP: ${error.status}`);
+        this.logger.error(`❌ SendGrid Status Code: ${error.response.statusCode}`);
+        this.logger.error(`❌ SendGrid Response Body: ${JSON.stringify(error.response.body)}`);
+        
+        // Extraire le message d'erreur détaillé
+        if (error.response.body?.errors?.length > 0) {
+          const firstError = error.response.body.errors[0];
+          this.logger.error(`❌ SendGrid Error Detail: ${firstError.message}`);
+          return { 
+            success: false, 
+            error: firstError.message || 'Erreur SendGrid'
+          };
+        }
       }
       
       return { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Erreur inconnue'
+        error: error.message || 'Erreur inconnue lors de l\'envoi'
       };
     }
   }
@@ -157,7 +174,58 @@ export class EmailService {
   }
 
   /**
-   * Envoie un email de reset de mot de passe
+   * Envoie un email de reset de mot de passe (utilisé par auth.service)
+   * Note: Cette méthode envoie un code à 6 chiffres, pas un token URL
+   */
+  async sendPasswordResetCode(
+    email: string, 
+    code: string
+  ): Promise<{ success: boolean; error?: string }> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #4F46E5;">Réinitialisation de mot de passe</h2>
+        <p>Bonjour,</p>
+        <p>Vous avez demandé une réinitialisation de votre mot de passe.</p>
+        <p>Voici votre code de validation :</p>
+        <div style="background-color: #f3f4f6; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+          <h1 style="color: #4F46E5; margin: 0; letter-spacing: 5px; font-size: 32px;">${code}</h1>
+        </div>
+        <p style="color: #E53E3E; font-weight: bold;">⚠️ Ce code expire dans 15 minutes.</p>
+        <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+        <p style="color: #6b7280; font-size: 12px;">
+          Cet email a été envoyé par FranchiseDesk. Ne répondez pas à cet email.
+        </p>
+      </div>
+    `;
+
+    const text = `
+      Réinitialisation de mot de passe - FranchiseDesk
+      
+      Bonjour,
+      
+      Vous avez demandé une réinitialisation de votre mot de passe.
+      
+      Voici votre code de validation : ${code}
+      
+      ⚠️ Ce code expire dans 15 minutes.
+      
+      Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
+      
+      Cordialement,
+      L'équipe FranchiseDesk
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject: 'Code de réinitialisation - FranchiseDesk',
+      html,
+      text,
+    });
+  }
+
+  /**
+   * Envoie un email de reset de mot de passe avec URL (méthode legacy si besoin)
    */
   async sendPasswordResetEmail(
     email: string, 

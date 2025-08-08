@@ -30,8 +30,8 @@ export const validationSchema = Joi.object({
   MAIL_FROM: Joi.string().default('noreply@franchisedesk.fr'),
   MAIL_FROM_NAME: Joi.string().default('FranchiseDesk'),
 
-  // Email Moderne (Resend) - requis en production
-  RESEND_API_KEY: Joi.string().optional(),
+  // Email Moderne (SendGrid) - requis en production
+  SENDGRID_API_KEY: Joi.string().optional(),
 
   // Frontend URL pour les liens d'emails
   FRONTEND_URL: Joi.string().default('http://localhost:5174'),
