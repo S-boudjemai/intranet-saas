@@ -237,6 +237,30 @@ export class NotificationsController {
     return { success: true, message: 'OneSignal subscription enregistrée' };
   }
 
+  // Test de configuration OneSignal (sans envoyer de notification)
+  @Get('onesignal-debug')
+  async oneSignalDebug(@Req() req) {
+    const userId = req.user.userId;
+    const user = await this.oneSignalService['userRepository'].findOne({ 
+      where: { id: userId } 
+    });
+
+    return {
+      success: true,
+      data: {
+        userId,
+        hasOneSignalId: !!user?.oneSignalUserId,
+        oneSignalIdLength: user?.oneSignalUserId?.length || 0,
+        platform: user?.platform || 'non défini',
+        configStatus: {
+          appIdConfigured: !!process.env.ONESIGNAL_APP_ID,
+          apiKeyConfigured: !!process.env.ONESIGNAL_API_KEY,
+          serviceInitialized: !!this.oneSignalService
+        }
+      }
+    };
+  }
+
   // Test notification OneSignal
   @Post('onesignal-test')
   async oneSignalTest(@Req() req) {

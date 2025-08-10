@@ -77,7 +77,7 @@ export class OneSignalService {
       const notification = {
         contents: { en: message },
         headings: { en: title },
-        include_external_user_ids: [user.oneSignalUserId],
+        include_player_ids: [user.oneSignalUserId], // Utiliser player_ids car on stocke le subscription ID
         data: data || {},
         web_url: data?.url || '/dashboard', // URL de redirection
         chrome_web_icon: '/pwa-192x192.svg',
@@ -133,7 +133,7 @@ export class OneSignalService {
       const notification = {
         contents: { en: message },
         headings: { en: title },
-        include_external_user_ids: externalUserIds,
+        include_player_ids: externalUserIds, // Utiliser player_ids car on stocke les subscription IDs
         data: data || {},
         web_url: data?.url || '/dashboard',
         chrome_web_icon: '/pwa-192x192.svg',

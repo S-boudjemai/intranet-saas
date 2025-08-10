@@ -113,6 +113,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setTimeout(async () => {
       try {
         await oneSignalService.initialize();
+        
+        // Définir l'ID utilisateur externe après l'initialisation
+        const decodedUser = decodeToken(access_token);
+        if (decodedUser?.userId) {
+          await oneSignalService.setUserId(decodedUser.userId.toString());
+        }
       } catch (error) {
         console.error('[AUTH] OneSignal initialization error:', error);
       }

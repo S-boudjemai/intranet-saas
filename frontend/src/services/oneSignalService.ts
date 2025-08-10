@@ -13,6 +13,14 @@ export class OneSignalService {
       return this.isSupported;
     }
 
+    // Skip OneSignal en localhost (utiliser seulement en production)
+    if (window.location.hostname === 'localhost') {
+      console.warn('[OneSignal] Skipping initialization on localhost - use production URL for testing');
+      this.initialized = true;
+      this.isSupported = false;
+      return false;
+    }
+
     // Détection iOS
     const isIOS = this.detectPlatform() === 'ios';
     const isPWA = window.matchMedia('(display-mode: standalone)').matches;
@@ -87,11 +95,15 @@ export class OneSignalService {
    */
   static async subscribeUser(): Promise<void> {
     try {
-      const userId = OneSignal.User.onesignalId;
-
-      if (userId) {
-        await this.sendUserIdToBackend(userId);
-        localStorage.setItem('onesignal-user-id', userId);
+      // Récupérer le subscription ID (player ID)
+      const subscriptionId = await OneSignal.User.PushSubscription.id;
+      console.log('[OneSignal] Subscription ID:', subscriptionId);
+      
+      if (subscriptionId) {
+        await this.sendUserIdToBackend(subscriptionId);
+        localStorage.setItem('onesignal-subscription-id', subscriptionId);
+      } else {
+        console.warn('[OneSignal] Pas de subscription ID - vérifier permissions et Service Worker');
       }
 
     } catch (error) {
@@ -160,10 +172,33 @@ export class OneSignalService {
     try {
       if (this.initialized) {
         OneSignal.User.removeAlias('external_id');
-        localStorage.removeItem('onesignal-user-id');
+        localStorage.removeItem('onesignal-subscription-id');
       }
     } catch (error) {
       console.error('[OneSignal] Unsubscribe error:', error);
+    }
+  }
+
+  /**
+   * Définir l'ID utilisateur externe (pour ciblage backend)
+   */
+  static async setUserId(userId: string): Promise<void> {
+    try {
+      if (this.initialized) {
+        // Utiliser OneSignal.login() pour l'external_id
+        await OneSignal.login(userId);
+        console.log('[OneSignal] External user ID défini:', userId);
+        
+        // Vérifier et logger le subscription ID
+        const subscriptionId = await OneSignal.User.PushSubscription.id;
+        console.log('[OneSignal] Subscription ID actuel:', subscriptionId);
+        
+        if (!subscriptionId) {
+          console.warn('[OneSignal] Pas encore de subscription - vérifier permissions');
+        }
+      }
+    } catch (error) {
+      console.error('[OneSignal] Set user ID error:', error);
     }
   }
 
@@ -226,5 +261,6 @@ export class OneSignalService {
   }
 }
 
-// Export singleton
+// Export singleton (la classe elle-même car toutes les méthodes sont statiques)
 export const oneSignalService = OneSignalService;
+export default OneSignalService;

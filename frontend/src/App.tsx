@@ -26,6 +26,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ContactPage from "./pages/ContactPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import TicketsPage from "./pages/TicketsPages";
+import { OneSignalDebugPage } from "./pages/OneSignalDebugPage";
 import NavBar from "./components/NavBar";
 import MobileNav from "./components/MobileNav";
 import UnifiedDashboard from "./pages/UnifiedDashboard";
@@ -112,6 +113,12 @@ const AppContent = () => {
                   <UsersPage />
                 </RoleProtectedRoute>
               } 
+            />
+            
+            {/* Debug OneSignal - dev only */}
+            <Route 
+              path="/onesignal-debug" 
+              element={<OneSignalDebugPage />} 
             />
             
             {/* Test Push Notifications - dev only */}

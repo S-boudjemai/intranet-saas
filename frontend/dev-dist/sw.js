@@ -67,7 +67,7 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-f001acab'], (function (workbox) { 'use strict';
+define(['./workbox-5aa74133'], (function (workbox) { 'use strict';
 
   importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
   self.skipWaiting();
@@ -80,7 +80,7 @@ define(['./workbox-f001acab'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "/index.html",
-    "revision": "0.ujnsechi0f8"
+    "revision": "0.65ld84ihqto"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
@@ -94,11 +94,15 @@ define(['./workbox-f001acab'], (function (workbox) { 'use strict';
       maxAgeSeconds: 31536000
     })]
   }), 'GET');
+  workbox.registerRoute(/^https:\/\/intranet-saas-backend\.onrender\.com\/api\/auth\/.*/i, new workbox.NetworkOnly({
+    "cacheName": "auth-no-cache",
+    plugins: []
+  }), 'GET');
   workbox.registerRoute(/^https:\/\/intranet-saas-backend\.onrender\.com\/api\/.*/i, new workbox.NetworkFirst({
     "cacheName": "api-cache",
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 100,
-      maxAgeSeconds: 86400
+      maxAgeSeconds: 3600
     })]
   }), 'GET');
   workbox.registerRoute(/^https:\/\/cdn\.onesignal\.com\/.*/i, new workbox.CacheFirst({
