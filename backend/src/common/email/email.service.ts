@@ -45,9 +45,9 @@ export class EmailService {
       this.logger.log(`🔧 SMTP User: ${smtpUser}`);
       
     } else {
-      this.logger.error(`❌ Configuration SMTP manquante !`);
-      this.logger.error(`❌ Variables requises : MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS`);
-      throw new Error('Configuration SMTP requise pour le service email');
+      this.logger.warn(`⚠️ Configuration SMTP manquante !`);
+      this.logger.warn(`⚠️ Variables requises : MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS`);
+      this.logger.warn(`⚠️ Service email désactivé - les emails ne seront pas envoyés`);
     }
     
     this.logger.log(`🔧 Frontend URL: ${this.configService.get<string>('FRONTEND_URL')}`);
@@ -59,7 +59,11 @@ export class EmailService {
   async sendEmail(options: SendEmailOptions): Promise<{ success: boolean; error?: string; result?: any }> {
     try {
       if (!this.transporter) {
-        throw new Error('Service email non configuré');
+        this.logger.warn(`⚠️ Email non envoyé - SMTP non configuré: ${options.subject}`);
+        return {
+          success: false,
+          error: 'Service email non configuré - configurez les variables SMTP',
+        };
       }
 
       const fromAddress = options.from || `${this.defaultFromName} <${this.defaultFromEmail}>`;
