@@ -101,8 +101,24 @@ const AppContent = () => {
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/tickets" element={<TicketsPage />} />
             <Route path="/announcements" element={<AnnouncementsNew />} />
-            <Route path="/audits" element={<AuditsPage />} />
-            <Route path="/planning" element={<PlanningPage />} />
+            
+            {/* Audits & Planning - manager/admin seulement */}
+            <Route 
+              path="/audits" 
+              element={
+                <RoleProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <AuditsPage />
+                </RoleProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/planning" 
+              element={
+                <RoleProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <PlanningPage />
+                </RoleProtectedRoute>
+              } 
+            />
             {/* <Route path="/announcements-old" element={<Announcements />} /> */}
             
             {/* Users - adaptatif selon le mode */}
