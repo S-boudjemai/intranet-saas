@@ -218,7 +218,7 @@ export class AuthService {
 
     // Envoyer l'email avec le code via SendGrid
     try {
-      const emailResult = await this.emailService.sendPasswordResetCode(email, code);
+      const emailResult = await this.emailService.sendPasswordResetEmail(email, code);
 
       if (!emailResult.success) {
         throw new Error(emailResult.error || 'Erreur inconnue lors de l\'envoi');

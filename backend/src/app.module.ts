@@ -31,9 +31,10 @@ import { EmailModule } from './common/email/email.module';
 
 @Module({
   imports: [
-    // Charge .env et rend ConfigService disponible partout
+    // Charge .env et .env.local et rend ConfigService disponible partout
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env.local', '.env'], // .env.local a la priorité
       validationSchema,
       validationOptions: {
         allowUnknown: true,

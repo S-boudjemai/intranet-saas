@@ -49,7 +49,7 @@ const AppContent = () => {
   useIOSStatusBar();
 
   // Pages où la NavBar ne doit PAS être affichée
-  const noNavPages = ["/login", "/signup", "/", "/contact", "/forgot-password", "/reset-password"];
+  const noNavPages = ["/login", "/signup", "/", "/contact", "/forgot-password"];
 
   // Admin global a son propre header, managers/viewers ont la navbar standard
   const isAdminGlobalView = user?.role === 'admin' && location.pathname === '/dashboard';

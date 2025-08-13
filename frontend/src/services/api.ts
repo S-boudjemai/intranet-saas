@@ -1,11 +1,40 @@
 // src/services/api.ts
 import axios, { AxiosResponse } from 'axios';
 
+// Détection intelligente de l'environnement
+const getApiUrl = () => {
+  // Si une URL est définie dans les variables d'environnement, l'utiliser
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // Détection automatique basée sur l'URL du frontend
+  const currentHost = window.location.hostname;
+  
+  // En développement local
+  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+    return 'http://localhost:3000';
+  }
+  
+  // En production (Vercel)
+  if (currentHost.includes('vercel.app') || currentHost.includes('franchisedesk')) {
+    return 'https://intranet-saas-backend.onrender.com';
+  }
+  
+  // Fallback par défaut
+  return 'http://localhost:3000';
+};
+
 // Configuration de base d'axios
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000', // URL du backend
+  baseURL: getApiUrl(), // URL du backend avec détection automatique
   timeout: 10000,
 });
+
+// Log de l'environnement détecté (uniquement en dev)
+if (import.meta.env.DEV) {
+  console.log('🔧 API URL détectée:', getApiUrl());
+}
 
 // Interface pour les réponses API standardisées
 export interface ApiResponse<T = any> {

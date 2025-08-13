@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as sgMail from '@sendgrid/mail';
+import * as nodemailer from 'nodemailer';
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -15,6 +15,7 @@ export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private readonly defaultFromEmail: string;
   private readonly defaultFromName: string;
+  private transporter: nodemailer.Transporter | null = null;
 
   constructor(
     private readonly configService: ConfigService,
@@ -22,265 +23,182 @@ export class EmailService {
     this.defaultFromEmail = this.configService.get<string>('MAIL_FROM') || 'noreply@franchisedesk.fr';
     this.defaultFromName = this.configService.get<string>('MAIL_FROM_NAME') || 'FranchiseDesk';
     
-    // Configuration SendGrid
-    const sendgridApiKey = this.configService.get<string>('SENDGRID_API_KEY');
-    if (sendgridApiKey) {
-      sgMail.setApiKey(sendgridApiKey);
-      this.logger.log(`🔧 EmailService initialisé avec SendGrid`);
+    // Configuration SMTP (Gmail obligatoire maintenant)
+    const smtpHost = this.configService.get<string>('MAIL_HOST');
+    const smtpPort = this.configService.get<string>('MAIL_PORT');
+    const smtpUser = this.configService.get<string>('MAIL_USER');
+    const smtpPass = this.configService.get<string>('MAIL_PASS');
+    
+    if (smtpHost && smtpPort && smtpUser && smtpPass) {
+      this.transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: parseInt(smtpPort),
+        secure: smtpPort === '465',
+        auth: {
+          user: smtpUser,
+          pass: smtpPass,
+        },
+      });
+      
+      this.logger.log(`🔧 EmailService initialisé avec SMTP (${smtpHost})`);
       this.logger.log(`🔧 From: ${this.defaultFromName} <${this.defaultFromEmail}>`);
-      this.logger.log(`🔧 SendGrid API Key: ${sendgridApiKey.substring(0, 10)}...`);
+      this.logger.log(`🔧 SMTP User: ${smtpUser}`);
+      
     } else {
-      this.logger.error(`❌ SENDGRID_API_KEY non définie !`);
+      this.logger.error(`❌ Configuration SMTP manquante !`);
+      this.logger.error(`❌ Variables requises : MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS`);
+      throw new Error('Configuration SMTP requise pour le service email');
     }
     
     this.logger.log(`🔧 Frontend URL: ${this.configService.get<string>('FRONTEND_URL')}`);
   }
 
   /**
-   * Envoie un email via SendGrid
+   * Envoie un email via SMTP
    */
   async sendEmail(options: SendEmailOptions): Promise<{ success: boolean; error?: string; result?: any }> {
     try {
+      if (!this.transporter) {
+        throw new Error('Service email non configuré');
+      }
+
       const fromAddress = options.from || `${this.defaultFromName} <${this.defaultFromEmail}>`;
       
       this.logger.log(`📧 Tentative envoi email depuis ${fromAddress} vers ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`);
       this.logger.log(`📧 Sujet: ${options.subject}`);
       
-      // Construire l'objet email pour SendGrid
-      const msg: any = {
-        to: options.to,
-        from: fromAddress,
-        subject: options.subject,
-      };
-
-      // Ajouter html et/ou text
-      if (options.html) {
-        msg.html = options.html;
-      }
-      if (options.text) {
-        msg.text = options.text;
-      }
-
       // Au moins une des deux propriétés (html ou text) doit être présente
       if (!options.html && !options.text) {
         throw new Error('Au moins un contenu HTML ou texte doit être fourni');
       }
 
-      this.logger.log(`📧 Configuration email: ${JSON.stringify({
-        from: msg.from,
-        to: msg.to,
-        subject: msg.subject,
-        hasHtml: !!msg.html,
-        hasText: !!msg.text
-      })}`);
+      const mailOptions = {
+        from: fromAddress,
+        to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
+        subject: options.subject,
+        text: options.text,
+        html: options.html,
+      };
 
-      // Envoyer avec SendGrid
-      const [response] = await sgMail.send(msg);
-
-      this.logger.log(`✅ Email envoyé avec succès via SendGrid!`);
-      this.logger.log(`✅ Status: ${response.statusCode}`);
-      this.logger.log(`✅ Headers: ${JSON.stringify(response.headers)}`);
+      const result = await this.transporter.sendMail(mailOptions);
+      this.logger.log(`✅ Email envoyé avec succès via SMTP!`);
+      this.logger.log(`📧 Message ID: ${result.messageId}`);
       
       return { 
         success: true, 
         result: {
-          statusCode: response.statusCode,
-          headers: response.headers,
+          messageId: result.messageId,
+          accepted: result.accepted,
+          rejected: result.rejected,
         }
       };
-    } catch (error: any) {
-      this.logger.error(`❌ Erreur détaillée envoi email SendGrid:`);
-      this.logger.error(`❌ Type d'erreur: ${error.constructor?.name}`);
-      this.logger.error(`❌ Message: ${error.message}`);
       
-      // Gestion spécifique des erreurs SendGrid
-      if (error.response) {
-        this.logger.error(`❌ SendGrid Status Code: ${error.response.statusCode}`);
-        this.logger.error(`❌ SendGrid Response Body: ${JSON.stringify(error.response.body)}`);
-        
-        // Extraire le message d'erreur détaillé
-        if (error.response.body?.errors?.length > 0) {
-          const firstError = error.response.body.errors[0];
-          this.logger.error(`❌ SendGrid Error Detail: ${firstError.message}`);
-          return { 
-            success: false, 
-            error: firstError.message || 'Erreur SendGrid'
-          };
-        }
-      }
+    } catch (error) {
+      this.logger.error(`❌ Erreur envoi email: ${error.message}`);
+      this.logger.error(error.stack);
       
-      return { 
-        success: false, 
-        error: error.message || 'Erreur inconnue lors de l\'envoi'
+      return {
+        success: false,
+        error: error.message || 'Erreur lors de l\'envoi de l\'email',
       };
     }
   }
 
   /**
+   * Envoie un email de bienvenue
+   */
+  async sendWelcomeEmail(to: string, name: string): Promise<{ success: boolean; error?: string }> {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    
+    return this.sendEmail({
+      to,
+      subject: 'Bienvenue sur FranchiseDesk !',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #4F46E5; margin: 0;">FranchiseDesk</h1>
+          </div>
+          <h2 style="color: #333;">Bienvenue ${name} !</h2>
+          <p style="color: #666; line-height: 1.6;">Votre compte a été créé avec succès sur FranchiseDesk.</p>
+          <p style="color: #666; line-height: 1.6;">Vous pouvez maintenant vous connecter à votre espace :</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${frontendUrl}/login" style="display: inline-block; padding: 12px 30px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">Se connecter</a>
+          </div>
+          <p style="color: #666; line-height: 1.6;">Si vous avez des questions, n'hésitez pas à nous contacter.</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          <p style="color: #999; font-size: 14px; text-align: center;">L'équipe FranchiseDesk</p>
+        </div>
+      `,
+      text: `Bienvenue ${name} ! Votre compte a été créé. Connectez-vous sur ${frontendUrl}/login`,
+    });
+  }
+
+  /**
    * Envoie un email d'invitation
    */
-  async sendInvitationEmail(
-    email: string, 
-    inviteToken: string, 
-    tenantName: string,
-    restaurantName?: string
-  ): Promise<{ success: boolean; error?: string }> {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://intranet-saas.vercel.app';
-    const inviteUrl = `${frontendUrl}/accept-invite?token=${inviteToken}`;
+  async sendInviteEmail(to: string, inviteCode: string, tenantName: string): Promise<{ success: boolean; error?: string }> {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    const signupUrl = `${frontendUrl}/signup?invite=${inviteCode}`;
     
-    const restaurantText = restaurantName ? ` pour le restaurant ${restaurantName}` : '';
-    
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #4F46E5;">Invitation FranchiseDesk</h2>
-        <p>Bonjour,</p>
-        <p>Vous êtes invité(e) à rejoindre la plateforme <strong>${tenantName}</strong>${restaurantText} sur FranchiseDesk.</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${inviteUrl}" 
-             style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-            Accepter l'invitation
-          </a>
-        </div>
-        <p style="color: #666; font-size: 14px;">
-          Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
-          <a href="${inviteUrl}">${inviteUrl}</a>
-        </p>
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-        <p style="color: #999; font-size: 12px;">
-          Cet email a été envoyé par FranchiseDesk. Si vous n'attendiez pas cette invitation, vous pouvez ignorer cet email.
-        </p>
-      </div>
-    `;
-
-    const text = `
-      Invitation FranchiseDesk
-      
-      Bonjour,
-      
-      Vous êtes invité(e) à rejoindre la plateforme ${tenantName}${restaurantText} sur FranchiseDesk.
-      
-      Pour accepter l'invitation, cliquez sur ce lien : ${inviteUrl}
-      
-      Cordialement,
-      L'équipe FranchiseDesk
-    `;
-
     return this.sendEmail({
-      to: email,
-      subject: `Invitation à rejoindre ${tenantName} - FranchiseDesk`,
-      html,
-      text,
+      to,
+      subject: `Invitation à rejoindre ${tenantName} sur FranchiseDesk`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #4F46E5; margin: 0;">FranchiseDesk</h1>
+          </div>
+          <h2 style="color: #333;">Vous êtes invité à rejoindre ${tenantName}</h2>
+          <p style="color: #666; line-height: 1.6;">Vous avez été invité à rejoindre l'équipe de <strong>${tenantName}</strong> sur FranchiseDesk.</p>
+          <p style="color: #666; line-height: 1.6;">Cliquez sur le lien ci-dessous pour créer votre compte :</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${signupUrl}" style="display: inline-block; padding: 12px 30px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">Créer mon compte</a>
+          </div>
+          <p style="color: #666; line-height: 1.6; font-size: 14px;">Ou copiez ce lien dans votre navigateur :</p>
+          <p style="background: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all; font-family: monospace; font-size: 12px;">${signupUrl}</p>
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 12px; margin: 20px 0;">
+            <p style="margin: 0; color: #856404; font-size: 14px;"><strong>⏰ Important :</strong> Ce lien est valable pendant 7 jours.</p>
+          </div>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          <p style="color: #999; font-size: 14px; text-align: center;">L'équipe FranchiseDesk</p>
+        </div>
+      `,
+      text: `Vous êtes invité à rejoindre ${tenantName} sur FranchiseDesk. Créez votre compte sur : ${signupUrl} (valable 7 jours)`,
     });
   }
 
   /**
-   * Envoie un email de reset de mot de passe (utilisé par auth.service)
-   * Note: Cette méthode envoie un code à 6 chiffres, pas un token URL
+   * Envoie un email de réinitialisation de mot de passe
    */
-  async sendPasswordResetCode(
-    email: string, 
-    code: string
-  ): Promise<{ success: boolean; error?: string }> {
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #4F46E5;">Réinitialisation de mot de passe</h2>
-        <p>Bonjour,</p>
-        <p>Vous avez demandé une réinitialisation de votre mot de passe.</p>
-        <p>Voici votre code de validation :</p>
-        <div style="background-color: #f3f4f6; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
-          <h1 style="color: #4F46E5; margin: 0; letter-spacing: 5px; font-size: 32px;">${code}</h1>
-        </div>
-        <p style="color: #E53E3E; font-weight: bold;">⚠️ Ce code expire dans 15 minutes.</p>
-        <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
-        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-        <p style="color: #6b7280; font-size: 12px;">
-          Cet email a été envoyé par FranchiseDesk. Ne répondez pas à cet email.
-        </p>
-      </div>
-    `;
-
-    const text = `
-      Réinitialisation de mot de passe - FranchiseDesk
-      
-      Bonjour,
-      
-      Vous avez demandé une réinitialisation de votre mot de passe.
-      
-      Voici votre code de validation : ${code}
-      
-      ⚠️ Ce code expire dans 15 minutes.
-      
-      Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
-      
-      Cordialement,
-      L'équipe FranchiseDesk
-    `;
-
+  async sendPasswordResetEmail(to: string, resetToken: string): Promise<{ success: boolean; error?: string }> {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/forgot-password?token=${resetToken}`;
+    
     return this.sendEmail({
-      to: email,
-      subject: 'Code de réinitialisation - FranchiseDesk',
-      html,
-      text,
-    });
-  }
-
-  /**
-   * Envoie un email de reset de mot de passe avec URL (méthode legacy si besoin)
-   */
-  async sendPasswordResetEmail(
-    email: string, 
-    resetToken: string
-  ): Promise<{ success: boolean; error?: string }> {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://intranet-saas.vercel.app';
-    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
-
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #4F46E5;">Réinitialisation de mot de passe</h2>
-        <p>Bonjour,</p>
-        <p>Vous avez demandé à réinitialiser votre mot de passe sur FranchiseDesk.</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" 
-             style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-            Réinitialiser mon mot de passe
-          </a>
+      to,
+      subject: 'Réinitialisation de votre mot de passe FranchiseDesk',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #4F46E5; margin: 0;">FranchiseDesk</h1>
+          </div>
+          <h2 style="color: #333;">Réinitialisation de mot de passe</h2>
+          <p style="color: #666; line-height: 1.6;">Vous avez demandé à réinitialiser votre mot de passe.</p>
+          <p style="color: #666; line-height: 1.6;">Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="display: inline-block; padding: 12px 30px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">Réinitialiser mon mot de passe</a>
+          </div>
+          <p style="color: #666; line-height: 1.6; font-size: 14px;">Ou copiez ce lien dans votre navigateur :</p>
+          <p style="background: #f5f5f5; padding: 10px; border-radius: 4px; word-break: break-all; font-family: monospace; font-size: 12px;">${resetUrl}</p>
+          <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 12px; margin: 20px 0;">
+            <p style="margin: 0; color: #721c24; font-size: 14px;"><strong>⚠️ Important :</strong> Ce lien est valable pendant 1 heure seulement.</p>
+          </div>
+          <p style="color: #666; line-height: 1.6;">Si vous n'avez pas demandé cette réinitialisation, ignorez cet email en toute sécurité.</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          <p style="color: #999; font-size: 14px; text-align: center;">L'équipe FranchiseDesk</p>
         </div>
-        <p style="color: #666; font-size: 14px;">
-          Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
-          <a href="${resetUrl}">${resetUrl}</a>
-        </p>
-        <p style="color: #E53E3E; font-weight: bold;">
-          ⚠️ Ce lien expire dans 1 heure pour des raisons de sécurité.
-        </p>
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-        <p style="color: #999; font-size: 12px;">
-          Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email.
-        </p>
-      </div>
-    `;
-
-    const text = `
-      Réinitialisation de mot de passe - FranchiseDesk
-      
-      Bonjour,
-      
-      Vous avez demandé à réinitialiser votre mot de passe sur FranchiseDesk.
-      
-      Pour réinitialiser votre mot de passe, cliquez sur ce lien : ${resetUrl}
-      
-      ⚠️ Ce lien expire dans 1 heure pour des raisons de sécurité.
-      
-      Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email.
-      
-      Cordialement,
-      L'équipe FranchiseDesk
-    `;
-
-    return this.sendEmail({
-      to: email,
-      subject: 'Réinitialisation de mot de passe - FranchiseDesk',
-      html,
-      text,
+      `,
+      text: `Réinitialisez votre mot de passe FranchiseDesk sur : ${resetUrl} (valable 1 heure). Si vous n'avez pas demandé ceci, ignorez cet email.`,
     });
   }
 }

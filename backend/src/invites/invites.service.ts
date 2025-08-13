@@ -56,11 +56,10 @@ export class InvitesService {
     const savedInvite = await this.repo.save(invite);
 
     // Envoyer l'email d'invitation via notre EmailService
-    const emailResult = await this.emailService.sendInvitationEmail(
+    const emailResult = await this.emailService.sendInviteEmail(
       invite_email,
       token,
-      tenant.name,
-      restaurant_name
+      tenant.name
     );
 
     if (!emailResult.success) {
