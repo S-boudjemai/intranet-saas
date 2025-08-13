@@ -180,19 +180,23 @@ export default function NavBar() {
                   />
                 </NavLink>
 
-                <NavLink 
-                  to="/audits" 
-                  className={navLinkClass}
-                >
-                  Audits
-                </NavLink>
+                {canManage && (
+                  <>
+                    <NavLink 
+                      to="/audits" 
+                      className={navLinkClass}
+                    >
+                      Audits
+                    </NavLink>
 
-                <NavLink 
-                  to="/planning" 
-                  className={navLinkClass}
-                >
-                  Planning
-                </NavLink>
+                    <NavLink 
+                      to="/planning" 
+                      className={navLinkClass}
+                    >
+                      Planning
+                    </NavLink>
+                  </>
+                )}
 
                 {canManage && (
                   <>
@@ -272,13 +276,15 @@ export default function NavBar() {
                           >
                             Annonces
                           </Link>
-                          <Link
-                            to="/audits"
-                            className="block px-3 py-2 text-sm rounded-lg hover:bg-muted"
-                            onClick={() => setIsMenuOpen(false)}
-                          >
-                            Audits
-                          </Link>
+                          {canManage && (
+                            <Link
+                              to="/audits"
+                              className="block px-3 py-2 text-sm rounded-lg hover:bg-muted"
+                              onClick={() => setIsMenuOpen(false)}
+                            >
+                              Audits
+                            </Link>
+                          )}
                           {canManage && (
                             <>
                               <Link
