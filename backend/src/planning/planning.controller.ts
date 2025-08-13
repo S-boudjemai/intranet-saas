@@ -17,10 +17,14 @@ import { UpdatePlanningTaskDto } from './dto/update-planning-task.dto';
 import { PlanningCalendarDto } from './dto/planning-calendar.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
+import { Roles } from '../auth/roles/roles.decorator';
+import { RolesGuard } from '../auth/roles/roles.guard';
+import { Role } from '../auth/roles/roles.enum';
 
 @ApiTags('Planning')
 @Controller('planning')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.Admin, Role.Manager)
 @ApiBearerAuth()
 export class PlanningController {
   constructor(private readonly planningService: PlanningService) {}

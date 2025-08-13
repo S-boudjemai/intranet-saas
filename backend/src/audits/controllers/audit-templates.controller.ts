@@ -10,15 +10,21 @@ import {
   Request,
   Query,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuditTemplatesService } from '../services/audit-templates.service';
 import { CreateAuditTemplateDto } from '../dto/create-audit-template.dto';
 import { JwtUser } from '../../common/interfaces/jwt-user.interface';
+import { Roles } from '../../auth/roles/roles.decorator';
+import { RolesGuard } from '../../auth/roles/roles.guard';
+import { Role } from '../../auth/roles/roles.enum';
 
 @ApiTags('Audit Templates')
 @ApiBearerAuth('JWT-auth')
 @Controller('audit-templates')
+@UseGuards(RolesGuard)
+@Roles(Role.Admin, Role.Manager)
 export class AuditTemplatesController {
   private readonly logger = new Logger(AuditTemplatesController.name);
 

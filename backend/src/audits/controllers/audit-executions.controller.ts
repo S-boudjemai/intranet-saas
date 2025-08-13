@@ -8,16 +8,22 @@ import {
   Param,
   Request,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuditExecutionsService } from '../services/audit-executions.service';
 import { CreateAuditExecutionDto } from '../dto/create-audit-execution.dto';
 import { JwtUser } from '../../common/interfaces/jwt-user.interface';
 import { AuditStatus } from '../entities/audit-execution.entity';
+import { Roles } from '../../auth/roles/roles.decorator';
+import { RolesGuard } from '../../auth/roles/roles.guard';
+import { Role } from '../../auth/roles/roles.enum';
 
 @ApiTags('Audit Executions')
 @ApiBearerAuth('JWT-auth')
 @Controller('audit-executions')
+@UseGuards(RolesGuard)
+@Roles(Role.Admin, Role.Manager)
 export class AuditExecutionsController {
   constructor(private readonly executionsService: AuditExecutionsService) {}
 

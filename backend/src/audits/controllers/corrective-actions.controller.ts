@@ -10,16 +10,22 @@ import {
   Put,
   Request,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CorrectiveActionsService } from '../services/corrective-actions.service';
 import { CreateCorrectiveActionDto } from '../dto/create-corrective-action.dto';
 import { JwtUser } from '../../common/interfaces/jwt-user.interface';
 import { ActionStatus } from '../entities/corrective-action.entity';
+import { Roles } from '../../auth/roles/roles.decorator';
+import { RolesGuard } from '../../auth/roles/roles.guard';
+import { Role } from '../../auth/roles/roles.enum';
 
 @ApiTags('Corrective Actions')
 @ApiBearerAuth('JWT-auth')
 @Controller('corrective-actions')
+@UseGuards(RolesGuard)
+@Roles(Role.Admin, Role.Manager)
 export class CorrectiveActionsController {
   constructor(private readonly correctiveActionsService: CorrectiveActionsService) {}
 
