@@ -284,4 +284,29 @@ export class NotificationsController {
   async oneSignalStats() {
     return await this.oneSignalService.getStats();
   }
+
+  // === Test rapide push notification ===
+  @Post('test-push-notification')
+  @UseGuards(AuthGuard('jwt'))
+  async testPushNotification(@Request() req) {
+    const userId = req.user.userId;
+    
+    // Envoyer une notification de test
+    await this.notificationsService.sendPushToUser(userId, {
+      title: '🎉 Test Notifications Push',
+      body: 'Les notifications push fonctionnent correctement!',
+      data: {
+        type: 'test',
+        url: '/dashboard',
+        timestamp: new Date().toISOString()
+      },
+      tag: 'test-notification'
+    });
+    
+    return { 
+      success: true, 
+      message: 'Notification de test envoyée',
+      userId
+    };
+  }
 }

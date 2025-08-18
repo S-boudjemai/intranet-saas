@@ -22,6 +22,7 @@ import {
 } from "../components/icons";
 import { DashboardSkeleton } from "../components/Skeleton";
 import { PageHeader, PageContent, PageCard } from "../components/ui/PageAnimations";
+import { TestPushButton } from "../components/TestPushButton";
 
 interface Restaurant {
   id: string;
@@ -282,6 +283,9 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </motion.div>
+      
+      {/* Bouton de test des notifications push (dev uniquement) */}
+      {import.meta.env.DEV && <TestPushButton />}
     </div>
   );
 };
