@@ -85,7 +85,7 @@ export class OneSignalService {
       const isIOS = this.detectPlatform() === 'ios';
       
       // Si déjà refusé, on ne peut pas redemander directement
-      if (currentPermission === false) {
+      if (currentPermission === 'denied') {
         console.log('[OneSignal] Permission déjà refusée');
         
         // Sur iOS, essayer d'ouvrir les réglages
@@ -115,13 +115,13 @@ export class OneSignalService {
       }
       
       // Si permission pas encore demandée, la demander
-      if (currentPermission === null || currentPermission === undefined) {
+      if (currentPermission === 'default') {
         await OneSignal.Notifications.requestPermission();
         const newPermission = await OneSignal.Notifications.permission;
-        return newPermission === true;
+        return newPermission === 'granted';
       }
       
-      return currentPermission === true;
+      return currentPermission === 'granted';
       
     } catch (error) {
       console.error('[OneSignal] Permission error:', error);

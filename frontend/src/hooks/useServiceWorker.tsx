@@ -43,7 +43,7 @@ export function ServiceWorkerProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const update = registerSW({
+    const update = registerSW('/service-worker.js', {
       onNeedRefresh() {
         setNeedRefresh(true);
       },

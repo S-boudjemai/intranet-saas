@@ -79,58 +79,8 @@ export default defineConfig({
           }
         ]
       },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        globDirectory: 'dist',
-        // Import OneSignal dans le service worker généré
-        importScripts: ['https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'],
-        // Configuration navigation fallback pour éviter 404
-        navigateFallback: '/index.html',
-        navigateFallbackAllowlist: [/.*/], // Autoriser TOUTES les routes SPA
-        navigateFallbackDenylist: [/^\/api\//, /\/__/, /\.(?:css|js|ico|png|svg|jpg|jpeg|gif|webp)$/], // Exclure API et assets
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/intranet-saas-backend\.onrender\.com\/api\/auth\/.*/i,
-            handler: 'NetworkOnly', // JAMAIS cacher l'authentification
-            options: {
-              cacheName: 'auth-no-cache'
-            }
-          },
-          {
-            urlPattern: /^https:\/\/intranet-saas-backend\.onrender\.com\/api\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 // Réduit à 1h au lieu de 24h
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/cdn\.onesignal\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'onesignal-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 1 week
-              }
-            }
-          }
-        ]
-      }
+      // Configuration minimale pour injectManifest
+      // Les stratégies de cache sont maintenant dans service-worker.js
     })
   ],
   build: {

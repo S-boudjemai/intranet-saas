@@ -196,7 +196,7 @@ export class NotificationsController {
   // Tester l'envoi d'une notification push (pour tous les utilisateurs connectés)
   @Post('test-push')
   async testPushNotification(@Req() req, @Body() body: any) {
-    const userId = req.user.userId.toString();
+    const userId = req.user.userId; // Garder en number
 
     // Si aucun data fourni, envoyer notification de test simple
     if (!body || !body.title) {

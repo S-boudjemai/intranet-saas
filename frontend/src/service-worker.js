@@ -47,51 +47,8 @@ registerRoute(
   })
 );
 
-// Écouter les notifications push
-self.addEventListener('push', (event) => {
-  console.log('Push notification received:', event);
-  
-  if (!event.data) {
-    console.warn('Push notification without data');
-    return;
-  }
-
-  let notificationData;
-  try {
-    notificationData = event.data.json();
-  } catch (e) {
-    notificationData = {
-      title: 'Nouvelle notification',
-      body: event.data.text(),
-      icon: '/pwa-192x192.svg',
-      badge: '/pwa-192x192.svg'
-    };
-  }
-
-  const options = {
-    body: notificationData.body || 'Vous avez une nouvelle notification',
-    icon: notificationData.icon || '/pwa-192x192.svg',
-    badge: notificationData.badge || '/pwa-192x192.svg',
-    vibrate: [200, 100, 200],
-    tag: notificationData.tag || 'franchisehub-notification',
-    renotify: true,
-    requireInteraction: false,
-    data: notificationData.data || {},
-    actions: notificationData.actions || []
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(
-      notificationData.title || 'FranchiseHUB',
-      options
-    )
-  );
-
-  // Mettre à jour le badge de l'application
-  if ('setAppBadge' in self.navigator && notificationData.badge_count !== undefined) {
-    self.navigator.setAppBadge(notificationData.badge_count).catch(console.error);
-  }
-});
+// OneSignal gère déjà les événements push
+// Nous ajoutons seulement la logique de badge et analytics
 
 // Gestion des clics sur les notifications
 self.addEventListener('notificationclick', (event) => {
