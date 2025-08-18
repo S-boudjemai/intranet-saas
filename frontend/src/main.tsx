@@ -7,8 +7,8 @@ import { ServiceWorkerProvider } from "./hooks/useServiceWorker";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    {/* <ServiceWorkerProvider> */}
+    <ServiceWorkerProvider>
       <App />
-    {/* </ServiceWorkerProvider> */}
+    </ServiceWorkerProvider>
   </React.StrictMode>
 );

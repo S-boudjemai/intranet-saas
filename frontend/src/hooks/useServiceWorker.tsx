@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { registerSW } from 'virtual:pwa-register';
+import { oneSignalService } from '../services/oneSignalService';
 
 interface ServiceWorkerContextType {
   needRefresh: boolean;
@@ -28,15 +29,31 @@ export function ServiceWorkerProvider({ children }: { children: ReactNode }) {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Check if PWA is installed on iOS
+    const detectIOSPWA = () => {
+      const isIOS = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+      
+      if (isIOS && isPWA) {
+        console.log('[ServiceWorker] iOS PWA detected - calling forceIOSRegistration');
+        // Force iOS registration after PWA installation
+        setTimeout(() => {
+          oneSignalService.forceIOSRegistration();
+        }, 2000); // Delay to ensure app is fully loaded
+      }
+    };
+
     const update = registerSW({
       onNeedRefresh() {
         setNeedRefresh(true);
       },
       onOfflineReady() {
         setOfflineReady(true);
+        detectIOSPWA(); // Check on offline ready
       },
       onRegisteredSW(swScriptUrl, registration) {
         // Service Worker registered
+        detectIOSPWA(); // Check on registration
         
         // Check for updates every hour
         if (registration) {
@@ -51,6 +68,9 @@ export function ServiceWorkerProvider({ children }: { children: ReactNode }) {
     });
 
     setUpdateSW(() => update);
+
+    // Also check on initial load
+    detectIOSPWA();
 
     return () => {
       window.removeEventListener('online', handleOnline);

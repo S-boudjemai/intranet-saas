@@ -48,14 +48,23 @@ export const PushNotificationPrompt = ({ onDismiss, onAccept }: PushNotification
     setIsLoading(true);
     try {
       const granted = await oneSignalService.requestPermission();
+      
       if (granted) {
+        // Permission accordée, s'abonner
         await oneSignalService.subscribeUser();
         onAccept?.();
+        localStorage.setItem('push-prompt-shown', 'true');
+        setIsVisible(false);
+      } else {
+        // Permission refusée ou bloquée
+        // Le message d'aide sera affiché par requestPermission
+        localStorage.setItem('push-prompt-shown', 'true');
+        setIsVisible(false);
       }
-      localStorage.setItem('push-prompt-shown', 'true');
-      setIsVisible(false);
     } catch (error) {
       console.error('Push notification error:', error);
+      // En cas d'erreur, fermer quand même le prompt
+      setIsVisible(false);
     } finally {
       setIsLoading(false);
     }
@@ -106,9 +115,9 @@ export const PushNotificationPrompt = ({ onDismiss, onAccept }: PushNotification
                 <button
                   onClick={handleAccept}
                   disabled={isLoading}
-                  className="flex-1 bg-primary text-primary-foreground text-sm px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  className="flex-1 bg-primary text-primary-foreground text-sm px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-wait"
                 >
-                  {isLoading ? '...' : 'Activer'}
+                  {isLoading ? 'Configuration...' : 'Activer'}
                 </button>
                 <button
                   onClick={handleDismiss}

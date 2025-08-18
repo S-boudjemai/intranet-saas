@@ -13,12 +13,10 @@ export class OneSignalService {
       return this.isSupported;
     }
 
-    // Skip OneSignal en localhost (utiliser seulement en production)
-    if (window.location.hostname === 'localhost') {
-      console.warn('[OneSignal] Skipping initialization on localhost - use production URL for testing');
-      this.initialized = true;
-      this.isSupported = false;
-      return false;
+    // Autoriser OneSignal en localhost pour les tests
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocalhost) {
+      console.log('[OneSignal] Localhost detected - enabling with allowLocalhostAsSecureOrigin');
     }
 
     // Détection iOS
@@ -30,7 +28,7 @@ export class OneSignalService {
     try {
       await OneSignal.init({
         appId: this.APP_ID,
-        allowLocalhostAsSecureOrigin: process.env.NODE_ENV === 'development',
+        allowLocalhostAsSecureOrigin: true, // Toujours autoriser pour les tests locaux
         autoRegister: !isIOS, // Sur iOS, on enregistre manuellement après installation PWA
         safari_web_id: this.APP_ID, // Configuration Safari pour iOS
         promptOptions: {
@@ -78,12 +76,53 @@ export class OneSignalService {
   }
 
   /**
-   * Demander permission notifications
+   * Demander permission notifications avec gestion iOS
    */
   static async requestPermission(): Promise<boolean> {
     try {
-      await OneSignal.Notifications.requestPermission();
-      return OneSignal.Notifications.permission;
+      // Vérifier le statut actuel
+      const currentPermission = await OneSignal.Notifications.permission;
+      const isIOS = this.detectPlatform() === 'ios';
+      
+      // Si déjà refusé, on ne peut pas redemander directement
+      if (currentPermission === false) {
+        console.log('[OneSignal] Permission déjà refusée');
+        
+        // Sur iOS, essayer d'ouvrir les réglages
+        if (isIOS) {
+          // Afficher un message explicatif
+          const message = `Pour activer les notifications:
+1. Ouvrez les Réglages de votre iPhone
+2. Recherchez "FranchiseDesk"
+3. Activez les Notifications`;
+          
+          alert(message);
+          
+          // Tenter d'ouvrir les réglages via une URL spéciale (ne marche pas toujours)
+          // Certains navigateurs iOS permettent ceci
+          try {
+            window.open('app-settings:', '_blank');
+          } catch (e) {
+            // Si ça ne marche pas, au moins on a affiché le message
+            console.log('[OneSignal] Cannot open iOS settings directly');
+          }
+        } else {
+          // Sur desktop/Android, afficher instructions
+          alert('Les notifications ont été bloquées. Veuillez les activer dans les paramètres de votre navigateur (icône à gauche de la barre d\'adresse).');
+        }
+        
+        return false;
+      }
+      
+      // Si permission pas encore demandée, la demander
+      if (currentPermission === null || currentPermission === undefined) {
+        await OneSignal.Notifications.requestPermission();
+        const newPermission = await OneSignal.Notifications.permission;
+        return newPermission === true;
+      }
+      
+      return currentPermission === true;
+      
     } catch (error) {
       console.error('[OneSignal] Permission error:', error);
       return false;

@@ -5,6 +5,7 @@ import { Notification, NotificationType } from './entities/notification.entity';
 import { View, ViewTargetType } from './entities/view.entity';
 import { PushSubscription } from './entities/push-subscription.entity';
 import { User } from '../users/entities/user.entity';
+import { OneSignalService } from './onesignal.service';
 import {
   CreatePushSubscriptionDto,
   SendPushNotificationDto,
@@ -23,6 +24,7 @@ export class NotificationsService {
     private pushSubscriptionRepository: Repository<PushSubscription>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private oneSignalService: OneSignalService,
   ) {
     // this.logger.log('📱 Notifications service initialized - Using OneSignal for push notifications');
   }
@@ -372,12 +374,19 @@ export class NotificationsService {
     userId: number,
     notification: SendPushNotificationDto,
   ): Promise<void> {
-    // this.logger.log(`📱 OneSignal - Would send push notification to user ${userId}: ${notification.title}`);
-    // this.logger.log(`📱 OneSignal - Message: ${notification.body}`);
-    // this.logger.log(`📱 OneSignal - Data:`, JSON.stringify(notification.data, null, 2));
-
-    // TODO: Implémenter l'envoi via OneSignal API
-    // Les subscriptions sont conservées pour futur usage avec OneSignal
+    try {
+      await this.oneSignalService.sendToUser(
+        userId,
+        notification.title,
+        notification.body,
+        {
+          ...notification.data,
+          tag: notification.tag,
+        }
+      );
+    } catch (error) {
+      this.logger.error(`Failed to send push notification to user ${userId}:`, error);
+    }
   }
 
   // Envoyer une notification push à tous les utilisateurs d'un tenant

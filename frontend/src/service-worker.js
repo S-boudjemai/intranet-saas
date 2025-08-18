@@ -1,4 +1,51 @@
 /// <reference lib="webworker" />
+import { precacheAndRoute } from 'workbox-precaching';
+import { clientsClaim } from 'workbox-core';
+import { registerRoute } from 'workbox-routing';
+import { CacheFirst, NetworkFirst, NetworkOnly } from 'workbox-strategies';
+import { ExpirationPlugin } from 'workbox-expiration';
+
+// Import OneSignal SDK
+importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+
+// Precache assets
+precacheAndRoute(self.__WB_MANIFEST);
+
+// Immediate claim
+self.skipWaiting();
+clientsClaim();
+
+// Cache strategies
+registerRoute(
+  ({ url }) => url.origin === 'https://fonts.googleapis.com',
+  new CacheFirst({
+    cacheName: 'google-fonts-cache',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 10,
+        maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+      }),
+    ],
+  })
+);
+
+registerRoute(
+  ({ url }) => url.href.includes('/api/auth/'),
+  new NetworkOnly()
+);
+
+registerRoute(
+  ({ url }) => url.href.includes('/api/'),
+  new NetworkFirst({
+    cacheName: 'api-cache',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 100,
+        maxAgeSeconds: 60 * 60, // 1 hour
+      }),
+    ],
+  })
+);
 
 // Écouter les notifications push
 self.addEventListener('push', (event) => {
