@@ -7,25 +7,30 @@ export class OneSignalService {
 
   /**
    * Initialiser OneSignal avec support iOS spécifique
+   * Initialise OneSignal une fois le Service Worker actif
    */
-  static async initialize(): Promise<boolean> {
+  static async initAfterSW(): Promise<boolean> {
     if (this.initialized) {
       return this.isSupported;
     }
 
-    // Autoriser OneSignal en localhost pour les tests
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (isLocalhost) {
-      console.log('[OneSignal] Localhost detected - enabling with allowLocalhostAsSecureOrigin');
-    }
-
-    // Détection iOS
-    const isIOS = this.detectPlatform() === 'ios';
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
-
-    console.log('[OneSignal] Platform detected:', { isIOS, isPWA });
-
     try {
+      // Attendre que le service worker soit prêt avant d'initialiser
+      if ('serviceWorker' in navigator) {
+        await navigator.serviceWorker.ready;
+      }
+
+      // Autoriser OneSignal en localhost pour les tests
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocalhost) {
+        console.log('[OneSignal] Localhost detected - enabling with allowLocalhostAsSecureOrigin');
+      }
+
+      // Détection iOS
+      const isIOS = this.detectPlatform() === 'ios';
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+
+      console.log('[OneSignal] Platform detected:', { isIOS, isPWA });
       await OneSignal.init({
         appId: this.APP_ID,
         allowLocalhostAsSecureOrigin: true, // Toujours autoriser pour les tests locaux
@@ -40,7 +45,7 @@ export class OneSignalService {
                 text: {
                   actionMessage: "Nous aimerions vous envoyer des notifications pour les mises à jour importantes.",
                   acceptButton: "Autoriser",
-                  cancelButton: "Non merci"
+                  cancelButton: "Non merci",
                 },
                 delay: {
                   pageViews: 1,

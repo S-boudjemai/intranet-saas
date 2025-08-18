@@ -28,6 +28,7 @@ export function ServiceWorkerProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    window.addEventListener('appinstalled', oneSignalService.initAfterSW);
 
     // Check if PWA is installed on iOS
     const detectIOSPWA = () => {
@@ -50,6 +51,7 @@ export function ServiceWorkerProvider({ children }: { children: ReactNode }) {
       onOfflineReady() {
         setOfflineReady(true);
         detectIOSPWA(); // Check on offline ready
+        oneSignalService.initAfterSW();
       },
       onRegisteredSW(swScriptUrl, registration) {
         // Service Worker registered
@@ -75,6 +77,7 @@ export function ServiceWorkerProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('appinstalled', oneSignalService.initAfterSW);
     };
   }, []);
 

@@ -91,7 +91,7 @@ export const OneSignalDebugPage = () => {
   const testInitialization = async () => {
     setLoading(true);
     try {
-      const result = await oneSignalService.initialize();
+      const result = await oneSignalService.initAfterSW();
       alert(`Initialisation: ${result ? '✅ Réussie' : '❌ Échouée'}`);
       await collectDebugInfo();
     } catch (error) {

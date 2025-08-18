@@ -112,8 +112,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Initialize OneSignal for push notifications
     setTimeout(async () => {
       try {
-        await oneSignalService.initialize();
-        
+        await oneSignalService.initAfterSW();
+
         // Définir l'ID utilisateur externe après l'initialisation
         const decodedUser = decodeToken(access_token);
         if (decodedUser?.userId) {
