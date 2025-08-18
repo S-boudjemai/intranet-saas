@@ -13,8 +13,11 @@ export const TestPushButton = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/notifications/test-push-notification`,
-        {},
+        `${import.meta.env.VITE_API_URL}/notifications/test-push`,
+        {
+          title: '🎉 Test Notifications Push',
+          body: 'Les notifications push fonctionnent correctement!'
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`
